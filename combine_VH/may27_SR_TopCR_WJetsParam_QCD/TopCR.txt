@@ -1,0 +1,20 @@
+# Datacard for <Channel (TopCR) instance at 0x7f74a750ebe0> generated on 2024-05-27 22:14:52.703732
+imax 1 # number of categories ('bins' but here we are using shape templates)
+jmax 5 # number of samples minus 1
+kmax 8 # number of nuisance parameters
+shapes * TopCR testModel.root testModel:TopCR_$PROCESS testModel:TopCR_$PROCESS_$SYSTEMATIC
+bin TopCR
+observation 0.000
+bin                                 TopCR          TopCR          TopCR          TopCR          TopCR  TopCR
+process                                VH          ttbar          wjets      singletop          zjets    qcd
+process                                 0              1              2              3              4      5
+rate                                1.445       6160.671        835.343        341.457        200.073  0.000
+BR_hww lnN                  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153      -
+CMS_lumi_13TeV_2018 lnN            1.0150         1.0150         1.0150         1.0150         1.0150      -
+TopCR_VH_mcstat lnN                1.0650              -              -              -              -      -
+TopCR_singletop_mcstat lnN              -              -              -         1.0652              -      -
+TopCR_ttbar_mcstat lnN                  -         1.0137              -              -              -      -
+TopCR_wjets_mcstat lnN                  -              -         1.0479              -              -      -
+TopCR_zjets_mcstat lnN                  -              -              -              -         1.3166      -
+taggereff lnN                      1.1000              -              -              -              -      -
+rate_ttbar rateParam * ttbar 1.0

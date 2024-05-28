@@ -1,0 +1,21 @@
+# Datacard for <Channel (SR1) instance at 0x7f74a750ec10> generated on 2024-05-27 22:14:52.702299
+imax 1 # number of categories ('bins' but here we are using shape templates)
+jmax 5 # number of samples minus 1
+kmax 9 # number of nuisance parameters
+shapes * SR1 testModel.root testModel:SR1_$PROCESS testModel:SR1_$PROCESS_$SYSTEMATIC
+bin SR1
+observation 0.000
+bin                                 SR1            SR1            SR1            SR1            SR1            SR1
+process                              VH          ttbar          wjets      singletop          zjets            qcd
+process                               0              1              2              3              4              5
+rate                              9.147        229.406        184.948         18.079         29.191          6.903
+BR_hww lnN                0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153
+CMS_lumi_13TeV_2018 lnN          1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
+SR1_VH_mcstat lnN                1.0226              -              -              -              -              -
+SR1_qcd_mcstat lnN                    -              -              -              -              -         1.3063
+SR1_singletop_mcstat lnN              -              -              -         1.2481              -              -
+SR1_ttbar_mcstat lnN                  -         1.0714              -              -              -              -
+SR1_wjets_mcstat lnN                  -              -         1.1054              -              -              -
+SR1_zjets_mcstat lnN                  -              -              -              -         1.1537              -
+taggereff lnN                    1.1000              -              -              -              -              -
+rate_wjets rateParam * wjets 1.0
