@@ -1,0 +1,33 @@
+Combination of signal_region=SR1.txt  ttbar_cr=TopCR.txt
+imax 2 number of bins
+jmax 5 number of processes minus 1
+kmax 15 number of nuisance parameters
+----------------------------------------------------------------------------------------------------------------------------------
+shapes *              signal_region  testModel.root testModel:SR1_$PROCESS testModel:SR1_$PROCESS_$SYSTEMATIC
+shapes *              ttbar_cr       testModel.root testModel:TopCR_$PROCESS testModel:TopCR_$PROCESS_$SYSTEMATIC
+----------------------------------------------------------------------------------------------------------------------------------
+bin          signal_region  ttbar_cr     
+observation  0              0            
+----------------------------------------------------------------------------------------------------------------------------------
+bin                                       signal_region  signal_region  signal_region  signal_region  signal_region  signal_region  ttbar_cr       ttbar_cr       ttbar_cr       ttbar_cr       ttbar_cr       ttbar_cr     
+process                                   VH             ttbar          wjets          singletop      zjets          qcd            VH             ttbar          wjets          singletop      zjets          qcd          
+process                                   0              1              2              3              4              5              0              1              2              3              4              5            
+rate                                      9.147          229.406        184.948        18.079         29.191         6.903          1.445          6160.671       835.343        341.457        200.073        0            
+----------------------------------------------------------------------------------------------------------------------------------
+BR_hww                  lnN               0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  -            
+CMS_lumi_13TeV_2018     lnN               1.015          1.015          1.015          1.015          1.015          1.015          1.015          1.015          1.015          1.015          1.015          -            
+SR1_VH_mcstat           lnN               1.0226         -              -              -              -              -              -              -              -              -              -              -            
+SR1_qcd_mcstat          lnN               -              -              -              -              -              1.3063         -              -              -              -              -              -            
+SR1_singletop_mcstat    lnN               -              -              -              1.2481         -              -              -              -              -              -              -              -            
+SR1_ttbar_mcstat        lnN               -              1.0714         -              -              -              -              -              -              -              -              -              -            
+SR1_wjets_mcstat        lnN               -              -              1.1054         -              -              -              -              -              -              -              -              -            
+SR1_zjets_mcstat        lnN               -              -              -              -              1.1537         -              -              -              -              -              -              -            
+TopCR_VH_mcstat         lnN               -              -              -              -              -              -              1.065          -              -              -              -              -            
+TopCR_singletop_mcstat   lnN              -              -              -              -              -              -              -              -              -              1.0652         -              -            
+TopCR_ttbar_mcstat      lnN               -              -              -              -              -              -              -              1.0137         -              -              -              -            
+TopCR_wjets_mcstat      lnN               -              -              -              -              -              -              -              -              1.0479         -              -              -            
+TopCR_zjets_mcstat      lnN               -              -              -              -              -              -              -              -              -              -              1.3166         -            
+taggereff               lnN               1.1            -              -              -              -              -              1.1            -              -              -              -              -            
+qcd_uncert              lnN               -              -              -              -              -              1.3            -              -              -              -              -              1.3         
+rate_wjets    rateParam signal_region wjets 1.0 
+rate_ttbar    rateParam ttbar_cr ttbar 1.0 
