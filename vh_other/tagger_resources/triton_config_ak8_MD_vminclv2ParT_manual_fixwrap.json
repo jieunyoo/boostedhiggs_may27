@@ -1,0 +1,5 @@
+{
+  "model_name": "ak8_MD_vminclv2ParT_manual_fixwrap",
+  "model_url": "triton+grpcs://triton.fnal.gov/ak8_MD_vminclv2ParT_manual_fixwrap/1",
+  "batch_size": 64
+}

@@ -5,10 +5,7 @@ Author(s): Raghav Kansal, Cristina Mantilla Suarez, Melissa Quinnan, Farouk Mokh
 
 import json
 
-# import onnxruntime as ort
 import time
-
-# import time
 from typing import Dict
 
 import numpy as np
@@ -19,6 +16,8 @@ from coffea.nanoevents.methods.base import NanoEventsArray
 from tqdm import tqdm
 
 from .get_tagger_inputs import get_pfcands_features, get_svs_features
+
+# import onnxruntime as ort
 
 
 # adapted from https://github.com/lgray/hgg-coffea/blob/triton-bdts/src/hgg_coffea/tools/chained_quantile.py
@@ -86,7 +85,6 @@ class wrapped_triton:
             outputs=[output],
         )
 
-        # in case of a server error, keep trying to connect for 5 minutes
         for i in range(60):
             try:
                 request = client.infer(
@@ -110,7 +108,7 @@ def runInferenceTriton(
     model_name: str = "ak8_MD_vminclv2ParT_manual_fixwrap",
 ) -> dict:
     # total_start = time.time()
-    # print(f"Running tagger inference with model {model_name}")
+    print(f"Running tagger inference with model {model_name}")
 
     with open(f"{tagger_resources_path}/triton_config_{model_name}.json") as f:
         triton_config = json.load(f)

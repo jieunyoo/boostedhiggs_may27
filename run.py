@@ -119,7 +119,7 @@ def main(args):
 
 
     elif args.processor == "vh":
-        from boostedhiggs_VH.vhprocessor import vhProcessor
+        from boostedhiggs.vhprocessor import vhProcessor
 
         p = vhProcessor(
             year=year,
@@ -273,11 +273,11 @@ if __name__ == "__main__":
     parser.add_argument("--no-inference", dest="inference", action="store_false")
     parser.add_argument("--systematics", dest="systematics", action="store_true")
     parser.add_argument("--no-systematics", dest="systematics", action="store_false")
-    #parser.add_argument("--getLPweights", dest="getLPweights", action="store_true")
-   # parser.add_argument("--no-getLPweights", dest="getLPweights", action="store_false")
+    parser.add_argument("--getLPweights", dest="getLPweights", action="store_true")
+    parser.add_argument("--no-getLPweights", dest="getLPweights", action="store_false")
 
-   # parser.add_argument("--uselooselep", dest="uselooselep", action="store_true")
-   # parser.add_argument("--no-uselooselep", dest="uselooselep", action="store_false")
+    parser.add_argument("--uselooselep", dest="uselooselep", action="store_true")
+    parser.add_argument("--no-uselooselep", dest="uselooselep", action="store_false")
 
     # fakes
    # parser.add_argument("--fakevalidation", dest="fakevalidation", action="store_true")
