@@ -51,3 +51,6 @@ combine/CMSSW*
 rootfiles/
 
 binder/*.root
+
+documentation
+binder/btag/*.root

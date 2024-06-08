@@ -1,7 +1,6 @@
 # SAMPLES to run (assume same names for all years 2016,2016APV,2017,2018)
 mc:
   - GluGluHToWW_Pt-200ToInf_M-125
-  - VBFHToWWToLNuQQ_M-125_withDipoleRecoil
   - VBFHToWWToAny_M-125_TuneCP5_withDipoleRecoil
   - HWminusJ_HToWW_M-125
   - HWplusJ_HToWW_M-125
@@ -150,6 +149,50 @@ data:
     - EGamma_Run2018B
     - EGamma_Run2018C
     - EGamma_Run2018D
+data_ele:
+  2016:
+    - SingleElectron_Run2016F
+    - SingleElectron_Run2016G
+    - SingleElectron_Run2016H
+  2016APV:
+    - SingleElectron_Run2016B_ver2_HIPM
+    - SingleElectron_Run2016C_HIPM
+    - SingleElectron_Run2016D_HIPM
+    - SingleElectron_Run2016E_HIPM
+    - SingleElectron_Run2016F_HIPM
+  2017:
+    - SingleElectron_Run2017B
+    - SingleElectron_Run2017C
+    - SingleElectron_Run2017D
+    - SingleElectron_Run2017E
+    - SingleElectron_Run2017F
+  2018:
+    - EGamma_Run2018A
+    - EGamma_Run2018B
+    - EGamma_Run2018C
+    - EGamma_Run2018D
+data_mu:
+  2016:
+    - SingleMuon_Run2016F
+    - SingleMuon_Run2016G
+    - SingleMuon_Run2016H
+  2016APV:
+    - SingleMuon_Run2016B_ver2_HIPM
+    - SingleMuon_Run2016C_HIPM
+    - SingleMuon_Run2016D_HIPM
+    - SingleMuon_Run2016E_HIPM
+    - SingleMuon_Run2016F_HIPM
+  2017:
+    - SingleMuon_Run2017B
+    - SingleMuon_Run2017C
+    - SingleMuon_Run2017D
+    - SingleMuon_Run2017E
+    - SingleMuon_Run2017F
+  2018:
+    - SingleMuon_Run2018A
+    - SingleMuon_Run2018B
+    - SingleMuon_Run2018C
+    - SingleMuon_Run2018D
 finetuning_top:
   - TTToSemiLeptonic
 finetuning_qcd:

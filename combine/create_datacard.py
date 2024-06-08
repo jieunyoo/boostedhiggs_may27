@@ -60,9 +60,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
         for sName in Samples:
 
-            if "CR" in ChName:  # TODO: remove signal from control regions
-                if sName in sigs:
-                    continue
+            if (sName in sigs) and (ChName in CONTROL_regions):
+                continue
 
             templ = get_template(hists_templates, sName, ChName)
             if templ == 0:
@@ -86,7 +85,7 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                         )
 
             # SYSTEMATICS FROM PARQUETS
-            for sys_name, (sys_value, list_of_samples) in sys_from_parquets.items():
+            for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
                 if sName in list_of_samples:
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()

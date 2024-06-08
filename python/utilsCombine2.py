@@ -5,7 +5,6 @@ import os
 import pickle as pkl
 import warnings
 
-import hist as hist2
 import matplotlib.pyplot as plt
 import mplhep as hep
 import numpy as np
@@ -48,7 +47,7 @@ combine_samples = {
     "JetsToQQ": "WZQQorDYJets",
 }
 
-signals = ["VBF", "ggF"]
+signals = ["VBF", "ggF", "WH", "ZH", "ttH"]
 
 
 def get_sum_sumgenweight(pkl_files, year, sample):
@@ -115,6 +114,7 @@ color_by_sample = {
     "ttH": "tab:olive",
     # background
     "QCD": "tab:orange",
+    "Fake": "tab:orange",
     "WJetsLNu": "tab:green",
     "TTbar": "tab:blue",
     "Diboson": "orchid",
@@ -139,6 +139,7 @@ plot_labels = {
     # "ttH": "ttH(WW)",
     "ttH": r"$t\bar{t}$H",
     "QCD": "Multijet",
+    "Fake": "Fake",
     "Diboson": "VV",
     "WJetsLNu": r"W$(\ell\nu)$+jets",
     "TTbar": r"$t\bar{t}$+jets",
@@ -244,11 +245,10 @@ def plot_hists(
                 tot = tot + b
 
         tot_val = tot.values()
-        tot_val_zero_mask = tot_val == 0
+        tot_val_zero_mask = tot_val == 0  # check if this is for the ratio or not
         tot_val[tot_val_zero_mask] = 1
 
-        tot_err = np.sqrt(tot_val)
-        tot_err[tot_val_zero_mask] = 0
+        tot_err_MC = np.sqrt(tot.variances())
 
     if add_data and data:
         data_err_opts = {
@@ -279,12 +279,13 @@ def plot_hists(
         )
 
         if len(bkg) > 0:
-            from hist.intervals import ratio_uncertainty
 
             data_val = data.values()
             data_val[tot_val_zero_mask] = 1
 
-            yerr = ratio_uncertainty(data_val, tot_val, "poisson")
+            # from hist.intervals import ratio_uncertainty
+            # yerr = ratio_uncertainty(data_val, tot_val, "poisson")
+            yerr = np.sqrt(data_val) / tot_val
 
             hep.histplot(
                 data_val / tot_val,
@@ -295,6 +296,13 @@ def plot_hists(
                 color="k",
                 capsize=4,
                 flow="none",
+            )
+            rax.stairs(
+                values=1 + tot_err_MC / tot_val,
+                baseline=1 - tot_err_MC / tot_val,
+                edges=tot.axes[0].edges,
+                **errps,
+                label="Stat. unc.",
             )
 
             rax.axhline(1, ls="--", color="k")
@@ -315,8 +323,8 @@ def plot_hists(
             flow="none",
         )
         ax.stairs(
-            values=tot.values() + tot_err,
-            baseline=tot.values() - tot_err,
+            values=tot.values() + tot_err_MC,
+            baseline=tot.values() - tot_err_MC,
             edges=tot.axes[0].edges,
             **errps,
             label="Stat. unc.",
@@ -337,9 +345,9 @@ def plot_hists(
         tot_signal *= mult_factor
 
         if mult_factor == 1:
-            siglabel = r"ggF+VBF"
+            siglabel = r"ggF+VBF+WH+ZH+ttH"
         else:
-            siglabel = r"ggF+VBF $\times$" + f"{mult_factor}"
+            siglabel = r"ggF+VBF+WH+ZH+ttH $\times$" + f"{mult_factor}"
 
         hep.histplot(
             tot_signal,
@@ -407,7 +415,7 @@ def plot_hists(
         [hand_new[idx] for idx in range(len(hand_new))],
         [lab_new[idx] for idx in range(len(lab_new))],
         title=text_,
-        ncol=3,
+        ncol=2,
         fontsize=14,
     )
 

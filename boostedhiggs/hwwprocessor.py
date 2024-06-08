@@ -32,7 +32,7 @@ from boostedhiggs.corrections import (
     getJMSRVariables,
     met_factory,
 )
-from boostedhiggs.utils import match_H, match_Top, match_V, sigs
+from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
 
 from .run_tagger_inference import runInferenceTriton
 
@@ -194,16 +194,16 @@ class HwwProcessor(processor.ProcessorABC):
         # Trigger
         ######################
 
-        # TODO: what we do is correct if: all high pt leptons that pass the low pt triggers also pass the high pt triggers
-        # TODO: split electron/muon triggers ()
         trigger = {}
-        for ch in ["ele", "mu"]:
+        for ch in ["ele", "mu_lowpt", "mu_highpt"]:
             trigger[ch] = np.zeros(nevents, dtype="bool")
             for t in self._HLTs[ch]:
                 if t in events.HLT.fields:
                     trigger[ch] = trigger[ch] | events.HLT[t]
-        trigger["ele"] = trigger["ele"] & (~trigger["mu"])
-        trigger["mu"] = trigger["mu"] & (~trigger["ele"])
+
+        trigger["ele"] = trigger["ele"] & (~trigger["mu_lowpt"]) & (~trigger["mu_highpt"])
+        trigger["mu_highpt"] = trigger["mu_highpt"] & (~trigger["ele"])
+        trigger["mu_lowpt"] = trigger["mu_lowpt"] & (~trigger["ele"])
 
         ######################
         # METFLITERS
@@ -243,11 +243,10 @@ class HwwProcessor(processor.ProcessorABC):
             (muons.pt > 30)
             & (np.abs(muons.eta) < 2.4)
             & muons.mediumId
-            & (((muons.pfRelIso04_all < 0.15) & (muons.pt < 55)) | (muons.pt >= 55) & (muons.miniPFRelIso_all < 0.2))
+            & (((muons.pfRelIso04_all < 0.20) & (muons.pt < 55)) | (muons.pt >= 55) & (muons.miniPFRelIso_all < 0.2))
             # additional cuts
             & (np.abs(muons.dz) < 0.1)
-            & (np.abs(muons.dxy) < 0.05)
-            & (muons.sip3d <= 4.0)
+            & (np.abs(muons.dxy) < 0.02)
         )
 
         n_loose_muons = ak.sum(loose_muons, axis=1)
@@ -265,16 +264,15 @@ class HwwProcessor(processor.ProcessorABC):
 
         loose_electrons = (
             (electrons.pt > 38)
-            & (np.abs(electrons.eta) < 2.4)
+            & (np.abs(electrons.eta) < 2.5)
             & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))
-            & (electrons.cutBased >= electrons.LOOSE)
-            # & (electrons.mvaFall17V2noIso_WPL)
+            & (electrons.mvaFall17V2noIso_WPL)
             & (((electrons.pfRelIso03_all < 0.25) & (electrons.pt < 120)) | (electrons.pt >= 120))
         )
 
         tight_electrons = (
             (electrons.pt > 38)
-            & (np.abs(electrons.eta) < 2.4)
+            & (np.abs(electrons.eta) < 2.5)
             & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))
             & (electrons.mvaFall17V2noIso_WP90)
             & (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
@@ -322,6 +320,15 @@ class HwwProcessor(processor.ProcessorABC):
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
 
         jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
+
+        # VH jet
+        minDeltaR = ak.argmin(candidatelep_p4.delta_r(good_fatjets), axis=1)  # similar to fj_idx_lep but without keepdims
+        fatJetIndices = ak.local_index(good_fatjets, axis=1)
+        mask_candidatefj = fatJetIndices != minDeltaR
+
+        allScores = VScore(good_fatjets)
+        masked = allScores[mask_candidatefj]
+        VH_fj = ak.firsts(good_fatjets[allScores == ak.max(masked, axis=1)])
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
@@ -382,8 +389,13 @@ class HwwProcessor(processor.ProcessorABC):
         ######################
 
         variables = {
+            # candidatefj
+            "fj_lsf3": candidatefj.lsf3,
+            "fj_VScore": VScore(candidatefj),
+            # lepton
             "lep_pt": candidatelep.pt,
             "lep_eta": candidatelep.eta,
+            # others
             "lep_isolation": lep_reliso,
             "lep_misolation": lep_miso,
             "lep_fj_dr": lep_fj_dr,
@@ -393,26 +405,33 @@ class HwwProcessor(processor.ProcessorABC):
             "deta": deta,
             "mjj": mjj,
             "ht": ht,
+            # bjets
             "n_bjets_L": n_bjets_L,
             "n_bjets_M": n_bjets_M,
             "n_bjets_T": n_bjets_T,
-            "fj_lsf3": candidatefj.lsf3,
             "NumFatjets": NumFatjets,
             "NumOtherJets": NumOtherJets,
+            # leading fatjet
             "FirstFatjet_pt": FirstFatjet.pt,
             "FirstFatjet_eta": FirstFatjet.eta,
             "FirstFatjet_phi": FirstFatjet.phi,
             "FirstFatjet_msd": FirstFatjet.msdcorr,
-            # "FirstFatjet_lep_dr": candidatelep_p4.delta_r(FirstFatjet),
+            "FirstFatjet_Vscore": VScore(SecondFatjet),
+            # second leading fatjet
             "SecondFatjet_pt": SecondFatjet.pt,
             "SecondFatjet_eta": SecondFatjet.eta,
             "SecondFatjet_phi": SecondFatjet.phi,
             "SecondFatjet_msd": SecondFatjet.msdcorr,
-            # "SecondFatjet_lep_dr": candidatelep_p4.delta_r(SecondFatjet),
+            "SecondFatjet_Vscore": VScore(FirstFatjet),
+            # number
             "n_loose_electrons": n_loose_electrons,
             "n_tight_electrons": n_tight_electrons,
             "n_loose_muons": n_loose_muons,
             "n_tight_muons": n_tight_muons,
+            # second fatjet after candidate jet
+            "VH_fj_pt": VH_fj.pt,
+            "VH_fj_eta": VH_fj.eta,
+            "VH_fj_VScore": VScore(VH_fj),
         }
 
         fatjetvars = {
@@ -422,19 +441,22 @@ class HwwProcessor(processor.ProcessorABC):
             "fj_mass": candidatefj.msdcorr,
         }
 
-        if self._systematics and self.isMC:
+        variables = {**variables, **fatjetvars}
 
+        if self._systematics and self.isMC:
+            fatjetvars_sys = {}
             # JEC vars
             for shift, vals in jec_shifted_fatjetvars["pt"].items():
                 if shift != "":
-                    fatjetvars[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
 
             # JMSR vars
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
-                    fatjetvars[f"fj_mass{shift}"] = ak.firsts(vals)
+                    fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
 
-            variables = {**variables, **fatjetvars}
+            variables = {**variables, **fatjetvars_sys}
+            fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
             # add variables affected by JECs/MET
             mjj_shift = {}
@@ -497,28 +519,29 @@ class HwwProcessor(processor.ProcessorABC):
         ######################
 
         for ch in self._channels:
-            self.add_selection(name="Trigger", sel=trigger[ch], channel=ch)
+            # trigger
+            if ch == "mu":
+                self.add_selection(
+                    name="Trigger",
+                    sel=((candidatelep.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep.pt >= 55) & trigger["mu_highpt"]),
+                    channel=ch,
+                )
+            else:
+                self.add_selection(name="Trigger", sel=trigger[ch], channel=ch)
+
         self.add_selection(name="METFilters", sel=metfilters)
-        self.add_selection(
-            name="OneLep",
-            sel=(n_good_muons == 1) & (n_loose_electrons == 0),
-            channel="mu",
-        )
-        self.add_selection(
-            name="OneLep",
-            sel=(n_loose_muons == 0) & (n_good_electrons == 1),
-            channel="ele",
-        )
+        self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_loose_electrons == 0), channel="mu")
+        self.add_selection(name="OneLep", sel=(n_loose_muons == 0) & (n_good_electrons == 1), channel="ele")
         self.add_selection(name="NoTaus", sel=(n_loose_taus_mu == 0), channel="mu")
         self.add_selection(name="NoTaus", sel=(n_loose_taus_ele == 0), channel="ele")
         self.add_selection(name="AtLeastOneFatJet", sel=(NumFatjets >= 1))
 
-        fj_pt_sel = ak.zeros_like(candidatefj.pt, dtype=bool)
-        for k, v in self.jecs.items():
-            for var in ["up", "down"]:
-                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
+        fj_pt_sel = candidatefj.pt > 250
+        if self.isMC:  # make an OR of all the JECs
+            for k, v in self.jecs.items():
+                for var in ["up", "down"]:
+                    fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
-        # self.add_selection(name="CandidateJetpT", sel=(candidatefj.pt > 250))
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
@@ -650,9 +673,6 @@ class HwwProcessor(processor.ProcessorABC):
                         self.weights[ch],
                         events.PSWeight if "PSWeight" in events.fields else [],
                     )
-
-                # store the gen-weight
-                variables[f"weight_{ch}"] = self.weights[ch].partial_weight(["genweight"])
 
                 # store the final weight per ch
                 variables[f"weight_{ch}"] = self.weights[ch].weight()

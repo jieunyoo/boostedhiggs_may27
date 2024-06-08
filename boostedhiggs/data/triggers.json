@@ -11,6 +11,14 @@
             "IsoMu24",
             "IsoTkMu24"
 	],
+	"mu_lowpt": [
+        "IsoMu24",
+        "IsoTkMu24"
+    ],
+	"mu_highpt": [
+        "Mu50",
+        "TkMu50"
+    ],
 	"had": [
             "PFHT800",
             "PFHT900",
@@ -56,6 +64,14 @@
             "OldMu100",
             "TkMu100"
         ],
+        "mu_lowpt": [
+            "IsoMu27"
+        ],
+        "mu_highpt": [
+            "Mu50",
+            "OldMu100",
+            "TkMu100"
+        ],
         "had": [
             "PFHT1050",
             "AK8PFJet400_TrimMass30",
@@ -92,6 +108,14 @@
         "mu": [
             "Mu50",
             "IsoMu24",
+            "OldMu100",
+            "TkMu100"
+        ],
+        "mu_lowpt": [
+            "IsoMu24"
+        ],
+        "mu_highpt": [
+            "Mu50",
             "OldMu100",
             "TkMu100"
         ],

@@ -62,17 +62,6 @@ def make_events_dict(years, channels, samples_dir, samples, presel, taggers=["v2
             for sample in os.listdir(samples_dir):
                 # get a combined label to combine samples of the same process
 
-                if "WJetsToLNu_1J" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-                if "WJetsToLNu_2J" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-
-                if "VBFHToWWToLNuQQ_" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-
                 # first: check if the sample is in one of combine_samples_by_name
                 sample_to_use = None
                 for key in utils.combine_samples_by_name:
@@ -125,7 +114,8 @@ def make_events_dict(years, channels, samples_dir, samples, presel, taggers=["v2
                 data = data[data.columns.drop(list(data.filter(regex="_up")))]
                 data = data[data.columns.drop(list(data.filter(regex="_down")))]
 
-                data["abs_met_fj_dphi"] = np.abs(data["met_fj_dphi"])
+                if "met_fj_dphi" in data.keys():
+                    data["abs_met_fj_dphi"] = np.abs(data["met_fj_dphi"])
 
                 # get event_weight
                 if sample_to_use != "Data":
@@ -172,7 +162,7 @@ def make_events_dict(years, channels, samples_dir, samples, presel, taggers=["v2
                         data[f"fj_ParT_score_finetuned_{modelv}"] = scipy.special.softmax(outputs[0], axis=1)[:, 0]
 
                 # use hidNeurons to get the finetuned scores
-                data["fj_ParT_score_finetuned"] = utils.get_finetuned_score(data, modelv="v2_nor2")
+                data["THWW"] = utils.get_finetuned_score(data, modelv="v35_30")
 
                 # drop hidNeuron columns for memory
                 data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]

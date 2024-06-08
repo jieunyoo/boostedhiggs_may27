@@ -29,7 +29,6 @@ combine_samples = {
     "SingleMuon_": "Data",
     "EGamma_": "Data",
     # bkg
-    "QCD_Pt": "QCD",
     "TT": "TTbar",
     "WJetsToLNu_": "WJetsLNu",
     "ST_": "SingleTop",
@@ -37,9 +36,11 @@ combine_samples = {
     "WZ": "Diboson",
     "ZZ": "Diboson",
     "EWK": "EWKvjets",
+    "DYJets": "DYJets",
+    "JetsToQQ": "WZQQ",
     # TODO: make sure it's WZQQ is NLO in next iteration
-    "DYJets": "WZQQorDYJets",
-    "JetsToQQ": "WZQQorDYJets",
+    # "DYJets": "WZQQorDYJets",
+    # "JetsToQQ": "WZQQorDYJets",
 }
 
 # (name in templates, name in cards)
@@ -51,7 +52,6 @@ labels = {
     "WH": "WH",
     "ZH": "ZH",
     # BKGS
-    "QCD": "qcd",
     "WJetsLNu": "wjets",
     "TTbar": "ttbar",
     "SingleTop": "singletop",
@@ -60,11 +60,11 @@ labels = {
     # TODO: make sure it's WZQQ is NLO in next iteration
     "DYJets": "zjets",
     "WZQQ": "wzqq",
-    "WZQQorDYJets": "vjets",
+    # "WZQQorDYJets": "vjets",
+    "Fake": "fake",
 }
 
-# bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "QCD", "Diboson", "WZQQ", "EWKvjets"]
-bkgs = ["TTbar", "WJetsLNu", "SingleTop", "WZQQorDYJets", "QCD", "Diboson", "EWKvjets"]
+bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
 sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
 samples = sigs + bkgs
 
@@ -81,7 +81,7 @@ def get_sum_sumgenweight(pkl_files, year, sample):
 
 def get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use):
 
-    if sample_to_use in ["ggF", "VBF", "VH", "ZH"]:
+    if sample_to_use in ["ggF", "VBF", "WH", "ZH"]:
 
         sum_sumpdfweight = {}
         for key in range(103):
@@ -102,20 +102,20 @@ def get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use):
 
 def get_sum_sumscsaleweight(pkl_files, year, sample, sample_to_use):
 
-    if sample_to_use in ["ggF", "VBF", "VH", "ZH", "WJetsLNu", "TTbar"]:
+    if sample_to_use in ["ggF", "VBF", "WH", "ZH", "WJetsLNu", "TTbar"]:
 
-        sum_sumpdfweight = {}
-        for key in range(103):
-            sum_sumpdfweight[key] = 0
+        sum_sumlheweight = {}
+        for key in [0, 1, 3, 5, 7, 8, 4]:
+            sum_sumlheweight[key] = 0
 
         for ifile in pkl_files:
             # load and sum the sumgenweight of each
             with open(ifile, "rb") as f:
                 metadata = pkl.load(f)
 
-            for key in range(8):
-                sum_sumpdfweight[key] = sum_sumpdfweight[key] + metadata[sample][year]["sumlheweight"][key]
-        return sum_sumpdfweight
+            for key in [0, 1, 3, 5, 7, 8, 4]:
+                sum_sumlheweight[key] = sum_sumlheweight[key] + metadata[sample][year]["sumlheweight"][key]
+        return sum_sumlheweight
     else:
         return 1
 
@@ -138,13 +138,13 @@ def get_xsecweight(pkl_files, year, sample, sample_to_use, is_data, luminosity):
 
         # get overall weighting of events.. each event has a genweight...
         # sumgenweight sums over events in a chunk... sum_sumgenweight sums over chunks
-        totgenweights = get_sum_sumgenweight(pkl_files, year, sample)
-        totpdfweights = get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use)
-        totscaleweights = get_sum_sumscsaleweight(pkl_files, year, sample, sample_to_use)
+        sumgenweights = get_sum_sumgenweight(pkl_files, year, sample)
+        sumpdfweights = get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use)
+        sumscaleweights = get_sum_sumscsaleweight(pkl_files, year, sample, sample_to_use)
 
-        xsecweight = (xsec * luminosity) / totgenweights
+        xsecweight = (xsec * luminosity) / sumgenweights
 
-        return xsecweight, totgenweights, totpdfweights, totscaleweights
+        return xsecweight, sumgenweights, sumpdfweights, sumscaleweights
 
     else:
         return 1, 1, 1, 1
@@ -156,11 +156,6 @@ def shape_to_num(var, nom, clip=1.5):
     """
     nom_rate = np.sum(nom)
     var_rate = np.sum(var)
-    # print("nom", nom)
-    # print("var", var)
-    # print("-----------------------------------")
-    # print("nom", nom_rate, "var", var_rate, "ratio", var_rate / nom_rate)
-    # print(var)
 
     if var_rate == nom_rate:  # in cases when both are zero
         return 1

@@ -1,6 +1,6 @@
 """
 Loads the config from `config_make_stacked_hists.yaml`, and postprocesses
-the condor output to make stacked histograms
+the condor output to make stacked histograms.
 
 Author: Farouk Mokhtar
 """
@@ -26,7 +26,27 @@ warnings.filterwarnings("ignore", message="Found duplicate branch ")
 pd.set_option("mode.chained_assignment", None)
 
 
-def make_events_dict(years, channels, samples_dir, samples, presel, logging_=True):
+def get_common_sample_name(sample):
+
+    # first: check if the sample is in one of combine_samples_by_name
+    sample_to_use = None
+    for key in utils.combine_samples_by_name:
+        if key in sample:
+            sample_to_use = utils.combine_samples_by_name[key]
+            break
+
+    # second: if not, combine under common label
+    if sample_to_use is None:
+        for key in utils.combine_samples:
+            if key in sample:
+                sample_to_use = utils.combine_samples[key]
+                break
+            else:
+                sample_to_use = sample
+    return sample_to_use
+
+
+def make_events_dict(years, channels, samples_dir, samples, presel, add_THWW=True):
     """
     Postprocess the parquets by applying preselections, saving an `event_weight` column, and
     a tagger score column in a big concatenated dataframe.
@@ -43,10 +63,6 @@ def make_events_dict(years, channels, samples_dir, samples, presel, logging_=Tru
 
     """
 
-    if logging_ is False:
-        logger = logging.getLogger()
-        logger.disabled = True
-
     events_dict = {}
     for year in years:
         events_dict[year] = {}
@@ -59,47 +75,17 @@ def make_events_dict(years, channels, samples_dir, samples, presel, logging_=Tru
                 luminosity = json.load(f)[ch][year]
 
             for sample in os.listdir(samples_dir):
+
                 # get a combined label to combine samples of the same process
-
-                if "WJetsToLNu_1J" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-                if "WJetsToLNu_2J" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-
-                if "VBFHToWWToLNuQQ_" in sample:
-                    print(f"Skipping sample {sample}")
-                    continue
-
-                # first: check if the sample is in one of combine_samples_by_name
-                sample_to_use = None
-                for key in utils.combine_samples_by_name:
-                    if key in sample:
-                        sample_to_use = utils.combine_samples_by_name[key]
-                        break
-
-                # second: if not, combine under common label
-                if sample_to_use is None:
-                    for key in utils.combine_samples:
-                        if key in sample:
-                            sample_to_use = utils.combine_samples[key]
-                            break
-                        else:
-                            sample_to_use = sample
+                sample_to_use = get_common_sample_name(sample)
 
                 if sample_to_use not in samples:
                     continue
 
                 logging.info(f"Finding {sample} samples and should combine them under {sample_to_use}")
 
-                out_files = f"{samples_dir}/{sample}/outfiles/"
-                if "postprocess" in samples_dir:
-                    parquet_files = glob.glob(f"{out_files}/{ch}.parquet")
-                else:
-                    parquet_files = glob.glob(f"{out_files}/*_{ch}.parquet")
-
-                pkl_files = glob.glob(f"{out_files}/*.pkl")
+                parquet_files = glob.glob(f"{samples_dir}/{sample}/outfiles/*_{ch}.parquet")
+                pkl_files = glob.glob(f"{samples_dir}/{sample}/outfiles/*.pkl")
 
                 if not parquet_files:
                     logging.info(f"No parquet file for {sample}")
@@ -107,33 +93,28 @@ def make_events_dict(years, channels, samples_dir, samples, presel, logging_=Tru
 
                 try:
                     data = pd.read_parquet(parquet_files)
-                except pyarrow.lib.ArrowInvalid:
-                    # empty parquet because no event passed selection
+                except pyarrow.lib.ArrowInvalid:  # empty parquet because no event passed selection
                     continue
 
                 if len(data) == 0:
                     continue
 
-                data["abs_met_fj_dphi"] = np.abs(data["met_fj_dphi"])
+                if "met_fj_dphi" in data.keys():
+                    data["abs_met_fj_dphi"] = np.abs(data["met_fj_dphi"])
 
                 # get event_weight
                 if sample_to_use != "Data":
-                    event_weight = utils.get_xsecweight(pkl_files, year, sample, False, luminosity)
-
-                    logging.info("---> Using already stored event weight")
-
-                    event_weight *= data[f"weight_{ch}"]
-
+                    xsecweight = utils.get_xsecweight(pkl_files, year, sample, False, luminosity)
+                    data["event_weight"] = xsecweight * data[f"weight_{ch}"]
                 else:
-                    event_weight = np.ones_like(data["fj_pt"])
+                    data["event_weight"] = np.ones_like(data["fj_pt"])
 
-                data["event_weight"] = event_weight
+                if add_THWW:
+                    # use hidNeurons to get the finetuned scores
+                    data["THWW"] = utils.get_finetuned_score(data, modelv="v35_30")
 
-                # use hidNeurons to get the finetuned scores
-                data["THWW"] = utils.get_finetuned_score(data, modelv="v35_26")
-
-                # drop hidNeuron columns for memory
-                data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]
+                    # drop hidNeuron columns for memory purposes
+                    data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]
 
                 # apply selection
                 for selection in presel[ch]:

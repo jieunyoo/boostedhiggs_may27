@@ -43,12 +43,13 @@ combine_samples = {
     "WZ": "Diboson",
     "ZZ": "Diboson",
     "EWK": "EWKvjets",
-    # TODO: make sure it's WZQQ is NLO in next iteration
-    "DYJets": "WZQQorDYJets",
-    "JetsToQQ": "WZQQorDYJets",
+    "DYJets": "DYJets",
+    "JetsToQQ": "WZQQ",
+    # "DYJets": "WZQQorDYJets",
+    # "JetsToQQ": "WZQQorDYJets",
 }
 
-signals = ["VBF", "ggF"]
+signals = ["VBF", "ggF", "WH", "ZH", "ttH"]
 
 
 def get_sum_sumgenweight(pkl_files, year, sample):
@@ -115,20 +116,22 @@ color_by_sample = {
     "ttH": "tab:olive",
     # background
     "QCD": "tab:orange",
+    "Fake": "tab:orange",
     "WJetsLNu": "tab:green",
     "TTbar": "tab:blue",
     "Diboson": "orchid",
     "SingleTop": "tab:cyan",
     "EWKvjets": "tab:grey",
+    "DYJets": "tab:purple",
+    "WZQQ": "khaki",
+    # "WZQQorDYJets": "khaki",
     # wjets matched and unmatched
     "WJetsLNu_unmatched": "lightgreen",
     "WJetsLNu_matched": "tab:green",
-    # TODO: make sure it's WZQQ is NLO in next iteration
-    "DYJets": "tab:purple",
-    "WZQQ": "khaki",
-    "WZQQorDYJets": "khaki",
+    # ttbar matched and unmatched
     "TTbar_allmatched": "tab:blue",
     "TTbar_unmatched": "lightskyblue",
+    "TTbar_LP": "lightskyblue",
 }
 
 plot_labels = {
@@ -142,34 +145,29 @@ plot_labels = {
     # "ttH": "ttH(WW)",
     "ttH": r"$t\bar{t}$H",
     "QCD": "Multijet",
+    "Fake": "Fake",
     "Diboson": "VV",
     "WJetsLNu": r"W$(\ell\nu)$+jets",
     "TTbar": r"$t\bar{t}$+jets",
     "SingleTop": r"Single T",
-    #     "WplusHToTauTau": "WplusHToTauTau",
-    #     "WminusHToTauTau": "WminusHToTauTau",
-    #     "ttHToTauTau": "ttHToTauTau",
-    #     "GluGluHToTauTau": "GluGluHToTauTau",
-    #     "ZHToTauTau": "ZHToTauTau",
-    #     "VBFHToTauTau": "VBFHToTauTau"
-    "WJetsLNu_unmatched": r"W$(\ell\nu)$+jets unmatched",
-    "WJetsLNu_matched": r"W$(\ell\nu)$+jets matched",
     "EWKvjets": "EWK VJets",
-    # TODO: make sure it's WZQQ is NLO in next iteration
     "DYJets": r"Z$(\ell\ell)$+jets",
     "WZQQ": r"V$(qq)$",
-    "WZQQorDYJets": r"W$(qq)$/Z(inc.)+jets",
+    # "WZQQorDYJets": r"W$(qq)$/Z(inc.)+jets",  # TODO: make sure it's WZQQ is NLO in next iteration
+    # wjets matched and unmatched
+    "WJetsLNu_unmatched": r"W$(\ell\nu)$+jets unmatched",
+    "WJetsLNu_matched": r"W$(\ell\nu)$+jets matched",
+    # ttbar matched and unmatched
     "TTbar_allmatched": r"$t\bar{t}$+jets matched",
     "TTbar_unmatched": r"$t\bar{t}$+jets unmatched",
+    "TTbar_LP": "TTbar_LP",
 }
 
 label_by_ch = {"mu": "Muon", "ele": "Electron"}
 
-massbin = 20
+massbin = 5
 axis_dict = {
     "Zmass": hist2.axis.Regular(40, 30, 450, name="var", label=r"Zmass [GeV]", overflow=True),
-    "fj_minus_lep_m": hist2.axis.Regular(35, 0, 280, name="var", label=r"Jet - Lepton mass [GeV]", overflow=True),
-    "fj_minus_lep_pt": hist2.axis.Regular(40, 0, 450, name="var", label=r"Jet - Lepton $p_T$ [GeV]", overflow=True),
     "fj_bjets_ophem": hist2.axis.Regular(35, 0, 1, name="var", label=r"max btagFlavB (opphem)", overflow=True),
     "fj_bjets": hist2.axis.Regular(35, 0, 1, name="var", label=r"max btagFlavB", overflow=True),
     "mu_mvaId": hist2.axis.Variable([0, 1, 2, 3, 4, 5], name="var", label="Muon MVAID", overflow=True),
@@ -214,7 +212,7 @@ axis_dict = {
     "lep_eta": hist2.axis.Regular(25, 0, 2.5, name="var", label=r"|Lepton $\eta$|", overflow=True),
     "NumFatjets": hist2.axis.Regular(5, 0.5, 5.5, name="var", label="Number of AK8 jets", overflow=True),
     "NumOtherJets": hist2.axis.Regular(
-        10, 0.5, 7.5, name="var", label="Number of AK4 jets (non-overlapping with AK8)", overflow=True
+        7, 0.5, 7.5, name="var", label="Number of AK4 jets (non-overlapping with AK8)", overflow=True
     ),
     "lep_fj_dr": hist2.axis.Regular(
         35, 0.03, 0.8, name="var", label=r"$\Delta R(\ell, \mathrm{Higgs \ candidate \ jet})$", overflow=True
@@ -233,7 +231,7 @@ axis_dict = {
     "fj_mass": hist2.axis.Variable(
         list(range(10, 240, massbin)), name="var", label=r"Higgs candidate soft-drop mass [GeV]", overflow=True
     ),
-    "fj_lsf3": hist2.axis.Regular(35, 0, 1, name="var", label=r"Jet lsf3", overflow=True),
+    "fj_lsf3": hist2.axis.Regular(35, 0, 1, name="var", label=r"Higgs candidate jet lsf3", overflow=True),
     # lepton isolation
     "lep_isolation": hist2.axis.Regular(35, 0, 0.5, name="var", label=r"Lepton PF isolation", overflow=True),
     "lep_isolation_ele": hist2.axis.Regular(35, 0, 0.5, name="var", label=r"Electron PF isolation", overflow=True),
@@ -532,7 +530,7 @@ def plot_hists(
         )
 
         _, a = ax.get_ylim()
-        if logy or ("isolation" in var):
+        if logy or ("isolation" in var) or ("lsf3" in var) or ("THWW" in var):
             ax.set_yscale("log")
             ax.set_ylim(1e-1, a * 15.7)
         else:
@@ -974,7 +972,7 @@ def plot_hists_sb(
         #         title=f"{label_by_ch[ch]} Channel",
         #     )
 
-        if logy or ("isolation" in var):
+        if logy or ("isolation" in var) or ("lsf3" in var) or ("THWW" in var):
             ax.set_yscale("log")
             ax.set_ylim(1e-1)
         else:

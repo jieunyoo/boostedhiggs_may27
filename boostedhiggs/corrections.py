@@ -307,7 +307,10 @@ def get_btag_weights(
     and 1a
     """
 
-    cset = correctionlib.CorrectionSet.from_file(get_pog_json("btagging", year))
+    try:
+        cset = correctionlib.CorrectionSet.from_file(get_pog_json("btagging", year))
+    except FileNotFoundError:
+        cset = correctionlib.CorrectionSet.from_file("btagging.json.gz")
 
     ul_year = get_UL_year(year)
     with importlib.resources.path("boostedhiggs.data", f"btageff_{algo}_{wp}_{ul_year}.coffea") as filename:
@@ -330,10 +333,6 @@ def get_btag_weights(
 
     lightEff = efflookup(lightJets.pt, abs(lightJets.eta), lightJets.hadronFlavour)
     bcEff = efflookup(bcJets.pt, abs(bcJets.eta), bcJets.hadronFlavour)
-
-    # TODO:
-    print(bcEff, "tagging eff")
-    print(lightEff, "mistagging eff (light quarks)")
 
     lightSF = _btagSF(lightJets, "light")
     bcSF = _btagSF(bcJets, "bc")
@@ -619,6 +618,11 @@ def add_pileupid_weights(weights: Weights, year: str, mod: str, jets: JetArray, 
     weights.add("pileupIDSF", *sfs_var)
 
 
+"""
+JECs
+----
+"""
+
 # find corrections path using this file's path
 try:
     with importlib.resources.path("boostedhiggs.data", "jec_compiled.pkl") as filename:
@@ -641,14 +645,7 @@ def _add_jec_variables(jets: JetArray, event_rho: ak.Array) -> JetArray:
     return jets
 
 
-def get_jec_jets(
-    events,
-    jets,
-    year: str,
-    isData: bool = False,
-    jecs: Dict[str, str] = None,
-    fatjets: bool = True,
-):
+def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, str] = None, fatjets: bool = True):
     """
     Based on https://github.com/nsmith-/boostedhiggs/blob/master/boostedhiggs/hbbprocessor.py
     Eventually update to V5 JECs once I figure out what's going on with the 2017 UL V5 JER scale factors
@@ -890,7 +887,9 @@ def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
     return variables
 
 
-# ------------------- Lund plane reweighting ------------------- #
+"""
+------------------- Lund plane reweighting ------------------- #
+"""
 
 
 from .utils import (
@@ -905,9 +904,6 @@ from .utils import (
     W_PDGID,
     b_PDGID,
     get_pid_mask,
-    vELE_PDGID,
-    vMU_PDGID,
-    vTAU_PDGID,
 )
 
 
@@ -930,8 +926,8 @@ def getGenLepGenQuarks(dataset, genparts: GenParticleArray):
         all_daus_flat = ak.flatten(all_daus, axis=2)  # flattents the daughters of the two Ws
         all_daus_flat_pdgId = abs(all_daus_flat.pdgId)
 
-        # the following tells you about the matching
         leptons = (all_daus_flat_pdgId == ELE_PDGID) | (all_daus_flat_pdgId == MU_PDGID) | (all_daus_flat_pdgId == TAU_PDGID)
+        quarks = all_daus_flat_pdgId < b_PDGID
 
         lepVars = {
             "lepton_pt": all_daus_flat[leptons].pt,
@@ -941,10 +937,10 @@ def getGenLepGenQuarks(dataset, genparts: GenParticleArray):
         }
 
         quarkVars = {
-            "quark_pt": all_daus_flat[all_daus_flat_pdgId <= b_PDGID].pt,
-            "quark_eta": all_daus_flat[all_daus_flat_pdgId <= b_PDGID].eta,
-            "quark_phi": all_daus_flat[all_daus_flat_pdgId <= b_PDGID].phi,
-            "quark_mass": all_daus_flat[all_daus_flat_pdgId <= b_PDGID].mass,
+            "quark_pt": all_daus_flat[quarks].pt,
+            "quark_eta": all_daus_flat[quarks].eta,
+            "quark_phi": all_daus_flat[quarks].phi,
+            "quark_mass": all_daus_flat[quarks].mass,
         }
 
     else:
@@ -959,39 +955,13 @@ def getGenLepGenQuarks(dataset, genparts: GenParticleArray):
         wboson_daughters = wboson_daughters[wboson_daughters.hasFlags(["fromHardProcess", "isLastCopy"])]
         wboson_daughters_pdgId = abs(wboson_daughters.pdgId)
 
-        neutrinos = (
-            (wboson_daughters_pdgId == vELE_PDGID)
-            | (wboson_daughters_pdgId == vMU_PDGID)
-            | (wboson_daughters_pdgId == vTAU_PDGID)
-        )
         leptons = (
             (wboson_daughters_pdgId == ELE_PDGID)
             | (wboson_daughters_pdgId == MU_PDGID)
             | (wboson_daughters_pdgId == TAU_PDGID)
         )
-        quarks = ~leptons & ~neutrinos
 
-        # get tau decays from V daughters
-        taudaughters = wboson_daughters[(wboson_daughters_pdgId == TAU_PDGID)].children
-        taudaughters = taudaughters[taudaughters.hasFlags(["isLastCopy"])]
-        taudaughters_pdgId = abs(taudaughters.pdgId)
-        taudecay = (
-            # pions/kaons (hadronic tau) * 1
-            (
-                ak.sum(
-                    (taudaughters_pdgId == ELE_PDGID) | (taudaughters_pdgId == MU_PDGID),
-                    axis=2,
-                )
-                == 0
-            )
-            * 1
-            # 1 electron * 3
-            + (ak.sum(taudaughters_pdgId == ELE_PDGID, axis=2) == 1) * 3
-            # 1 muon * 5
-            + (ak.sum(taudaughters_pdgId == MU_PDGID, axis=2) == 1) * 5
-        )
-        # flatten taudecay - so painful
-        taudecay = ak.sum(taudecay, axis=-1)
+        quarks = wboson_daughters_pdgId < b_PDGID
 
         lepVars = {
             "lepton_pt": wboson_daughters[leptons].pt,
@@ -1036,6 +1006,8 @@ def getLPweights(dataset, events, candidatefj, fj_idx_lep, candidatelep_p4):
         "pt": "Pt",
     }
 
+    # prepare eta, phi array only for 2q, used for Lund Plane reweighting
+    # since it only takes quarks gen-level 4-vector as input
     Gen2qVars = {
         f"Gen2q{var}": ak.to_numpy(
             ak.fill_none(
@@ -1046,11 +1018,7 @@ def getLPweights(dataset, events, candidatefj, fj_idx_lep, candidatelep_p4):
         for key, var in skim_vars.items()
     }
 
-    # prepare eta, phi array only for 2q, used for Lund Plane reweighting
-    # since it only takes quarks gen-level 4-vector as input
-    eta_2q = Gen2qVars["Gen2qEta"]
-    phi_2q = Gen2qVars["Gen2qPhi"]
-    gen_parts_eta_phi = np.array(np.dstack((eta_2q, phi_2q)))
+    gen_parts_eta_phi = np.array(np.dstack((Gen2qVars["Gen2qEta"], Gen2qVars["Gen2qPhi"])))
 
     # prepare the Gen lepton in case we mask objects around it
     GenlepVars = {
