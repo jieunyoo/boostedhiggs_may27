@@ -1,0 +1,5 @@
+{
+  "model_name": "particlenet_hww_inclv2_pre2",
+  "model_url": "triton+grpc://67.58.49.52:8001/particlenet_hww_inclv2_pre2/1",
+  "batch_size": 128
+}

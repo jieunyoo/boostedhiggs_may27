@@ -15,8 +15,9 @@ nanoevents.PFNanoAODSchema.warn_missing_crossrefs = False
 import sys
 
 sys.path.insert(0, "")
-sys.path.append("boostedhiggs/LundReweighting")
-sys.path.append("boostedhiggs/LundReweighting/utils")
+#sys.path.append("boostedhiggs/LundReweighting")
+#sys.path.append("boostedhiggs/LundReweighting/utils")
+
 # # from utils.LundReweighter import *
 # # from utils.Utils import *
 # import LundReweighter
@@ -110,9 +111,22 @@ def main(args):
             channels=channels,
             inference=args.inference,
             systematics=args.systematics,
-            getLPweights=args.getLPweights,
-            uselooselep=args.uselooselep,
-            fakevalidation=args.fakevalidation,
+            #getLPweights=args.getLPweights,
+            #uselooselep=args.uselooselep,
+            #fakevalidation=args.fakevalidation,
+            output_location="./outfiles" + job_name,
+        )
+
+
+    elif args.processor == "vh":
+        from boostedhiggs_VH.vhprocessor import vhProcessor
+
+        p = vhProcessor(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
             output_location="./outfiles" + job_name,
         )
 
@@ -259,15 +273,15 @@ if __name__ == "__main__":
     parser.add_argument("--no-inference", dest="inference", action="store_false")
     parser.add_argument("--systematics", dest="systematics", action="store_true")
     parser.add_argument("--no-systematics", dest="systematics", action="store_false")
-    parser.add_argument("--getLPweights", dest="getLPweights", action="store_true")
-    parser.add_argument("--no-getLPweights", dest="getLPweights", action="store_false")
+    #parser.add_argument("--getLPweights", dest="getLPweights", action="store_true")
+   # parser.add_argument("--no-getLPweights", dest="getLPweights", action="store_false")
 
-    parser.add_argument("--uselooselep", dest="uselooselep", action="store_true")
-    parser.add_argument("--no-uselooselep", dest="uselooselep", action="store_false")
+   # parser.add_argument("--uselooselep", dest="uselooselep", action="store_true")
+   # parser.add_argument("--no-uselooselep", dest="uselooselep", action="store_false")
 
     # fakes
-    parser.add_argument("--fakevalidation", dest="fakevalidation", action="store_true")
-    parser.add_argument("--no-fakevalidation", dest="fakevalidation", action="store_false")
+   # parser.add_argument("--fakevalidation", dest="fakevalidation", action="store_true")
+   # parser.add_argument("--no-fakevalidation", dest="fakevalidation", action="store_false")
 
     parser.set_defaults(inference=False)
     args = parser.parse_args()
