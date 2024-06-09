@@ -130,6 +130,32 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+
+    elif args.processor == "fr":
+        from boostedhiggs.fakeRateProcessor import fakeRateProcessor
+
+        p = fakeRateProcessor(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+    elif args.processor == "wj":
+        from boostedhiggs.vhprocessorWJetCalib import vhprocessorWJetCalib
+
+        p = vhprocessorWJetCalib(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+
     elif args.processor == "lumi":
         from boostedhiggs.lumi_processor import LumiProcessor
 

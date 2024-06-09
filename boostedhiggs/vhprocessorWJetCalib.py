@@ -75,7 +75,7 @@ def VScore(goodFatJetsSelected):
 
 
 #class HwwProcessor(processor.ProcessorABC):
-class vhProcessor(processor.ProcessorABC):
+class vhprocessorWJetCalib(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -294,26 +294,17 @@ class vhProcessor(processor.ProcessorABC):
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
 
-        # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
-        candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
+
+        #for W Jet ******************************************************
+        candidatefj = ak.firsts(good_fatjets[:, 0:1])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
+        print('deltaR', ak.to_list(lep_fj_dr)[0:100])
+        VScore_WJet = VScore(candidatefj)
+        print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
 
+      
         jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
-
-        # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
-        deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
-        minDeltaR = ak.argmin(deltaR_lepton_all_jets, axis=1)
-        fatJetIndices = ak.local_index(good_fatjets, axis=1)
-        mask1 = fatJetIndices != minDeltaR
-        allScores = VScore(good_fatjets)
-        masked = allScores[mask1]
-        secondFJ = good_fatjets[allScores == ak.max(masked, axis=1)]
-        second_fj = ak.firsts(secondFJ)
-        VCandidateVScore = VScore(second_fj)
-        VCandidate_Mass = second_fj.msdcorr
-
-        dr_two_jets = candidatefj.delta_r(second_fj)
 
 
         # OBJECT: AK4 jets
@@ -336,20 +327,30 @@ class vhProcessor(processor.ProcessorABC):
 
         # bjet counts for SR and TTBar Control Region
         #V H version
-        dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
-        dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
-        ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
+        dr_ak8Jets_WJet = goodjets.delta_r(candidatefj)
 
-        NumOtherJetsOutsideBothJets = ak.num(ak4_outsideBothJets)
-        n_bjets_M_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],
+        ak4_outsideJet = goodjets[ (dr_ak8Jets_WJet > 0.8) ]
+
+        NumOtherJetsOutsideJet = ak.num(ak4_outsideJet)
+
+        n_bjets_M_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],
             axis=1,
         )
-        n_bjets_T_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"],
+        n_bjets_T_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"],
             axis=1,
         )
 
+        n_bjets_L_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["L"],
+            axis=1,
+        )
+
+
+
+        # delta R between AK8 jet and lepton
+        lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
@@ -363,30 +364,30 @@ class vhProcessor(processor.ProcessorABC):
         ######################
 
         variables = {
-            "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
-            "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
+
+            "fj_msoftdrop": candidatefj.msdcorr, #this it the W jet's soft drop mass
             "lep_pt": candidatelep.pt,
-            "lep_eta": candidatelep.eta,
             "lep_isolation": lep_reliso,
             "lep_misolation": lep_miso,
-  
-            "lep_fj_dr": lep_fj_dr, #  lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
-            "lep_met_mt": mt_lep_met, 
-            "met_fj_dphi": met_fj_dphi,
+            "lep_fj_dr": lep_fj_dr,
+            "lep_met_mt": mt_lep_met,
+            #"met_fj_dphi": met_fjlep_dphi,
             "met_pt": met.pt,
-
-            "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "ReconHiggsCandidateFatJet_pt": candidatefj.pt,
-            "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
-            "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
-        
-            "numberAK4JetsOutsideFatJets": NumOtherJetsOutsideBothJets,
-            "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
-	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
-
-            "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
-       
+	        "lep_eta": candidatelep.eta,
+            "numberLeptons": ngood_leptons,
+            #"numberFatJet": n_fatjets,
+            "ReconLepton_flavor": candidatelep.flavor,
+	        "WJet_pt": candidatefj.pt,
+            "VScore_WJet": VScore_WJet,
+            
+	        "numberAK4JetsOutsideFatJet": NumOtherJetsOutsideJet,
+	        "numberBJets_Medium_OutsideWFatJet": n_bjets_M_OutsideJet,
+	        "numberBJets_Tight_OutsideWFatJet": n_bjets_T_OutsideJet,
+	        "numberBJets_Loose_OutsideWFatJet": n_bjets_L_OutsideJet,
         }
+
+
+        
 
         fatjetvars = {
             "fj_pt": candidatefj.pt,
@@ -446,7 +447,7 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="METFilters", sel=metfilters)
         self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_good_electrons == 0), channel="mu")
         self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
-        self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
+        self.add_selection(name="OneJet", sel=(NumFatjets == 1))
 
         #*************************
         fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
@@ -458,9 +459,8 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
-        self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
-        self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
+        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
+        self.add_selection(name="MET", sel=(met.pt > 30))
 
         #we also add a MET cut, but can do offline so can use these files for checks
 
