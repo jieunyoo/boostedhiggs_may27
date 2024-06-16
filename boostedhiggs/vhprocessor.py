@@ -332,6 +332,10 @@ class vhProcessor(processor.ProcessorABC):
         #changed this to get the V jet
         jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
+        #check
+        print('fjindex', ak.to_list(fj_idx_lep)[0:100])
+        print('VbosonIndex', ak.to_list(VbosonIndex)[0:100])
+
         #*************************************************************************
 
         # OBJECT: AK4 jets
@@ -424,11 +428,11 @@ class vhProcessor(processor.ProcessorABC):
             # JEC vars
             #for shift, vals in jec_shifted_fatjetvars["pt"].items():
              #   if shift != "":
-              #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
+              #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  
 
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_V])  #to do: change this to the V
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
 
             #keeping this as this is already the chosen above as the V
             # JMSR vars
