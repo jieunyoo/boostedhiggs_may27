@@ -393,6 +393,11 @@ class vhProcessor(processor.ProcessorABC):
             "fj_eta": candidatefj.eta,
             "fj_phi": candidatefj.phi,
             "fj_mass": candidatefj.msdcorr,
+            "V_pt": second_fj.pt,
+            "V_eta": second_fj.eta,
+            "V_phi": second_fj.phi,
+            "V_mass": second_fj.msdcorr,
+
         }
 
         variables = {**variables, **fatjetvars}
@@ -414,21 +419,21 @@ class vhProcessor(processor.ProcessorABC):
 
         #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
 
-            for met_shift in ["UES_up", "UES_down"]:
-                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
-                variables = {**variables, **jecvariables}
+#            for met_shift in ["UES_up", "UES_down"]:
+#                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
+#                variables = {**variables, **jecvariables}
 
-        for shift in jec_shifted_fatjetvars["pt"]:
-            if shift != "" and not self._systematics:
-                continue
-            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=shift, met_shift=None)
-            variables = {**variables, **jecvariables}
+#        for shift in jec_shifted_fatjetvars["pt"]:
+#            if shift != "" and not self._systematics:
+#                continue
+#            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=shift, met_shift=None)
+#            variables = {**variables, **jecvariables}
 
-        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-            if shift != "" and not self._systematics:
-                continue
-            jmsrvariables = getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=shift)
-            variables = {**variables, **jmsrvariables}
+#        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+#            if shift != "" and not self._systematics:
+#                continue
+            #jmsrvariables = getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=shift)
+            #variables = {**variables, **jmsrvariables}
 
  
         # Selection ***********************************************************************************************************************************************

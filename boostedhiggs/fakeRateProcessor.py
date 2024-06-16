@@ -489,7 +489,7 @@ class fakeRateProcessor(processor.ProcessorABC):
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt < 30))
+        self.add_selection(name="metRevertCut", sel=(met.pt > 30))
 
         #we also add a MET cut, but can do offline so can use these files for checks
 
