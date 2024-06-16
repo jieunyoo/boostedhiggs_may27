@@ -294,13 +294,17 @@ class vhProcessor(processor.ProcessorABC):
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
+        
 
         # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
+        #this applies jmsr to higgs jet - need to fix to apply to V
+        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
 
+        #*************************************************************************
         # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
         deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
         minDeltaR = ak.argmin(deltaR_lepton_all_jets, axis=1)
@@ -315,15 +319,20 @@ class vhProcessor(processor.ProcessorABC):
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
-        #this applies jmsr to higgs jet - need to fix to apply to V
-        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
-
         #check
         #print('higgs', ak.to_list(good_fatjets[fj_idx_lep].pt)[0:100])
         #print('V boson', ak.to_list(secondFJ.pt)[0:100])
 
+        #only for V boson, since need up and down
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
+            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True
+        )
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
+
         #changed this to get the V jet
         jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+
+        #*************************************************************************
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
@@ -341,7 +350,6 @@ class vhProcessor(processor.ProcessorABC):
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
         ak4_bjet_candidate = jets[bjet_selector]
-
 
         # bjet counts for SR and TTBar Control Region
         #V H version
@@ -398,14 +406,14 @@ class vhProcessor(processor.ProcessorABC):
         }
 
         fatjetvars = {
-            "fj_pt": candidatefj.pt,
-            "fj_eta": candidatefj.eta,
-            "fj_phi": candidatefj.phi,
-            "fj_mass": candidatefj.msdcorr,
-            "V_pt": second_fj.pt,
-            "V_eta": second_fj.eta,
-            "V_phi": second_fj.phi,
-            "V_mass": second_fj.msdcorr,
+            #"fj_pt": candidatefj.pt,
+            #"fj_eta": candidatefj.eta,
+            #"fj_phi": candidatefj.phi,
+            #"fj_mass": candidatefj.msdcorr,
+            "fj_pt": second_fj.pt,
+            "fj_eta": second_fj.eta,
+            "fj_phi": second_fj.phi,
+            "fj_mass": second_fj.msdcorr,
 
         }
 
@@ -414,10 +422,13 @@ class vhProcessor(processor.ProcessorABC):
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
             # JEC vars
-            for shift, vals in jec_shifted_fatjetvars["pt"].items():
-                if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
+            #for shift, vals in jec_shifted_fatjetvars["pt"].items():
+             #   if shift != "":
+              #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
 
+            for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
+                if shift != "":
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_V])  #to do: change this to the V
 
             #keeping this as this is already the chosen above as the V
             # JMSR vars
@@ -469,7 +480,8 @@ class vhProcessor(processor.ProcessorABC):
         if self.isMC:  # make an OR of all the JECs
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
-                    fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200)
+                    #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 200) #change to V
 
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
