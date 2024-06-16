@@ -290,6 +290,7 @@ class vhProcessor(processor.ProcessorABC):
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
 
+        #this applies JEC to all the fat jets
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
@@ -299,7 +300,6 @@ class vhProcessor(processor.ProcessorABC):
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
-        jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
 
         # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
         deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
@@ -315,6 +315,15 @@ class vhProcessor(processor.ProcessorABC):
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
+        #this applies jmsr to higgs jet - need to fix to apply to V
+        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
+
+        #check
+        #print('higgs', ak.to_list(good_fatjets[fj_idx_lep].pt)[0:100])
+        #print('V boson', ak.to_list(secondFJ.pt)[0:100])
+
+        #changed this to get the V jet
+        jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
@@ -407,8 +416,10 @@ class vhProcessor(processor.ProcessorABC):
             # JEC vars
             for shift, vals in jec_shifted_fatjetvars["pt"].items():
                 if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
 
+
+            #keeping this as this is already the chosen above as the V
             # JMSR vars
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
