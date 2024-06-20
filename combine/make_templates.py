@@ -353,7 +353,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
         hist2.axis.Variable(
-            list(range(20, 120, mass_binning)),
+            list(range(20, 140, mass_binning)),
             name="mass_observable",
             label=r"V reconstructed mass [GeV]",
             overflow=True,
