@@ -339,10 +339,10 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
     # add extra selections to preselection
     presel = {
         "mu": {
-            "tagger>0.50": "THWW>0.50",
+            "tagger>0.": "THWW>0",
         },
         "ele": {
-            "tagger>0.50": "THWW>0.50",
+            "tagger>0.": "THWW>0",
         },
     }
 
@@ -353,9 +353,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
         hist2.axis.Variable(
-            list(range(55, 255, mass_binning)),
+            list(range(20, 120, mass_binning)),
             name="mass_observable",
-            label=r"Higgs reconstructed mass [GeV]",
+            label=r"V reconstructed mass [GeV]",
             overflow=True,
         ),
         storage=hist2.storage.Weight(),
@@ -427,7 +427,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     else:
                         nominal = df[f"weight_{ch}"] * xsecweight
 
-                        if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        #if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
 
                     ###################################
@@ -444,7 +445,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="nominal",
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=nominal,
                     )
 
@@ -466,7 +467,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["rec_higgs_m"],
+                            mass_observable=df["ReconVCandidateMass"],
                             weight=shape_up,
                         )
 
@@ -474,7 +475,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["rec_higgs_m"],
+                            mass_observable=df["ReconVCandidateMass"],
                             weight=shape_down,
                         )
 
@@ -496,7 +497,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["rec_higgs_m"],
+                            mass_observable=df["ReconVCandidateMass"],
                             weight=shape_up,
                         )
 
@@ -504,7 +505,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["rec_higgs_m"],
+                            mass_observable=df["ReconVCandidateMass"],
                             weight=shape_down,
                         )
 
@@ -545,7 +546,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_up",
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=shape_up,
                     )
 
@@ -553,7 +554,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_down",
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=shape_down,
                     )
 
@@ -605,7 +606,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_up",
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=shape_up,
                     )
 
@@ -613,7 +614,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_down",
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=shape_down,
                     )
 
@@ -621,29 +622,29 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     # systematics correlated across all years
                     # TODO: apply the jet pt cut on the up/down variations
-                    for syst, (yrs, smpls, var) in {**JEC_systs_correlated, **JEC_systs_uncorrelated}.items():
+          #          for syst, (yrs, smpls, var) in {**JEC_systs_correlated, **JEC_systs_uncorrelated}.items():
 
-                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df["rec_higgs_m" + var[ch] + "_up"]
-                            shape_down = df["rec_higgs_m" + var[ch] + "_down"]
-                        else:
-                            shape_up = df["rec_higgs_m"]
-                            shape_down = df["rec_higgs_m"]
+          #              if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+          #                  shape_up = df["fj_pt" + var[ch] + "_up"]
+          #                  shape_down = df["fj_pt" + var[ch] + "_down"]
+          #              else:
+          #                  shape_up = df["fj_pt"]
+          #                  shape_down = df["fj_pt"]
 
-                        hists.fill(
-                            Sample=sample_to_use,
-                            Systematic=f"{syst}_up",
-                            Region=region,
-                            mass_observable=shape_up,
-                            weight=nominal,
-                        )
-                        hists.fill(
-                            Sample=sample_to_use,
-                            Systematic=f"{syst}_down",
-                            Region=region,
-                            mass_observable=shape_down,
-                            weight=nominal,
-                        )
+          #              hists.fill(
+          #                  Sample=sample_to_use,
+          #                  Systematic=f"{syst}_up",
+          #                  Region=region,
+          #                  mass_observable=shape_up,
+          #                  weight=nominal,
+          #              )
+          #              hists.fill(
+          #                  Sample=sample_to_use,
+          #                  Systematic=f"{syst}_down",
+          #                  Region=region,
+          #                  mass_observable=shape_down,
+          #                  weight=nominal,
+          #              )
 
     if add_fake:
         for year in years:
@@ -666,7 +667,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample="Fake",
                         Systematic=syst,
                         Region=region,
-                        mass_observable=df["rec_higgs_m"],
+                        mass_observable=df["ReconVCandidateMass"],
                         weight=df["event_weight"],
                     )
 

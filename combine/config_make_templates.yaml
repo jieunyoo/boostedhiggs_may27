@@ -1,33 +1,20 @@
 samples:
-    - ggF
-    - VBF
     - WH
     - ZH
-    - ttH
     - WJetsLNu
     - TTbar
     - SingleTop
-    - Diboson
-    - EWKvjets
     - DYJets
     - WZQQ
+    - Diboson
+    - EWKvjets
     - Data
-
 regions_sel:
-    "Pre-selection": (THWW>0.50)
-
-    "VBF": (THWW>0.905) & (n_bjets_T==0) & ( (mjj>1000) & (deta>3.5) ) & (fj_pt>250)
-    "ggFpt250to300": (THWW>0.93) & (n_bjets_T==0) & ( (mjj<1000) | (deta<3.5) ) & (fj_pt<300)
-    "ggFpt300to450": (THWW>0.93) & (n_bjets_T==0) & ( (mjj<1000) | (deta<3.5) ) & (fj_pt>300) & (fj_pt<450)
-    "ggFpt450toInf": (THWW>0.93) & (n_bjets_T==0) & ( (mjj<1000) | (deta<3.5) ) & (fj_pt>450)
-
-    "WJetsCR": (THWW>0.50) & (THWW<0.905) & (n_bjets_T==0)
-    "TopCR": (THWW>0.50) & (n_bjets_T>0)
+    # put any "selection name: selection" here to store it in the templates
+    "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (fj_ParT_score > 0.9) & (met_pt > 30) & (ReconVCandidateMass > 20)
+    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_ParT_score > 0.50) & (ReconVCandidateMass > 20) & (met_pt > 30)
 
 samples_dir:
-    "2018": ../eos/May31_hww_2018
-    "2017": ../eos/May31_hww_2017
-    "2016": ../eos/May31_hww_2016
-    "2016APV": ../eos/May31_hww_2016APV
+    "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/june19/june16_620pm_2018/
 
-model_path: ../../weaver-core-dev/experiments_finetuning/v35_30/model.onnx
+model_path: /uscms/home/jieun201/nobackup/YOURWORKINGAREA/model.onnx

@@ -64,8 +64,11 @@ labels = {
     "Fake": "fake",
 }
 
-bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
-sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
+#bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
+#sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
+
+bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
+sigs = ["WH", "ZH"]
 samples = sigs + bkgs
 
 
