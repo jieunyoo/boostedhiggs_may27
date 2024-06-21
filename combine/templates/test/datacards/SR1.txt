@@ -1,49 +1,50 @@
-# Datacard for <Channel (SR1) instance at 0x7f5b519909a0> generated on 2024-06-21 15:29:14.525166
+# Datacard for <Channel (SR1) instance at 0x7f82edec69a0> generated on 2024-06-21 18:35:22.713306
 imax 1 # number of categories ('bins' but here we are using shape templates)
-jmax 9 # number of samples minus 1
-kmax 38 # number of nuisance parameters
+jmax 8 # number of samples minus 1
+kmax 39 # number of nuisance parameters
 shapes * SR1 testModel.root testModel:SR1_$PROCESS testModel:SR1_$PROCESS_$SYSTEMATIC
 bin SR1
-observation 1126.000
-bin                                                  SR1            SR1            SR1            SR1            SR1            SR1            SR1            SR1            SR1            SR1
-process                                               WH             ZH          ttbar          wjets      singletop          zjets           wzqq        diboson       ewkvjets            QCD
-process                                               -1              0              1              2              3              4              5              6              7              8
-rate                                               6.445          3.799        417.604        493.103         34.876         27.864          5.090          9.646         39.713         54.946
-BR_hww lnN                                 0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153
-CMS_HWW_boosted_PDFacc_VH shape                   1.0000         1.0000              -              -              -              -              -              -              -              -
-CMS_HWW_boosted_QCDScaleacc_VH shape              1.0000         1.0000              -              -              -              -              -              -              -              -
-CMS_HWW_boosted_QCDScaleacc_wjets shape                -              -              -         1.0000              -              -              -              -              -              -
-CMS_HWW_boosted_W_d1kappa_EW lnN                       -              -              -         0.9345              -         0.9378              -              -              -              -
-CMS_HWW_boosted_W_d2kappa_EW lnN                       -              -              -         0.9369              -              -              -              -              -              -
-CMS_HWW_boosted_W_d3kappa_EW lnN                       -              -              -         0.9345              -              -              -              -              -              -
-CMS_HWW_boosted_Z_d2kappa_EW lnN                       -              -              -              -              -         0.9390              -              -              -              -
-CMS_HWW_boosted_Z_d3kappa_EW lnN                       -              -              -              -              -         0.9379              -              -              -              -
-CMS_HWW_boosted_btagSFbcCorrelated lnN     1.0097/1.2319  1.0133/1.1427  1.0418/1.1493  1.0081/1.1519  1.0238/1.1418  0.9867/1.1031  1.0179/1.0864  0.9988/1.0347  1.0150/1.2319         0.9996
-CMS_HWW_boosted_btagSFbc_2018 lnN          0.9623/1.2804  0.9874/1.1728  1.0166/1.1758  0.9822/1.1811  0.9905/1.1756  0.9763/1.1135  0.9971/1.1069  0.9959/1.0376  0.9624/1.2870         0.9997
-CMS_HWW_boosted_btagSFlightCorrelated lnN  1.0045/1.0270  1.0049/1.0292  1.0074/1.0329  1.0047/1.0272  1.0041/1.0185  1.0136/1.0656         1.0032  1.0054/1.0159  1.0097/1.0458  1.1278/1.5000
-CMS_HWW_boosted_btagSFlight_2018 lnN       1.0035/1.0281  1.0038/1.0304  1.0061/1.0342  1.0036/1.0283  1.0034/1.0191  1.0112/1.0680         1.0034  1.0048/1.0164  1.0079/1.0475  1.1044/1.5000
-CMS_HWW_boosted_d1K_NLO lnN                            -              -              -  0.8718/0.9969              -              -              -              -              -              -
-CMS_HWW_boosted_d2K_NLO lnN                            -              -              -  0.8809/0.9878              -              -              -              -              -              -
-CMS_HWW_boosted_d3K_NLO lnN                            -              -              -  0.9226/0.9461              -              -              -              -              -              -
-CMS_HWW_boosted_ele_identification lnN            0.9704         0.9816         0.9705         0.9776         0.9771         0.9692         0.9658         0.9942         0.9464         0.7645
-CMS_HWW_boosted_ele_isolation lnN                 0.9690         0.9801         0.9700         0.9774         0.9772         0.9686         0.9632         0.9948         0.9447         0.7643
-CMS_HWW_boosted_ele_reconstruction lnN            0.9703         0.9815         0.9712         0.9785         0.9780         0.9699         0.9661         0.9954         0.9462  0.7572/0.7667
-CMS_HWW_boosted_ele_trigger lnN                   0.9698         0.9810         0.9705         0.9779         0.9775         0.9691         0.9648         0.9947         0.9457         0.7651
-CMS_HWW_boosted_mu_identification lnN             0.9320         0.9587         0.9508         0.9583         0.9596         0.9704         0.9995         0.9868         0.9520              -
-CMS_HWW_boosted_mu_isolation lnN                  0.9315         0.9582         0.9504         0.9579         0.9593         0.9698         0.9993         0.9864         0.9518              -
-CMS_HWW_boosted_mu_trigger lnN                    0.9325         0.9592         0.9511         0.9585         0.9599         0.9705         1.0000         0.9872         0.9524              -
-CMS_HWW_boosted_mu_trigger_iso lnN                0.9315         0.9582         0.9504         0.9579         0.9593         0.9699         0.9993         0.9864         0.9518              -
-CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
-CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-QCDscale_VH lnN                            0.9930/1.0050  0.9700/1.0380              -              -              -              -              -              -              -              -
-SR1_mcstat_bin1 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-SR1_mcstat_bin2 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-SR1_mcstat_bin3 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-SR1_mcstat_bin4 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-alpha_s lnN                                       1.0090         1.0090              -              -              -              -              -              -              -              -
-miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
-pdf_Higgs_qqbar lnN                               1.0170         1.0130              -              -              -              -              -              -              -              -
-ps_fsr shape                                      1.0000         1.0000              -              -              -              -              -              -              -              -
-ps_isr shape                                      1.0000         1.0000              -              -              -              -              -              -              -              -
-taggereff lnN                                     1.2700         1.2700              -              -              -              -              -              -              -              -
+observation 1244.000
+bin                                                  SR1            SR1            SR1            SR1            SR1            SR1            SR1            SR1            SR1
+process                                               WH             ZH          ttbar          wjets      singletop          zjets           wzqq        diboson       ewkvjets
+process                                               -1              0              1              2              3              4              5              6              7
+rate                                               6.515          3.877        471.889        538.451         36.967         31.299          5.834         10.678         40.105
+BR_hww lnN                                 0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153
+CMS_HWW_boosted_PDFacc_VH shape                   1.0000         1.0000              -              -              -              -              -              -              -
+CMS_HWW_boosted_QCDScaleacc_VH shape              1.0000         1.0000              -              -              -              -              -              -              -
+CMS_HWW_boosted_QCDScaleacc_wjets shape                -              -              -         1.0000              -              -              -              -              -
+CMS_HWW_boosted_W_d1kappa_EW lnN                       -              -              -         0.9330              -         0.9380              -              -              -
+CMS_HWW_boosted_W_d2kappa_EW lnN                       -              -              -         0.9355              -              -              -              -              -
+CMS_HWW_boosted_W_d3kappa_EW lnN                       -              -              -         0.9331              -              -              -              -              -
+CMS_HWW_boosted_Z_d2kappa_EW lnN                       -              -              -              -              -         0.9393              -              -              -
+CMS_HWW_boosted_Z_d3kappa_EW lnN                       -              -              -              -              -         0.9381              -              -              -
+CMS_HWW_boosted_btagSFbcCorrelated lnN     1.0095/1.2320  1.0131/1.1438  1.0419/1.1526  1.0091/1.1557  1.0295/1.1474  0.9904/1.1031  1.0153/1.0918  0.9989/1.0314  1.0149/1.2296
+CMS_HWW_boosted_btagSFbc_2018 lnN          0.9623/1.2804  0.9871/1.1740  1.0164/1.1794  0.9823/1.1861  0.9947/1.1830  0.9788/1.1147  0.9942/1.1126  0.9963/1.0340  0.9627/1.2842
+CMS_HWW_boosted_btagSFlightCorrelated lnN  1.0045/1.0270  1.0049/1.0290  1.0079/1.0352  1.0046/1.0274  1.0038/1.0172  1.0128/1.0612         1.0011         1.0127  1.0096/1.0452
+CMS_HWW_boosted_btagSFlight_2018 lnN       1.0035/1.0281  1.0038/1.0302  1.0066/1.0366  1.0036/1.0285  1.0032/1.0178  1.0106/1.0635         1.0012         1.0132  1.0078/1.0469
+CMS_HWW_boosted_d1K_NLO lnN                            -              -              -  0.8702/0.9955              -              -              -              -              -
+CMS_HWW_boosted_d2K_NLO lnN                            -              -              -  0.8796/0.9861              -              -              -              -              -
+CMS_HWW_boosted_d3K_NLO lnN                            -              -              -  0.9211/0.9446              -              -              -              -              -
+CMS_HWW_boosted_ele_identification lnN            0.9702         0.9815         0.9700         0.9774         0.9794         0.9692         0.9647         0.9947         0.9470
+CMS_HWW_boosted_ele_isolation lnN                 0.9688         0.9801         0.9695         0.9772         0.9795         0.9687         0.9625         0.9953         0.9453
+CMS_HWW_boosted_ele_reconstruction lnN            0.9702         0.9814         0.9707         0.9782         0.9803         0.9702         0.9653         0.9959         0.9469
+CMS_HWW_boosted_ele_trigger lnN                   0.9697         0.9810         0.9700         0.9776         0.9798         0.9693         0.9641         0.9952         0.9463
+CMS_HWW_boosted_mu_identification lnN             0.9322         0.9586         0.9497         0.9571         0.9545         0.9706         0.9999         0.9889         0.9525
+CMS_HWW_boosted_mu_isolation lnN                  0.9318         0.9581         0.9493         0.9567         0.9542         0.9701         0.9997         0.9885         0.9522
+CMS_HWW_boosted_mu_trigger lnN                    0.9327         0.9591         0.9500         0.9573         0.9548         0.9707         1.0003         0.9895         0.9529
+CMS_HWW_boosted_mu_trigger_iso lnN                0.9318         0.9581         0.9493         0.9567         0.9542         0.9701         0.9997         0.9886         0.9522
+CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
+CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+QCDscale_VH lnN                            0.9930/1.0050  0.9700/1.0380              -              -              -              -              -              -              -
+SR1_mcstat_bin0 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin1 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin2 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin3 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin4 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+alpha_s lnN                                       1.0090         1.0090              -              -              -              -              -              -              -
+miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
+pdf_Higgs_qqbar lnN                               1.0170         1.0130              -              -              -              -              -              -              -
+ps_fsr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
+ps_isr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
+taggereff lnN                                     1.2700         1.2700              -              -              -              -              -              -              -

@@ -41,6 +41,7 @@ combine_samples = {
     # TODO: make sure it's WZQQ is NLO in next iteration
     # "DYJets": "WZQQorDYJets",
     # "JetsToQQ": "WZQQorDYJets",
+    "QCD_Pt": "QCD",
 }
 
 # (name in templates, name in cards)
@@ -62,12 +63,14 @@ labels = {
     "WZQQ": "wzqq",
     # "WZQQorDYJets": "vjets",
     "Fake": "fake",
+    "QCD": "QCD",
 }
 
 #bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
 #sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
 
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
+#bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "QCD"]
 sigs = ["WH", "ZH"]
 samples = sigs + bkgs
 
