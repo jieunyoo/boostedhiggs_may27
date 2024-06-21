@@ -1,4 +1,4 @@
-# Datacard for <Channel (TopCR) instance at 0x7fcc15e23ac0> generated on 2024-06-20 13:55:39.361543
+# Datacard for <Channel (TopCR) instance at 0x7f14ca048af0> generated on 2024-06-21 13:51:41.916244
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 6 # number of samples minus 1
 kmax 33 # number of nuisance parameters
@@ -42,4 +42,3 @@ TopCR_wjets_mcstat lnN                                 -         1.0235         
 TopCR_wzqq_mcstat lnN                                  -              -              -              -         1.2222              -              -
 TopCR_zjets_mcstat lnN                                 -              -              -         1.0751              -              -              -
 miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
-rate_ttbar rateParam * ttbar 1.0

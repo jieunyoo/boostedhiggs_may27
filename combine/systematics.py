@@ -147,7 +147,7 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     #systs_dict_values["VBF"]["alpha_s"] = (1.005, None)
     #systs_dict["ttH"]["alpha_s"] = n
     #systs_dict_values["ttH"]["alpha_s"] = (1.020, None)
-    #systs_dict["WH"]["alpha_s"] = n
+    systs_dict["WH"]["alpha_s"] = n
     systs_dict_values["WH"]["alpha_s"] = (1.009, None)
     systs_dict["ZH"]["alpha_s"] = n
     systs_dict_values["ZH"]["alpha_s"] = (1.009, None)
