@@ -42,3 +42,4 @@ TopCR_wjets_mcstat lnN                                 -         1.0235         
 TopCR_wzqq_mcstat lnN                                  -              -              -              -         1.2222              -              -
 TopCR_zjets_mcstat lnN                                 -              -              -         1.0751              -              -              -
 miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
+rate_ttbar rateParam * ttbar 1.0

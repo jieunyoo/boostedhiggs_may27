@@ -48,3 +48,5 @@ pdf_Higgs_qqbar lnN                               1.0170         1.0130         
 ps_fsr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
 ps_isr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
 taggereff lnN                                     1.2700         1.2700              -              -              -              -              -              -              -
+rate_wjets rateParam * wjets 1.0
+rate_ttbar rateParam * ttbar 1.0  
