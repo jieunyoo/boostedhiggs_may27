@@ -1,7 +1,7 @@
-# Datacard for <Channel (SR1) instance at 0x7f13a80fb970> generated on 2024-06-21 19:00:17.611957
+# Datacard for <Channel (SR1) instance at 0x7fa81528f9d0> generated on 2024-06-21 19:37:21.492072
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 8 # number of samples minus 1
-kmax 79 # number of nuisance parameters
+kmax 39 # number of nuisance parameters
 shapes * SR1 testModel.root testModel:SR1_$PROCESS testModel:SR1_$PROCESS_$SYSTEMATIC
 bin SR1
 observation 1244.000
@@ -37,54 +37,17 @@ CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         
 CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 QCDscale_VH lnN                            0.9930/1.0050  0.9700/1.0380              -              -              -              -              -              -              -
-SR1_WH_mcstat_bin0 shape                          1.0000              -              -              -              -              -              -              -              -
-SR1_WH_mcstat_bin1 shape                          1.0000              -              -              -              -              -              -              -              -
-SR1_WH_mcstat_bin2 shape                          1.0000              -              -              -              -              -              -              -              -
-SR1_WH_mcstat_bin3 shape                          1.0000              -              -              -              -              -              -              -              -
-SR1_WH_mcstat_bin4 shape                          1.0000              -              -              -              -              -              -              -              -
-SR1_ZH_mcstat_bin0 shape                               -         1.0000              -              -              -              -              -              -              -
-SR1_ZH_mcstat_bin1 shape                               -         1.0000              -              -              -              -              -              -              -
-SR1_ZH_mcstat_bin2 shape                               -         1.0000              -              -              -              -              -              -              -
-SR1_ZH_mcstat_bin3 shape                               -         1.0000              -              -              -              -              -              -              -
-SR1_ZH_mcstat_bin4 shape                               -         1.0000              -              -              -              -              -              -              -
-SR1_diboson_mcstat_bin0 shape                          -              -              -              -              -              -              -         1.0000              -
-SR1_diboson_mcstat_bin1 shape                          -              -              -              -              -              -              -         1.0000              -
-SR1_diboson_mcstat_bin2 shape                          -              -              -              -              -              -              -         1.0000              -
-SR1_diboson_mcstat_bin3 shape                          -              -              -              -              -              -              -         1.0000              -
-SR1_diboson_mcstat_bin4 shape                          -              -              -              -              -              -              -         1.0000              -
-SR1_ewkvjets_mcstat_bin0 shape                         -              -              -              -              -              -              -              -         1.0000
-SR1_ewkvjets_mcstat_bin1 shape                         -              -              -              -              -              -              -              -         1.0000
-SR1_ewkvjets_mcstat_bin2 shape                         -              -              -              -              -              -              -              -         1.0000
-SR1_ewkvjets_mcstat_bin3 shape                         -              -              -              -              -              -              -              -         1.0000
-SR1_ewkvjets_mcstat_bin4 shape                         -              -              -              -              -              -              -              -         1.0000
-SR1_singletop_mcstat_bin0 shape                        -              -              -              -         1.0000              -              -              -              -
-SR1_singletop_mcstat_bin1 shape                        -              -              -              -         1.0000              -              -              -              -
-SR1_singletop_mcstat_bin2 shape                        -              -              -              -         1.0000              -              -              -              -
-SR1_singletop_mcstat_bin3 shape                        -              -              -              -         1.0000              -              -              -              -
-SR1_singletop_mcstat_bin4 shape                        -              -              -              -         1.0000              -              -              -              -
-SR1_ttbar_mcstat_bin0 shape                            -              -         1.0000              -              -              -              -              -              -
-SR1_ttbar_mcstat_bin1 shape                            -              -         1.0000              -              -              -              -              -              -
-SR1_ttbar_mcstat_bin2 shape                            -              -         1.0000              -              -              -              -              -              -
-SR1_ttbar_mcstat_bin3 shape                            -              -         1.0000              -              -              -              -              -              -
-SR1_ttbar_mcstat_bin4 shape                            -              -         1.0000              -              -              -              -              -              -
-SR1_wjets_mcstat_bin0 shape                            -              -              -         1.0000              -              -              -              -              -
-SR1_wjets_mcstat_bin1 shape                            -              -              -         1.0000              -              -              -              -              -
-SR1_wjets_mcstat_bin2 shape                            -              -              -         1.0000              -              -              -              -              -
-SR1_wjets_mcstat_bin3 shape                            -              -              -         1.0000              -              -              -              -              -
-SR1_wjets_mcstat_bin4 shape                            -              -              -         1.0000              -              -              -              -              -
-SR1_wzqq_mcstat_bin0 shape                             -              -              -              -              -              -         1.0000              -              -
-SR1_wzqq_mcstat_bin1 shape                             -              -              -              -              -              -         1.0000              -              -
-SR1_wzqq_mcstat_bin2 shape                             -              -              -              -              -              -         1.0000              -              -
-SR1_wzqq_mcstat_bin3 shape                             -              -              -              -              -              -         1.0000              -              -
-SR1_wzqq_mcstat_bin4 shape                             -              -              -              -              -              -         1.0000              -              -
-SR1_zjets_mcstat_bin0 shape                            -              -              -              -              -         1.0000              -              -              -
-SR1_zjets_mcstat_bin1 shape                            -              -              -              -              -         1.0000              -              -              -
-SR1_zjets_mcstat_bin2 shape                            -              -              -              -              -         1.0000              -              -              -
-SR1_zjets_mcstat_bin3 shape                            -              -              -              -              -         1.0000              -              -              -
-SR1_zjets_mcstat_bin4 shape                            -              -              -              -              -         1.0000              -              -              -
+SR1_mcstat_bin0 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin1 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin2 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin3 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+SR1_mcstat_bin4 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 alpha_s lnN                                       1.0090         1.0090              -              -              -              -              -              -              -
 miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
 pdf_Higgs_qqbar lnN                               1.0170         1.0130              -              -              -              -              -              -              -
 ps_fsr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
 ps_isr shape                                      1.0000         1.0000              -              -              -              -              -              -              -
 taggereff lnN                                     1.2700         1.2700              -              -              -              -              -              -              -
+ttbarnormSF extArg testModel.root:testModel
+ttbarnormSF_effect_SR1_ttbar rateParam SR1 ttbar (1*@0) ttbarnormSF
+rate_wjets rateParam * wjets 1.0

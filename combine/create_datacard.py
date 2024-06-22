@@ -30,8 +30,8 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=False):
+#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
     sys_from_parquets = systs_from_parquets(years)
@@ -70,10 +70,10 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
             sample = rl.TemplateSample(ch.name + "_" + labels[sName], stype, templ)
 
-            #if "CR" in ChName:
-             #   sample.autoMCStats(lnN=True)
+            if "CR" in ChName:
+                sample.autoMCStats(lnN=True)
 
-            sample.autoMCStats()
+            #sample.autoMCStats()
 
             # SYSTEMATICS NOT FROM PARQUETS
             for syst_on_sample in ["all_samples", sName]:  # apply common systs and per sample systs
@@ -115,21 +115,21 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
         #data_obs = get_template(hists_templates, "ZH", ChName)
         ch.setObservation(data_obs)
 
-        #if "CR" not in ChName:
-         #   ch.autoMCStats()
+        if "CR" not in ChName:
+            ch.autoMCStats()
 
-    #if add_ttbar_constraint:
-    #    failCh = model["TopCR"]
+    if add_ttbar_constraint:
+        failCh = model["TopCR"]
 
-    #    ttbarfail = failCh["ttbar"]
-    #    ttbarfail.setParamEffect(ttbarnormSF, 1 * ttbarnormSF)
+        ttbarfail = failCh["ttbar"]
+        ttbarfail.setParamEffect(ttbarnormSF, 1 * ttbarnormSF)
 
-    #    for sig_region in SIG_regions:
+        for sig_region in SIG_regions:
 
-    #        passCh = model[sig_region]
+            passCh = model[sig_region]
 
-    #        ttbarpass = passCh["ttbar"]
-     #       ttbarpass.setParamEffect(ttbarnormSF, 1 * ttbarnormSF)
+            ttbarpass = passCh["ttbar"]
+            ttbarpass.setParamEffect(ttbarnormSF, 1 * ttbarnormSF)
 
    # if add_wjets_constraint:
    #     failCh = model["WJetsCR"]

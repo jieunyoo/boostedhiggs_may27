@@ -1,7 +1,7 @@
-# Datacard for <Channel (TopCR) instance at 0x7f13a811cfa0> generated on 2024-06-21 19:00:17.614508
+# Datacard for <Channel (TopCR) instance at 0x7fa8152b4e20> generated on 2024-06-21 19:37:21.494785
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 6 # number of samples minus 1
-kmax 61 # number of nuisance parameters
+kmax 33 # number of nuisance parameters
 shapes * TopCR testModel.root testModel:TopCR_$PROCESS testModel:TopCR_$PROCESS_$SYSTEMATIC
 bin TopCR
 observation 14404.000
@@ -34,39 +34,13 @@ CMS_HWW_boosted_mu_trigger_iso lnN                0.9689         0.9523         
 CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
 CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-TopCR_diboson_mcstat_bin0 shape                        -              -              -              -              -         1.0000              -
-TopCR_diboson_mcstat_bin1 shape                        -              -              -              -              -         1.0000              -
-TopCR_diboson_mcstat_bin2 shape                        -              -              -              -              -         1.0000              -
-TopCR_diboson_mcstat_bin3 shape                        -              -              -              -              -         1.0000              -
-TopCR_diboson_mcstat_bin4 shape                        -              -              -              -              -         1.0000              -
-TopCR_ewkvjets_mcstat_bin0 shape                       -              -              -              -              -              -         1.0000
-TopCR_ewkvjets_mcstat_bin1 shape                       -              -              -              -              -              -         1.0000
-TopCR_ewkvjets_mcstat_bin2 shape                       -              -              -              -              -              -         1.0000
-TopCR_ewkvjets_mcstat_bin3 shape                       -              -              -              -              -              -         1.0000
-TopCR_ewkvjets_mcstat_bin4 shape                       -              -              -              -              -              -         1.0000
-TopCR_singletop_mcstat_bin0 shape                      -              -         1.0000              -              -              -              -
-TopCR_singletop_mcstat_bin1 shape                      -              -         1.0000              -              -              -              -
-TopCR_singletop_mcstat_bin2 shape                      -              -         1.0000              -              -              -              -
-TopCR_singletop_mcstat_bin3 shape                      -              -         1.0000              -              -              -              -
-TopCR_singletop_mcstat_bin4 shape                      -              -         1.0000              -              -              -              -
-TopCR_ttbar_mcstat_bin0 shape                     1.0000              -              -              -              -              -              -
-TopCR_ttbar_mcstat_bin1 shape                     1.0000              -              -              -              -              -              -
-TopCR_ttbar_mcstat_bin2 shape                     1.0000              -              -              -              -              -              -
-TopCR_ttbar_mcstat_bin3 shape                     1.0000              -              -              -              -              -              -
-TopCR_ttbar_mcstat_bin4 shape                     1.0000              -              -              -              -              -              -
-TopCR_wjets_mcstat_bin0 shape                          -         1.0000              -              -              -              -              -
-TopCR_wjets_mcstat_bin1 shape                          -         1.0000              -              -              -              -              -
-TopCR_wjets_mcstat_bin2 shape                          -         1.0000              -              -              -              -              -
-TopCR_wjets_mcstat_bin3 shape                          -         1.0000              -              -              -              -              -
-TopCR_wjets_mcstat_bin4 shape                          -         1.0000              -              -              -              -              -
-TopCR_wzqq_mcstat_bin0 shape                           -              -              -              -         1.0000              -              -
-TopCR_wzqq_mcstat_bin1 shape                           -              -              -              -         1.0000              -              -
-TopCR_wzqq_mcstat_bin2 shape                           -              -              -              -         1.0000              -              -
-TopCR_wzqq_mcstat_bin3 shape                           -              -              -              -         1.0000              -              -
-TopCR_wzqq_mcstat_bin4 shape                           -              -              -              -         1.0000              -              -
-TopCR_zjets_mcstat_bin0 shape                          -              -              -         1.0000              -              -              -
-TopCR_zjets_mcstat_bin1 shape                          -              -              -         1.0000              -              -              -
-TopCR_zjets_mcstat_bin2 shape                          -              -              -         1.0000              -              -              -
-TopCR_zjets_mcstat_bin3 shape                          -              -              -         1.0000              -              -              -
-TopCR_zjets_mcstat_bin4 shape                          -              -              -         1.0000              -              -              -
+TopCR_diboson_mcstat lnN                               -              -              -              -              -         1.4202              -
+TopCR_ewkvjets_mcstat lnN                              -              -              -              -              -              -         1.1302
+TopCR_singletop_mcstat lnN                             -              -         1.0387              -              -              -              -
+TopCR_ttbar_mcstat lnN                            1.0082              -              -              -              -              -              -
+TopCR_wjets_mcstat lnN                                 -         1.0335              -              -              -              -              -
+TopCR_wzqq_mcstat lnN                                  -              -              -              -         1.3396              -              -
+TopCR_zjets_mcstat lnN                                 -              -              -         1.1496              -              -              -
 miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
+ttbarnormSF extArg testModel.root:testModel
+ttbarnormSF_effect_TopCR_ttbar rateParam TopCR ttbar (1*@0) ttbarnormSF
