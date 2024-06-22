@@ -30,7 +30,7 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=False):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
 #def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
@@ -41,7 +41,7 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
     # define the signal and control regions ********this is different from Faroku
     SIG_regions = ["SR1"]
-    CONTROL_regions = ["TopCR"]
+    CONTROL_regions = ["TopCR", "WJetsCR"]
 
     # SIG_regions = list(hists_templates.axes["Region"])
     # CONTROL_regions = []
@@ -131,17 +131,17 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
             ttbarpass = passCh["ttbar"]
             ttbarpass.setParamEffect(ttbarnormSF, 1 * ttbarnormSF)
 
-   # if add_wjets_constraint:
-   #     failCh = model["WJetsCR"]
+    if add_wjets_constraint:
+        failCh = model["WJetsCR"]
 
-    #    wjetsfail = failCh["wjets"]
-    #    wjetsfail.setParamEffect(wjetsnormSF, 1 * wjetsnormSF)
+        wjetsfail = failCh["wjets"]
+        wjetsfail.setParamEffect(wjetsnormSF, 1 * wjetsnormSF)
 
-    #    for sig_region in SIG_regions:
-    #        passCh = model[sig_region]
+        for sig_region in SIG_regions:
+            passCh = model[sig_region]
 
-     #       wjetspass = passCh["wjets"]
-     #       wjetspass.setParamEffect(wjetsnormSF, 1 * wjetsnormSF)
+            wjetspass = passCh["wjets"]
+            wjetspass.setParamEffect(wjetsnormSF, 1 * wjetsnormSF)
 
     return model
 

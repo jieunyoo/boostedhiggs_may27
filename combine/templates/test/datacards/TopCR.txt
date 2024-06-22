@@ -1,4 +1,4 @@
-# Datacard for <Channel (TopCR) instance at 0x7fa8152b4e20> generated on 2024-06-21 19:37:21.494785
+# Datacard for <Channel (TopCR) instance at 0x7fcd02b5d370> generated on 2024-06-21 20:22:45.810432
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 6 # number of samples minus 1
 kmax 33 # number of nuisance parameters
