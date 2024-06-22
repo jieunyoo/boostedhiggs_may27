@@ -481,6 +481,7 @@ class vhProcessor(processor.ProcessorABC):
 
         #*************************
         fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
+        #*******Note - I ran most recently with 200, we need to possibly change this to 250 now back to match Farouk
         if self.isMC:  # make an OR of all the JECs
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
