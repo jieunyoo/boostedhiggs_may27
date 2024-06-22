@@ -70,8 +70,10 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
             sample = rl.TemplateSample(ch.name + "_" + labels[sName], stype, templ)
 
-            if "CR" in ChName:
-                sample.autoMCStats(lnN=True)
+            #if "CR" in ChName:
+             #   sample.autoMCStats(lnN=True)
+
+            sample.autoMCStats()
 
             # SYSTEMATICS NOT FROM PARQUETS
             for syst_on_sample in ["all_samples", sName]:  # apply common systs and per sample systs
@@ -113,8 +115,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
         #data_obs = get_template(hists_templates, "ZH", ChName)
         ch.setObservation(data_obs)
 
-        if "CR" not in ChName:
-            ch.autoMCStats()
+        #if "CR" not in ChName:
+         #   ch.autoMCStats()
 
     #if add_ttbar_constraint:
     #    failCh = model["TopCR"]

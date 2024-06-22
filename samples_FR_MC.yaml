@@ -1,0 +1,343 @@
+# SAMPLES to run (assume same names for all years 2016,2016APV,2017,2018)
+mc:
+  - WJetsToLNu_HT-70To100
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - TTTo2L2Nu
+  - TTToHadronic
+  - TTToSemiLeptonic
+  - DYJetsToLL_LHEFilterPtZ-0To50
+  - DYJetsToLL_LHEFilterPtZ-50To100
+  - DYJetsToLL_LHEFilterPtZ-100To250
+  - DYJetsToLL_LHEFilterPtZ-250To400
+  - DYJetsToLL_LHEFilterPtZ-400To650
+  - DYJetsToLL_LHEFilterPtZ-650ToInf
+vjetsnlo:
+  - WJetsToLNu_1J
+  - WJetsToLNu_2J
+extra:
+  - GluGluZH_HToWW_M-125_TuneCP5_13TeV-powheg-pythia8
+  - TTZToQQ
+  - TTWJetsToQQ
+  - TTWJetsToLNu
+  - TTZToLLNuNu_M-10
+mc_s_over_b:
+  - GluGluHToWW_Pt-200ToInf_M-125
+  - VBFHToWWToAny_M-125_TuneCP5_withDipoleRecoil
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - TTTo2L2Nu
+  - TTToHadronic
+  - TTToSemiLeptonic
+  - QCD_Pt_120to170
+  - QCD_Pt_170to300
+  - QCD_Pt_300to470
+  - QCD_Pt_470to600
+  - QCD_Pt_600to800
+  - QCD_Pt_800to1000
+  - QCD_Pt_1000to1400
+  - QCD_Pt_1400to1800
+  - QCD_Pt_1800to2400
+  - QCD_Pt_2400to3200
+  - QCD_Pt_3200toInf
+sig:
+  - GluGluHToWW_Pt-200ToInf_M-125
+  - VBFHToWWToAny_M-125_TuneCP5_withDipoleRecoil
+  - HWminusJ_HToWW_M-125
+  - HWplusJ_HToWW_M-125
+  - HZJ_HToWW_M-125
+  - ttHToNonbb_M125
+ggF:
+  - GluGluHToWW_Pt-200ToInf_M-125
+vjetslep:
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+data:
+  2016:
+    - SingleMuon_Run2016F
+    - SingleMuon_Run2016G
+    - SingleMuon_Run2016H
+    - SingleElectron_Run2016F
+    - SingleElectron_Run2016G
+    - SingleElectron_Run2016H
+  2016APV:
+    - SingleMuon_Run2016B_ver2_HIPM
+    - SingleMuon_Run2016C_HIPM
+    - SingleMuon_Run2016D_HIPM
+    - SingleMuon_Run2016E_HIPM
+    - SingleMuon_Run2016F_HIPM
+    - SingleElectron_Run2016B_ver2_HIPM
+    - SingleElectron_Run2016C_HIPM
+    - SingleElectron_Run2016D_HIPM
+    - SingleElectron_Run2016E_HIPM
+    - SingleElectron_Run2016F_HIPM
+  2017:
+    - SingleMuon_Run2017B
+    - SingleMuon_Run2017C
+    - SingleMuon_Run2017D
+    - SingleMuon_Run2017E
+    - SingleMuon_Run2017F
+    - SingleElectron_Run2017B
+    - SingleElectron_Run2017C
+    - SingleElectron_Run2017D
+    - SingleElectron_Run2017E
+    - SingleElectron_Run2017F
+  2018:
+    - SingleMuon_Run2018A
+    - SingleMuon_Run2018B
+    - SingleMuon_Run2018C
+    - SingleMuon_Run2018D
+    - EGamma_Run2018A
+    - EGamma_Run2018B
+    - EGamma_Run2018C
+    - EGamma_Run2018D
+data_ele:
+  2016:
+    - SingleElectron_Run2016F
+    - SingleElectron_Run2016G
+    - SingleElectron_Run2016H
+  2016APV:
+    - SingleElectron_Run2016B_ver2_HIPM
+    - SingleElectron_Run2016C_HIPM
+    - SingleElectron_Run2016D_HIPM
+    - SingleElectron_Run2016E_HIPM
+    - SingleElectron_Run2016F_HIPM
+  2017:
+    - SingleElectron_Run2017B
+    - SingleElectron_Run2017C
+    - SingleElectron_Run2017D
+    - SingleElectron_Run2017E
+    - SingleElectron_Run2017F
+  2018:
+    - EGamma_Run2018A
+    - EGamma_Run2018B
+    - EGamma_Run2018C
+    - EGamma_Run2018D
+data_mu:
+  2016:
+    - SingleMuon_Run2016F
+    - SingleMuon_Run2016G
+    - SingleMuon_Run2016H
+  2016APV:
+    - SingleMuon_Run2016B_ver2_HIPM
+    - SingleMuon_Run2016C_HIPM
+    - SingleMuon_Run2016D_HIPM
+    - SingleMuon_Run2016E_HIPM
+    - SingleMuon_Run2016F_HIPM
+  2017:
+    - SingleMuon_Run2017B
+    - SingleMuon_Run2017C
+    - SingleMuon_Run2017D
+    - SingleMuon_Run2017E
+    - SingleMuon_Run2017F
+  2018:
+    - SingleMuon_Run2018A
+    - SingleMuon_Run2018B
+    - SingleMuon_Run2018C
+    - SingleMuon_Run2018D
+finetuning_top:
+  - TTToSemiLeptonic
+finetuning_qcd:
+  - QCD_Pt_170to300
+  - QCD_Pt_300to470
+  - QCD_Pt_470to600
+  - QCD_Pt_600to800
+finetuning_wjets:
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+finetuning_sig:
+  - GluGluHToWW_Pt-200ToInf_M-125
+  - VBFHToWWToLNuQQ_M-125_withDipoleRecoil
+data_sf:
+  2016APV:
+    - JetHT_Run2016B_ver2_HIPM
+    - JetHT_Run2016C_HIPM
+    - JetHT_Run2016D_HIPM
+    - JetHT_Run2016E_HIPM
+    - JetHT_Run2016F_HIPM
+  2016:
+    - JetHT_Run2016F
+    - JetHT_Run2016G
+    - JetHT_Run2016H
+  2017:
+    - JetHT_Run2017B
+    - JetHT_Run2017C
+    - JetHT_Run2017D
+    - JetHT_Run2017E
+    - JetHT_Run2017F
+  2018:
+    - JetHT_Run2018A
+    - JetHT_Run2018B
+    - JetHT_Run2018C
+    - JetHT_Run2018D
+mc_sf:
+  - TTTo2L2Nu
+  - TTToHadronic
+  - TTToSemiLeptonic
+  - QCD_Pt_120to170
+  - QCD_Pt_170to300
+  - QCD_Pt_300to470
+  - QCD_Pt_470to600
+  - QCD_Pt_600to800
+  - QCD_Pt_800to1000
+  - QCD_Pt_1000to1400
+  - QCD_Pt_1400to1800
+  - QCD_Pt_1800to2400
+  - QCD_Pt_2400to3200
+  - QCD_Pt_3200toInf
+  - DYJetsToLL_LHEFilterPtZ-0To50
+  - DYJetsToLL_LHEFilterPtZ-50To100
+  - DYJetsToLL_LHEFilterPtZ-100To250
+  - DYJetsToLL_LHEFilterPtZ-250To400
+  - DYJetsToLL_LHEFilterPtZ-400To650
+  - DYJetsToLL_LHEFilterPtZ-650ToInf
+  - ST_t-channel_antitop_4f_InclusiveDecays
+  - ST_t-channel_top_4f_InclusiveDecays
+  - ST_tW_antitop_5f_inclusiveDecays
+  - ST_tW_top_5f_inclusiveDecays
+  - ST_s-channel_4f_hadronicDecays
+  - ST_s-channel_4f_leptonDecays
+  - WJetsToLNu_HT-70To100
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - WW
+  - ZZ
+  - WZ
+  - WJetsToQQ_HT-200to400
+  - WJetsToQQ_HT-400to600
+  - WJetsToQQ_HT-600to800
+  - WJetsToQQ_HT-800toInf
+  - ZJetsToQQ_HT-200to400
+  - ZJetsToQQ_HT-400to600
+  - ZJetsToQQ_HT-600to800
+  - ZJetsToQQ_HT-800toInf
+GluGluZH:
+  - GluGluZH_HToWW_M-125_TuneCP5_13TeV-powheg-pythia8
+fake:
+  - QCD_Pt_120to170
+  - QCD_Pt_170to300
+  - QCD_Pt_300to470
+  - QCD_Pt_470to600
+  - QCD_Pt_600to800
+  - QCD_Pt_800to1000
+  - QCD_Pt_1000to1400
+  - QCD_Pt_1400to1800
+  - QCD_Pt_1800to2400
+  - QCD_Pt_2400to3200
+  - QCD_Pt_3200toInf
+prompt:
+  - DYJetsToLL_LHEFilterPtZ-0To50
+  - DYJetsToLL_LHEFilterPtZ-50To100
+  - DYJetsToLL_LHEFilterPtZ-100To250
+  - DYJetsToLL_LHEFilterPtZ-250To400
+  - DYJetsToLL_LHEFilterPtZ-400To650
+  - DYJetsToLL_LHEFilterPtZ-650ToInf
+prompt_old:
+- DYJetsToLL_M-10to50
+- DYJetsToLL_M-50_HT-70to100
+- DYJetsToLL_M-50_HT-100to200
+- DYJetsToLL_M-50_HT-200to400
+- DYJetsToLL_M-50_HT-400to600
+- DYJetsToLL_M-50_HT-600to800
+- DYJetsToLL_M-50_HT-800to1200
+- DYJetsToLL_M-50_HT-1200to2500
+- DYJetsToLL_M-50_HT-2500toInf
+wjets:
+  - WJetsToLNu_HT-70To100
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - WJetsToQQ_HT-200to400
+  - WJetsToQQ_HT-400to600
+  - WJetsToQQ_HT-600to800
+  - WJetsToQQ_HT-800toInf
+  - ZJetsToQQ_HT-200to400
+  - ZJetsToQQ_HT-400to600
+  - ZJetsToQQ_HT-600to800
+  - ZJetsToQQ_HT-800toInf
+fakeplusEWK:
+  - QCD_Pt_120to170
+  - QCD_Pt_170to300
+  - QCD_Pt_300to470
+  - QCD_Pt_470to600
+  - QCD_Pt_600to800
+  - QCD_Pt_800to1000
+  - QCD_Pt_1000to1400
+  - QCD_Pt_1400to1800
+  - QCD_Pt_1800to2400
+  - QCD_Pt_2400to3200
+  - QCD_Pt_3200toInf
+  - DYJetsToLL_LHEFilterPtZ-0To50
+  - DYJetsToLL_LHEFilterPtZ-50To100
+  - DYJetsToLL_LHEFilterPtZ-100To250
+  - DYJetsToLL_LHEFilterPtZ-250To400
+  - DYJetsToLL_LHEFilterPtZ-400To650
+  - DYJetsToLL_LHEFilterPtZ-650ToInf
+  - WJetsToLNu_HT-70To100
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - WJetsToQQ_HT-200to400
+  - WJetsToQQ_HT-400to600
+  - WJetsToQQ_HT-600to800
+  - WJetsToQQ_HT-800toInf
+  - ZJetsToQQ_HT-200to400
+  - ZJetsToQQ_HT-400to600
+  - ZJetsToQQ_HT-600to800
+  - ZJetsToQQ_HT-800toInf
+top_LP:
+  - TTTo2L2Nu
+  - TTToHadronic
+  - TTToSemiLeptonic
+EWK:
+  - DYJetsToLL_LHEFilterPtZ-0To50
+  - DYJetsToLL_LHEFilterPtZ-50To100
+  - DYJetsToLL_LHEFilterPtZ-100To250
+  - DYJetsToLL_LHEFilterPtZ-250To400
+  - DYJetsToLL_LHEFilterPtZ-400To650
+  - DYJetsToLL_LHEFilterPtZ-650ToInf
+  - WJetsToLNu_HT-70To100
+  - WJetsToLNu_HT-100To200
+  - WJetsToLNu_HT-200To400
+  - WJetsToLNu_HT-400To600
+  - WJetsToLNu_HT-600To800
+  - WJetsToLNu_HT-800To1200
+  - WJetsToLNu_HT-1200To2500
+  - WJetsToLNu_HT-2500ToInf
+  - WJetsToQQ_HT-200to400
+  - WJetsToQQ_HT-400to600
+  - WJetsToQQ_HT-600to800
+  - WJetsToQQ_HT-800toInf
+  - ZJetsToQQ_HT-200to400
+  - ZJetsToQQ_HT-400to600
+  - ZJetsToQQ_HT-600to800
+  - ZJetsToQQ_HT-800toInf

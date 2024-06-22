@@ -333,8 +333,8 @@ class vhProcessor(processor.ProcessorABC):
         jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
         #check
-        print('fjindex', ak.to_list(fj_idx_lep)[0:100])
-        print('VbosonIndex', ak.to_list(VbosonIndex)[0:100])
+        #print('fjindex', ak.to_list(fj_idx_lep)[0:100])
+        #print('VbosonIndex', ak.to_list(VbosonIndex)[0:100])
 
         #*************************************************************************
 
