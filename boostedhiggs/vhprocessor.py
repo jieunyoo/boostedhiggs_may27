@@ -449,17 +449,18 @@ class vhProcessor(processor.ProcessorABC):
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
 
-#        for shift in jec_shifted_fatjetvars["pt"]:
-#            if shift != "" and not self._systematics:
-#                continue
-#            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=shift, met_shift=None)
-#            variables = {**variables, **jecvariables}
+#try putting this back in and change definitions in utils file
+        for shift in jec_shifted_fatjetvars["pt"]:
+            if shift != "" and not self._systematics:
+                continue
+            jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
+            variables = {**variables, **jecvariables}
 
-#        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-#            if shift != "" and not self._systematics:
-#                continue
-            #jmsrvariables = getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=shift)
-            #variables = {**variables, **jmsrvariables}
+        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+            if shift != "" and not self._systematics:
+                continue
+            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
+            variables = {**variables, **jmsrvariables}
 
  
         # Selection ***********************************************************************************************************************************************
@@ -480,13 +481,12 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
-        #*******Note - I ran most recently with 200, we need to possibly change this to 250 now back to match Farouk
+        fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
         if self.isMC:  # make an OR of all the JECs
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
                     #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 200) #change to V
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
 
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
@@ -675,12 +675,10 @@ class vhProcessor(processor.ProcessorABC):
                 output[ch] = self.ak_to_pandas(output[ch])
 
             for var_ in [
-                "rec_higgs_m",
-                "rec_higgs_pt",
-                "rec_W_qq_m",
-                "rec_W_qq_pt",
-                "rec_W_lnu_m",
-                "rec_W_lnu_pt",
+                #"rec_higgs_m",
+                #"rec_higgs_pt",
+                "rec_V_m",
+                "rec_V_pt",
             ]:
                 if var_ in output[ch].keys():
                     output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
