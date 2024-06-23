@@ -285,11 +285,13 @@ class vhProcessor(processor.ProcessorABC):
         # OBJECT: AK8 fatjets
         fatjets = events.FatJet
         fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
-        fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
+        #fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
+        fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         good_fatjets = fatjets[fatjet_selector]
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
 
+        #JETS**************************************************
         #this applies JEC to all the fat jets
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
@@ -323,6 +325,8 @@ class vhProcessor(processor.ProcessorABC):
         #print('higgs', ak.to_list(good_fatjets[fj_idx_lep].pt)[0:100])
         #print('V boson', ak.to_list(secondFJ.pt)[0:100])
 
+
+        #for V boson
         #only for V boson, since need up and down
         Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
             events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True
@@ -430,9 +434,14 @@ class vhProcessor(processor.ProcessorABC):
              #   if shift != "":
               #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  
 
+#note: june 23 12:06 pm, changed this to jec_shifted_fatjetvars_V, hopefully this fixes the bug
+#farouk applies pt shift to only the higgs, i need to apply it to the V,
+#jec_shifted_fatjetvars is all jets and could be one with no Vjet, so then i think it fails here when trying to apply if there is no fat jet
+
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
+                    #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
 
             #keeping this as this is already the chosen above as the V
             # JMSR vars
@@ -450,7 +459,7 @@ class vhProcessor(processor.ProcessorABC):
 #                variables = {**variables, **jecvariables}
 
 #try putting this back in and change definitions in utils file
-        for shift in jec_shifted_fatjetvars["pt"]:
+        for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
             if shift != "" and not self._systematics:
                 continue
             jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
@@ -481,21 +490,21 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
-        if self.isMC:  # make an OR of all the JECs
-            for k, v in self.jecs.items():
-                for var in ["up", "down"]:
-                    #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
-
-        self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+        #fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
+      #  if self.isMC:  # make an OR of all the JECs
+      #      for k, v in self.jecs.items():
+      #          for var in ["up", "down"]:
+      #              #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
+      #              fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+      #  self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+      #this seems to be failing, june 23 12:13 pm, above i changed fat jets to > 250 GeV, and eliminating this cut, seems to allow for case where fat jet down pt is 250 GeV
         #*************************
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
+        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 )) #keeping at 30, can increase to 40 in post-processing to check
+        self.add_selection(name="MET", sel=(met.pt > 30))
 
-        #we also add a MET cut, but can do offline so can use these files for checks
 
         # gen-level matching
         signal_mask = None
