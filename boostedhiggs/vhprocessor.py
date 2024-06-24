@@ -434,10 +434,7 @@ class vhProcessor(processor.ProcessorABC):
              #   if shift != "":
               #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  
 
-#note: june 23 12:06 pm, changed this to jec_shifted_fatjetvars_V, hopefully this fixes the bug
 #farouk applies pt shift to only the higgs, i need to apply it to the V,
-#jec_shifted_fatjetvars is all jets and could be one with no Vjet, so then i think it fails here when trying to apply if there is no fat jet
-
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
@@ -448,6 +445,7 @@ class vhProcessor(processor.ProcessorABC):
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
+                    print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
@@ -490,14 +488,14 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
+        #fj_pt_sel = candidatefj.pt > 250   Farouk
+        fj_pt_sel = second_fj.pt > 250   # put back, this now for V only.... should be for higgs as well?
         if self.isMC:  # make an OR of all the JECs
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
                     #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
                     fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
-      #this seems to be failing, june 23 12:13 pm, above i changed fat jets to > 250 GeV, and eliminating this cut, seems to allow for case where fat jet down pt is 250 GeV
         #*************************
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
