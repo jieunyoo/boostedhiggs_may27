@@ -285,8 +285,8 @@ class vhProcessor(processor.ProcessorABC):
         # OBJECT: AK8 fatjets
         fatjets = events.FatJet
         fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
-        #fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
-        fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
+        fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
+        #fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         good_fatjets = fatjets[fatjet_selector]
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
@@ -490,13 +490,13 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        #fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
-      #  if self.isMC:  # make an OR of all the JECs
-      #      for k, v in self.jecs.items():
-      #          for var in ["up", "down"]:
-      #              #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-      #              fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
-      #  self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+        fj_pt_sel = candidatefj.pt > 250   # changed now june 22 2:13 pm to 250 to match farouk
+        if self.isMC:  # make an OR of all the JECs
+            for k, v in self.jecs.items():
+                for var in ["up", "down"]:
+                    #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+        self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
       #this seems to be failing, june 23 12:13 pm, above i changed fat jets to > 250 GeV, and eliminating this cut, seems to allow for case where fat jet down pt is 250 GeV
         #*************************
 
