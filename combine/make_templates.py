@@ -368,7 +368,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
         hist2.axis.Variable(
-            list(range(40, 140, mass_binning)),
+            list(range(20, 140, mass_binning)),
             name="mass_observable",
             label=r"V softdrop mass [GeV]",
             overflow=True,
@@ -656,7 +656,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             weight=nominal,
                         )
                 # ------------------- individual sources of JES -------------------
-
+#this includes JMS JMR
                 """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
                 for syst, (yrs, smpls, var) in {**JES_systs_correlated, **JES_systs_uncorrelated}.items():
 
