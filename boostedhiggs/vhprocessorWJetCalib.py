@@ -299,9 +299,9 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         #for W Jet ******************************************************
         candidatefj = ak.firsts(good_fatjets[:, 0:1])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
-        print('deltaR', ak.to_list(lep_fj_dr)[0:100])
+        #print('deltaR', ak.to_list(lep_fj_dr)[0:100])
         VScore_WJet = VScore(candidatefj)
-        print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
+        #print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
 
       
         jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
@@ -401,7 +401,7 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
             # JEC vars
-            for shift, vals in jec_shifted_fatjetvars["pt"].items():
+            for shift, vals in jec_shifted_fatjetvars["pt"].items(): #we only have one jet anyway don't need this systematics for now - to fix
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
 
@@ -422,13 +422,13 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         for shift in jec_shifted_fatjetvars["pt"]:
             if shift != "" and not self._systematics:
                 continue
-            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=shift, met_shift=None)
+            jecvariables = getJECVariables(fatjetvars,pt_shift=shift) #now agrees with what is in vhprocessor this will give shfits on fat jet only
             variables = {**variables, **jecvariables}
 
         for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
             if shift != "" and not self._systematics:
                 continue
-            jmsrvariables = getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=shift)
+            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
             variables = {**variables, **jmsrvariables}
 
  
@@ -450,16 +450,16 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         self.add_selection(name="OneJet", sel=(NumFatjets == 1))
 
         #*************************
-        fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
-        if self.isMC:  # make an OR of all the JECs
-            for k, v in self.jecs.items():
-                for var in ["up", "down"]:
-                    fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200)
+    #    fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
+    #    if self.isMC:  # make an OR of all the JECs
+    #        for k, v in self.jecs.items():
+    #            for var in ["up", "down"]:
+    #                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200)
 
-        self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+    #    self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
-        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
+        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 ))
         self.add_selection(name="MET", sel=(met.pt > 30))
 
         #we also add a MET cut, but can do offline so can use these files for checks
