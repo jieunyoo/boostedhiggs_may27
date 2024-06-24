@@ -10,12 +10,12 @@ samples:
     - EWKvjets
     - Data
 regions_sel:
-    # put any "selection name: selection" here to store it in the templates
+    # put any "selection name: selection" here to store it in the templates       #to do: do we want Higgs jet pt > 250 or V jet > 250 or both?
     "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (fj_ParT_score > 0.9) & (met_pt > 30) & (ReconVCandidateMass > 60) & (ReconHiggsCandidateFatJet_pt > 250)
-    "TopCR": (numberBJets_Medium_OutsideFatJets > 0)& (ReconVCandidateMass > 40) & (met_pt > 30)
-    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0)& (ReconVCandidateMass > 40) & (met_pt > 30) & (ReconVCandidateMass < 60)
+    "TopCR": (numberBJets_Medium_OutsideFatJets > 0)& (ReconVCandidateMass > 30) & (met_pt > 30)
+    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0)& (ReconVCandidateMass > 30) & (met_pt > 30) & (ReconVCandidateMass < 60)
 
 samples_dir:
-    "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/june19/june16_620pm_2018/
+    "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/june24/
 
 model_path: /uscms/home/jieun201/nobackup/YOURWORKINGAREA/model.onnx

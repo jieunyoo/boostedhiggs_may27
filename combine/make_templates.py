@@ -219,7 +219,6 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         ),
     }
 
-    # key: name of systematic to store, value: (year to process up/down, name of variable in parquet)
     BTAG_systs_uncorrelated = {}
     for year in years:
         if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
@@ -243,12 +242,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
             },
         }
 
-    JEC_systs_correlated = {
-        "UES": (
-            years,
-            sigs + bkgs,
-            {"ele": "UES", "mu": "UES"},
-        ),
+    JES_systs_correlated = {
         # individual sources
         "JES_FlavorQCD": (
             years,
@@ -282,32 +276,16 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         ),
     }
 
-    # key: name of systematic to store, value: (year to process up/down otherwise store nominal, name of variable in parquet)
-    JEC_systs_uncorrelated = {}
+    JES_systs_uncorrelated = {}
     for year in years:
         if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
             yearlabel = "2016"
         else:
             yearlabel = year
 
-        JEC_systs_uncorrelated = {
-            **JEC_systs_uncorrelated,
+        JES_systs_uncorrelated = {
+            **JES_systs_uncorrelated,
             **{
-                f"JER_{year}": (
-                    year,
-                    sigs + bkgs,
-                    {"ele": "JER", "mu": "JER"},
-                ),
-                f"JMR_{year}": (
-                    year,
-                    sigs + bkgs,
-                    {"ele": "JMR", "mu": "JMR"},
-                ),
-                f"JMS_{year}": (
-                    year,
-                    sigs + bkgs,
-                    {"ele": "JMS", "mu": "JMS"},
-                ),
                 f"JES_BBEC1_{year}": (
                     year,
                     sigs + bkgs,
@@ -336,13 +314,50 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
             },
         }
 
+#    JEC_systs_correlated_others = {
+#        "UES": (
+#            years,
+#            sigs + bkgs,
+#            {"ele": "UES", "mu": "UES"},
+#        ),
+#    }
+
+    # key: name of systematic to store, value: (year to process up/down otherwise store nominal, name of variable in parquet)
+    JEC_systs_uncorrelated_others = {}
+    for year in years:
+        if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
+            yearlabel = "2016"
+        else:
+            yearlabel = year
+
+        JEC_systs_uncorrelated_others = {
+            **JEC_systs_uncorrelated_others,
+            **{
+                f"JER_{year}": (
+                    year,
+                    sigs + bkgs,
+                    {"ele": "JER", "mu": "JER"},
+                ),
+                f"JMR_{year}": (
+                    year,
+                    sigs + bkgs,
+                    {"ele": "JMR", "mu": "JMR"},
+                ),
+                f"JMS_{year}": (
+                    year,
+                    sigs + bkgs,
+                    {"ele": "JMS", "mu": "JMS"},
+                ),
+            },
+        }
+
     # add extra selections to preselection
     presel = {
         "mu": {
-            "tagger>0.": "THWW>0.1",
+            "tagger>0.50": "THWW>0.50",
         },
         "ele": {
-            "tagger>0.": "THWW>0.1",
+            "tagger>0.50": "THWW>0.50",
         },
     }
 
@@ -353,9 +368,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
         hist2.axis.Variable(
-            list(range(40, 160, mass_binning)),
+            list(range(40, 140, mass_binning)),
             name="mass_observable",
-            label=r"V reconstructed mass [GeV]",
+            label=r"V softdrop mass [GeV]",
             overflow=True,
         ),
         storage=hist2.storage.Weight(),
@@ -427,8 +442,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     else:
                         nominal = df[f"weight_{ch}"] * xsecweight
 
-                        #if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
-                        if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
 
                     ###################################
@@ -436,16 +450,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         threshold = 20
                         df = df[nominal < threshold]
                         nominal = nominal[nominal < threshold]
-
-                        # avg_good_weight = nominal[nominal < threshold].mean()
-                        # nominal[nominal > threshold] = avg_good_weight
                     ###################################
 
                     hists.fill(
                         Sample=sample_to_use,
                         Systematic="nominal",
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=nominal,
                     )
 
@@ -467,7 +478,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["ReconVCandidateMass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_up,
                         )
 
@@ -475,7 +486,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["ReconVCandidateMass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_down,
                         )
 
@@ -497,7 +508,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["ReconVCandidateMass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_up,
                         )
 
@@ -505,7 +516,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["ReconVCandidateMass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_down,
                         )
 
@@ -546,7 +557,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_up",
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_up,
                     )
 
@@ -554,7 +565,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_down",
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_down,
                     )
 
@@ -606,7 +617,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_up",
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_up,
                     )
 
@@ -614,37 +625,86 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_down",
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_down,
                     )
 
-                    # # ------------------- JECs -------------------
+                    # ------------------- Some JECs -------------------
 
-                    # systematics correlated across all years
-                    # TODO: apply the jet pt cut on the up/down variations
-          #          for syst, (yrs, smpls, var) in {**JEC_systs_correlated, **JEC_systs_uncorrelated}.items():
+                    #for syst, (yrs, smpls, var) in {**JEC_systs_uncorrelated_others, **JEC_systs_correlated_others}.items():
+                    for syst, (yrs, smpls, var) in { **JEC_systs_uncorrelated_others}.items():
 
-          #              if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-          #                  shape_up = df["fj_pt" + var[ch] + "_up"]
-          #                  shape_down = df["fj_pt" + var[ch] + "_down"]
-          #              else:
-          #                  shape_up = df["fj_pt"]
-          #                  shape_down = df["fj_pt"]
+                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                            shape_up = df["rec_V_m" + var[ch] + "_up"]
+                            shape_down = df["rec_V_m" + var[ch] + "_down"]
+                        else:
+                            shape_up = df["rec_V_m"]
+                            shape_down = df["rec_V_m"]
 
-          #              hists.fill(
-          #                  Sample=sample_to_use,
-          #                  Systematic=f"{syst}_up",
-          #                  Region=region,
-          #                  mass_observable=shape_up,
-          #                  weight=nominal,
-          #              )
-          #              hists.fill(
-          #                  Sample=sample_to_use,
-          #                  Systematic=f"{syst}_down",
-          #                  Region=region,
-          #                  mass_observable=shape_down,
-          #                  weight=nominal,
-          #              )
+                        hists.fill(
+                            Sample=sample_to_use,
+                            Systematic=f"{syst}_up",
+                            Region=region,
+                            mass_observable=shape_up,
+                            weight=nominal,
+                        )
+                        hists.fill(
+                            Sample=sample_to_use,
+                            Systematic=f"{syst}_down",
+                            Region=region,
+                            mass_observable=shape_down,
+                            weight=nominal,
+                        )
+                # ------------------- individual sources of JES -------------------
+
+                """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
+                for syst, (yrs, smpls, var) in {**JES_systs_correlated, **JES_systs_uncorrelated}.items():
+
+                    for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
+
+                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                            region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + "_up")
+
+                        df = data.copy()
+                        df = df.query(region_sel)
+
+                        # ------------------- Nominal -------------------
+                        if is_data:
+                            nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
+                        else:
+                            nominal = df[f"weight_{ch}"] * xsecweight
+
+                            if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                                nominal *= df["weight_btag"]
+
+                        ###################################
+                        if sample_to_use == "EWKvjets":
+                            threshold = 20
+                            df = df[nominal < threshold]
+                            nominal = nominal[nominal < threshold]
+                        ###################################
+
+                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                            shape_up = df["rec_V_m" + var[ch] + "_up"]
+                            shape_down = df["rec_V_m" + var[ch] + "_down"]
+                        else:
+                            shape_up = df["rec_V_m"]
+                            shape_down = df["rec_V_m"]
+
+                        hists.fill(
+                            Sample=sample_to_use,
+                            Systematic=f"{syst}_up",
+                            Region=region,
+                            mass_observable=shape_up,
+                            weight=nominal,
+                        )
+                        hists.fill(
+                            Sample=sample_to_use,
+                            Systematic=f"{syst}_down",
+                            Region=region,
+                            mass_observable=shape_down,
+                            weight=nominal,
+                        )
 
     if add_fake:
         for year in years:
@@ -667,7 +727,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample="Fake",
                         Systematic=syst,
                         Region=region,
-                        mass_observable=df["ReconVCandidateMass"],
+                        mass_observable=df["rec_V_m"],
                         weight=df["event_weight"],
                     )
 
@@ -700,6 +760,7 @@ def main(args):
     years = args.years.split(",")
     channels = args.channels.split(",")
     with open("config_make_templates.yaml", "r") as stream:
+    #with open("simple.yaml", "r") as stream:
         config = yaml.safe_load(stream)
 
     if len(years) == 4:

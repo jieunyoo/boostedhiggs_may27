@@ -102,7 +102,7 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     # Theory Systematics. (convention: https://gitlab.cern.ch/hh/naming-conventions#theory-uncertainties)
 
     # PDF
-    n = rl.NuisanceParameter("pdf_Higgs_gg", "lnN")
+    #n = rl.NuisanceParameter("pdf_Higgs_gg", "lnN")
     #systs_dict["ggF"]["pdf_Higgs_gg"] = n
     #systs_dict_values["ggF"]["pdf_Higgs_gg"] = (1.019, None)
 
@@ -338,86 +338,86 @@ def systs_from_parquets(years):
     # ------------------- JECs -------------------
 
     # systematics correlated across all years
-#    JEC_systs_correlated = {
-#        rl.NuisanceParameter("unclustered_Energy", "shape"): (
-#            "UES",
-#            sigs + bkgs,
-#        ),
+    JEC_systs_correlated = {
+        #rl.NuisanceParameter("unclustered_Energy", "shape"): ( #Farouk uses this, think we don't have this, so am commenting this out
+        #    "UES",
+        #    sigs + bkgs,
+       # ),
 #        # individual sources
-#        rl.NuisanceParameter("CMS_scale_j_FlavQCD", "shape"): (
-#            "JES_FlavorQCD",
-#            sigs + bkgs,
-#        ),
-#        rl.NuisanceParameter("CMS_scale_j_RelBal", "shape"): (
-#            "JES_RelativeBal",
-#            sigs + bkgs,
-#        ),
-#        rl.NuisanceParameter("CMS_scale_j_HF", "shape"): (
-#            "JES_HF",
-#            sigs + bkgs,
-#        ),
-#        rl.NuisanceParameter("CMS_scale_j_BBEC1", "shape"): (
-#            "JES_BBEC1",
-#            sigs + bkgs,
-#        ),
-#        rl.NuisanceParameter("CMS_scale_j_EC2", "shape"): (
-#            "JES_EC2",
-#            sigs + bkgs,
-#        ),
-#        rl.NuisanceParameter("CMS_scale_j_Abs", "shape"): (
-#            "JES_Absolute",
-#            sigs + bkgs,
-#        ),
-#    }
+        rl.NuisanceParameter("CMS_scale_j_FlavQCD", "shape"): (
+            "JES_FlavorQCD",
+            sigs + bkgs,
+        ),
+        rl.NuisanceParameter("CMS_scale_j_RelBal", "shape"): (
+            "JES_RelativeBal",
+            sigs + bkgs,
+        ),
+        rl.NuisanceParameter("CMS_scale_j_HF", "shape"): (
+            "JES_HF",
+            sigs + bkgs,
+        ),
+        rl.NuisanceParameter("CMS_scale_j_BBEC1", "shape"): (
+            "JES_BBEC1",
+            sigs + bkgs,
+        ),
+        rl.NuisanceParameter("CMS_scale_j_EC2", "shape"): (
+            "JES_EC2",
+            sigs + bkgs,
+        ),
+        rl.NuisanceParameter("CMS_scale_j_Abs", "shape"): (
+            "JES_Absolute",
+            sigs + bkgs,
+        ),
+    }
 
     # systematics uncorrelated across all years
-#    JEC_systs_uncorrelated = {}
-#    for year in years:
-        #JEC_systs_uncorrelated = {
-#            **JEC_systs_uncorrelated,
-#            **{
-#                rl.NuisanceParameter(f"CMS_res_j_{year}", "shape"): (
-#                    f"JER_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
-#                    f"JMR_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
-#                    f"JMS_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}", "shape"): (
-#                    f"JES_BBEC1_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"CMS_scale_j_RelSample_{year}", "shape"): (
-#                    f"JES_RelativeSample_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"CMS_scale_j_EC2_{year}", "shape"): (
-#                    f"JES_EC2_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"CMS_scale_j_HF_{year}", "shape"): (
-#                    f"JES_HF_{year}",
-#                    sigs + bkgs,
-#                ),
-#                rl.NuisanceParameter(f"CMS_scale_j_Abs_{year}", "shape"): (
-#                    f"JES_Absolute_{year}",
-#                    sigs + bkgs,
-#                ),
-#            },
-        #}
+    JEC_systs_uncorrelated = {}
+    for year in years:
+        JEC_systs_uncorrelated = {
+            **JEC_systs_uncorrelated,
+            **{
+                rl.NuisanceParameter(f"CMS_res_j_{year}", "shape"): (
+                    f"JER_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
+                    f"JMR_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
+                    f"JMS_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}", "shape"): (
+                    f"JES_BBEC1_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_RelSample_{year}", "shape"): (
+                    f"JES_RelativeSample_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_EC2_{year}", "shape"): (
+                    f"JES_EC2_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_HF_{year}", "shape"): (
+                    f"JES_HF_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_Abs_{year}", "shape"): (
+                    f"JES_Absolute_{year}",
+                    sigs + bkgs,
+                ),
+            },
+        }
 
     SYSTEMATICS = {
         **SYSTEMATICS_correlated,
         **SYSTEMATICS_uncorrelated,
         **BTAG_systs_correlated,
         **BTAG_systs_uncorrelated,
-        #**JEC_systs_correlated,
-        #**JEC_systs_uncorrelated,
+        **JEC_systs_correlated,
+        **JEC_systs_uncorrelated,
     }
 
     return SYSTEMATICS
