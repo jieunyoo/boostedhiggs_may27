@@ -678,8 +678,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
 
-                                if sample_to_use == "TTbar":
-                                    nominal *= df["top_reweighting"]
+                                #if sample_to_use == "TTbar":
+                                 #   nominal *= df["top_reweighting"]
 
                             ###################################
                             if sample_to_use == "EWKvjets":
