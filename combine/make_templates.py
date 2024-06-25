@@ -442,7 +442,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     else:
                         nominal = df[f"weight_{ch}"] * xsecweight
 
-                        if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
 
                     ###################################
@@ -659,52 +659,48 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 #this includes JMS JMR
                 """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
                 for syst, (yrs, smpls, var) in {**JES_systs_correlated, **JES_systs_uncorrelated}.items():
+                    for variation in ["up", "down"]:
 
-                    for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
+                        for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
-                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + "_up") #why no down? 
+                            if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                region_sel = region_sel.replace("rec_V_pt", "rec_V_pt" + var[ch] + f"_{variation}")
 
-                        df = data.copy()
-                        df = df.query(region_sel)
+                            df = data.copy()
+                            df = df.query(region_sel)
 
-                        # ------------------- Nominal -------------------
-                        if is_data:
-                            nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
-                        else:
-                            nominal = df[f"weight_{ch}"] * xsecweight
+                            # ------------------- Nominal -------------------
+                            if is_data:
+                                nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
+                            else:
+                                nominal = df[f"weight_{ch}"] * xsecweight
 
-                            if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
-                                nominal *= df["weight_btag"]
+                                if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                                    nominal *= df["weight_btag"]
 
-                        ###################################
-                        if sample_to_use == "EWKvjets":
-                            threshold = 20
-                            df = df[nominal < threshold]
-                            nominal = nominal[nominal < threshold]
-                        ###################################
+                                if sample_to_use == "TTbar":
+                                    nominal *= df["top_reweighting"]
 
-                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df["rec_V_m" + var[ch] + "_up"]
-                            shape_down = df["rec_V_m" + var[ch] + "_down"]
-                        else:
-                            shape_up = df["rec_V_m"]
-                            shape_down = df["rec_V_m"]
+                            ###################################
+                            if sample_to_use == "EWKvjets":
+                                threshold = 20
+                                df = df[nominal < threshold]
+                                nominal = nominal[nominal < threshold]
+                            ###################################
 
-                        hists.fill(
-                            Sample=sample_to_use,
-                            Systematic=f"{syst}_up",
-                            Region=region,
-                            mass_observable=shape_up,
-                            weight=nominal,
-                        )
-                        hists.fill(
-                            Sample=sample_to_use,
-                            Systematic=f"{syst}_down",
-                            Region=region,
-                            mass_observable=shape_down,
-                            weight=nominal,
-                        )
+                            if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                shape_variation = df["rec_V_m" + var[ch] + f"_{variation}"]
+                            else:
+                                shape_variation = df["rec_V_m"]
+
+                            hists.fill(
+                                Sample=sample_to_use,
+                                Systematic=f"{syst}_{variation}",
+                                Region=region,
+                                mass_observable=shape_variation,
+                                weight=nominal,
+                            )
+
 
     if add_fake:
         for year in years:
