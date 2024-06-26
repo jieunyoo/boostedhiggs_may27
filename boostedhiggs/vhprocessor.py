@@ -410,6 +410,7 @@ class vhProcessor(processor.ProcessorABC):
 	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
+            "V_noncorrectedMass": second_fj.mass,
        
         }
 
@@ -442,10 +443,11 @@ class vhProcessor(processor.ProcessorABC):
 
             #keeping this as this is already the chosen above as the V
             # JMSR vars
+            print('items', ak.to_list(jmsr_shifted_fatjetvars["msoftdrop"].items())[0:100])
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
-                    print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
+                    #print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
@@ -457,17 +459,18 @@ class vhProcessor(processor.ProcessorABC):
 #                variables = {**variables, **jecvariables}
 
 #try putting this back in and change definitions in utils file
-        for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
-            if shift != "" and not self._systematics:
-                continue
-            jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
-            variables = {**variables, **jecvariables}
+#can delete these now, and just use the fat jet variables above, e.g., fj_mass_UP and down
+   #     for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
+   #         if shift != "" and not self._systematics:
+   #             continue
+   #         jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
+   #         variables = {**variables, **jecvariables}
 
-        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-            if shift != "" and not self._systematics:
-                continue
-            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-            variables = {**variables, **jmsrvariables}
+   #     for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+   #         if shift != "" and not self._systematics:
+   #             continue
+   #         jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
+   #         variables = {**variables, **jmsrvariables}
 
  
         # Selection ***********************************************************************************************************************************************
@@ -681,14 +684,14 @@ class vhProcessor(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-            for var_ in [
+      #      for var_ in [
                 #"rec_higgs_m",
                 #"rec_higgs_pt",
-                "rec_V_m",
-                "rec_V_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+      #          "rec_V_m",
+      #          "rec_V_pt",
+      #      ]:
+      #          if var_ in output[ch].keys():
+      #              output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")

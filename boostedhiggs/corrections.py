@@ -735,6 +735,7 @@ jmsValues["msoftdrop"] = {
     "2017": [0.982, 0.978, 0.986],
     # Use 2017 values for 2018 until 2018 are released
     "2018": [0.982, 0.978, 0.986],
+    #"2018": [1,1,1],
 }
 
 
@@ -742,7 +743,7 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
     """Calculates post JMS/R masses and shifts"""
     jmsr_shifted_vars = {}
 
-    for mkey in jmsr_vars:
+    for mkey in jmsr_vars: #the key is msoftdrop, do this for nominal, down, then up
         tdict = {}
 
         mass = pad_val(fatjets[mkey], num_jets, axis=1)
@@ -753,8 +754,8 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)
             # scale to JMR nom, down, up (minimum at 0)
-            jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
-            jms_nom, jms_down, jms_up = jmsValues[mkey][year]
+            jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]  #this is for jmR
+            jms_nom, jms_down, jms_up = jmsValues[mkey][year]  #this is for jmS
 
             mass_jms = mass * jms_nom
             mass_jmr = mass * jmr_nom
@@ -762,8 +763,10 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             tdict[""] = mass_jms * jmr_nom
             tdict["JMS_down"] = mass_jmr * jms_down
             tdict["JMS_up"] = mass_jmr * jms_up
-            tdict["JMR_down"] = mass_jms * jmr_down
+
+            tdict["JMR_down"] = mass_jmr * jmr_down
             tdict["JMR_up"] = mass_jms * jmr_up
+            tdict["nominal"] = mass_jms * jmr_nom #added june 25 10:04 pm, thanks mohammad! need to save this nominal value since nominal correction is NOT equal to 1
 
         jmsr_shifted_vars[mkey] = tdict
 
@@ -788,7 +791,7 @@ def getJECVariables(fatjetvars, pt_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    variables[f"rec_V_m{shift}"] = candidatefj.mass #in procesor "fj_mass": second_fj.msdcorr which is the V mass
+    variables[f"rec_V_m{shift}"] = candidatefj.mass
     variables[f"rec_V_pt{shift}"] = candidatefj.pt
     return variables
 
@@ -805,7 +808,7 @@ def getJMSRVariables(fatjetvars, mass_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass
+    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
     variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
 
     return variables
