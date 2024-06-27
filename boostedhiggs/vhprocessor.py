@@ -28,8 +28,8 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJMSRVariables,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
@@ -335,10 +335,13 @@ class vhProcessor(processor.ProcessorABC):
 
         #changed this to get the V jet
         jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        #to do: rewrite the above function so that it returns the nominal value and then i can save that as the fat jet mass (soft drop mass corrected with soft drop mass correctino and JMR/JMS correction, but too tired for that now so will do tom; otherwise right now creates a new variable)
 
         #check
         #print('fjindex', ak.to_list(fj_idx_lep)[0:100])
-        #print('VbosonIndex', ak.to_list(VbosonIndex)[0:100])
+        #print('VbosonJet pt', ak.to_list(Vboson_Jet.pt)[0:100]) #this is the corrected pt, e.g., 245.99, 208.8
+        #corrected jet pt seems to shift pt lower a little
+        #print('second fj pt', ak.to_list(second_fj.pt)[0:100])  #ths is the uncorrected pt, e.g., 246.23, 209.19
 
         #*************************************************************************
 
@@ -401,7 +404,7 @@ class vhProcessor(processor.ProcessorABC):
             "met_pt": met.pt,
 
             "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "ReconHiggsCandidateFatJet_pt": candidatefj.pt,
+            "ReconHiggsCandidateFatJet_pt": candidatefj.pt, #THIS IS THE UNCORRECTED PT!!
             "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
             "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
         
@@ -410,7 +413,7 @@ class vhProcessor(processor.ProcessorABC):
 	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
-            "V_noncorrectedMass": second_fj.mass,
+            "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking
        
         }
 
@@ -419,10 +422,11 @@ class vhProcessor(processor.ProcessorABC):
             #"fj_eta": candidatefj.eta,
             #"fj_phi": candidatefj.phi,
             #"fj_mass": candidatefj.msdcorr,
-            "fj_pt": second_fj.pt,
+            #"fj_pt": second_fj.pt,
+            "fj_pt": Vboson_Jet.pt, #this is the corrected one i think!
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_mass": second_fj.msdcorr,
+            "fj_mass": second_fj.msdcorr, #this is the uncorrected one (not JMR corrected)
 
         }
 
@@ -443,7 +447,7 @@ class vhProcessor(processor.ProcessorABC):
 
             #keeping this as this is already the chosen above as the V
             # JMSR vars
-            print('items', ak.to_list(jmsr_shifted_fatjetvars["msoftdrop"].items())[0:100])
+            #print('items', ak.to_list(jmsr_shifted_fatjetvars["msoftdrop"].items())[0:100])
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
