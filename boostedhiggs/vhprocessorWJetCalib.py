@@ -28,8 +28,8 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJMSRVariables,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
@@ -294,18 +294,28 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
 
+
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
 
         #for W Jet ******************************************************
-        candidatefj = ak.firsts(good_fatjets[:, 0:1])
+        candidatefj = ak.firsts(good_fatjets[:, 0:1]) #get highest pt jet
+        print('pt', ak.to_list(candidatefj.pt)[0:100])
+
+
+        WJet_corrected, jec_shifted_fatjetvars_WJet = get_jec_jets(
+            events, good_fatjets[:, 0:1], self._year, not self.isMC, self.jecs, fatjets=True,
+        )
+        WJetIndex = ak.local_index(WJet_corrected,axis=1)
+        #print('WJetindex', ak.to_list(WJetIndex)[0:100])
+        #print('Wjet pt', ak.to_list(WJet_corrected.pt)[0:100])
+
+
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
         #print('deltaR', ak.to_list(lep_fj_dr)[0:100])
         VScore_WJet = VScore(candidatefj)
         #print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
 
-      
         jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
-
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
@@ -389,11 +399,12 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
 
         
 
-        fatjetvars = {
-            "fj_pt": candidatefj.pt,
+        fatjetvars = {   
+            "fj_pt": WJet_corrected.pt,
+            #"fj_pt": candidatefj.pt,
             "fj_eta": candidatefj.eta,
             "fj_phi": candidatefj.phi,
-            "fj_mass": candidatefj.msdcorr,
+            "fj_mass": candidatefj.msdcorr, #note don't use this now for the mass, use massNominal until I fit this naming
         }
 
         variables = {**variables, **fatjetvars}
@@ -401,9 +412,9 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
             # JEC vars
-            for shift, vals in jec_shifted_fatjetvars["pt"].items(): #we only have one jet anyway don't need this systematics for now - to fix
+            for shift, vals in jec_shifted_fatjetvars_WJet["pt"].items(): #we only have one jet anyway don't need this systematics for now - to fix
                 if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[WJetIndex])
 
             # JMSR vars
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
@@ -412,24 +423,6 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
-
-        #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
-
-            for met_shift in ["UES_up", "UES_down"]:
-                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
-                variables = {**variables, **jecvariables}
-
-        for shift in jec_shifted_fatjetvars["pt"]:
-            if shift != "" and not self._systematics:
-                continue
-            jecvariables = getJECVariables(fatjetvars,pt_shift=shift) #now agrees with what is in vhprocessor this will give shfits on fat jet only
-            variables = {**variables, **jecvariables}
-
-        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-            if shift != "" and not self._systematics:
-                continue
-            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-            variables = {**variables, **jmsrvariables}
 
  
         # Selection ***********************************************************************************************************************************************
@@ -450,11 +443,11 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         self.add_selection(name="OneJet", sel=(NumFatjets == 1))
 
         #*************************
-    #    fj_pt_sel = candidatefj.pt > 200   #not sure what farouk is doing here, change his 250 --> 200 for now 
+    #    fj_pt_sel = candidatefj.pt > 250   
     #    if self.isMC:  # make an OR of all the JECs
     #        for k, v in self.jecs.items():
     #            for var in ["up", "down"]:
-    #                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200)
+    #                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
 
     #    self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
@@ -640,17 +633,6 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
             # convert arrays to pandas
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
-
-            for var_ in [
-                "rec_higgs_m",
-                "rec_higgs_pt",
-                "rec_W_qq_m",
-                "rec_W_qq_pt",
-                "rec_W_lnu_m",
-                "rec_W_lnu_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
