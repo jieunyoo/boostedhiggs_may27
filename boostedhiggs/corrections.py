@@ -681,6 +681,7 @@ def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, 
 
     for jec_var in jec_vars:
         tdict = {"": jets[jec_var]}
+        #print('tdict', ak.to_list(tdict))
         if apply_jecs:
             for key, shift in jecs.items():
                 for var in ["up", "down"]:
@@ -774,44 +775,44 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
 
 
 #def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
-def getJECVariables(fatjetvars, pt_shift=None):
-    """
-    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
-    """
-    variables = {}
-    ptlabel = pt_shift if pt_shift is not None else ""
-    shift = ptlabel 
-    candidatefj = ak.zip(
-        {
-            "pt": fatjetvars[f"fj_pt{ptlabel}"],
-            "eta": fatjetvars["fj_eta"],
-            "phi": fatjetvars["fj_phi"],
-            "mass": fatjetvars["fj_mass"],
-        },
-        with_name="PtEtaPhiMCandidate",
-        behavior=candidate.behavior,
-    )
-    variables[f"rec_V_m{shift}"] = candidatefj.mass
-    variables[f"rec_V_pt{shift}"] = candidatefj.pt
-    return variables
+#def getJECVariables(fatjetvars, pt_shift=None):
+#    """
+#    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
+#    """
+#    variables = {}
+#    ptlabel = pt_shift if pt_shift is not None else ""
+#    shift = ptlabel 
+#    candidatefj = ak.zip(
+#        {
+#            "pt": fatjetvars[f"fj_pt{ptlabel}"],
+#            "eta": fatjetvars["fj_eta"],
+#            "phi": fatjetvars["fj_phi"],
+#            "mass": fatjetvars["fj_mass"],
+#        },
+#        with_name="PtEtaPhiMCandidate",
+#        behavior=candidate.behavior,
+#    )
+#    variables[f"rec_V_m{shift}"] = candidatefj.mass
+#    variables[f"rec_V_pt{shift}"] = candidatefj.pt
+#    return variables
 
 #def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
-def getJMSRVariables(fatjetvars, mass_shift=None):
-    variables = {}
-    candidatefj = ak.zip(
-        {
-            "pt": fatjetvars["fj_pt"],
-            "eta": fatjetvars["fj_eta"],
-            "phi": fatjetvars["fj_phi"],
-            "mass": fatjetvars[f"fj_mass{mass_shift}"],
-        },
-        with_name="PtEtaPhiMCandidate",
-        behavior=candidate.behavior,
-    )
-    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
-    variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
+#def getJMSRVariables(fatjetvars, mass_shift=None):
+#    variables = {}
+#    candidatefj = ak.zip(
+#        {
+#            "pt": fatjetvars["fj_pt"],
+#            "eta": fatjetvars["fj_eta"],
+#            "phi": fatjetvars["fj_phi"],
+#            "mass": fatjetvars[f"fj_mass{mass_shift}"],
+#        },
+#        with_name="PtEtaPhiMCandidate",
+#        behavior=candidate.behavior,
+#    )
+#    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
+#    variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
 
-    return variables
+#    return variables
 
 
 """
