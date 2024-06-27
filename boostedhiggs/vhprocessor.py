@@ -333,9 +333,12 @@ class vhProcessor(processor.ProcessorABC):
         )
         VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-        #changed this to get the V jet
+
+
+        #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+
+
         jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        #to do: rewrite the above function so that it returns the nominal value and then i can save that as the fat jet mass (soft drop mass corrected with soft drop mass correctino and JMR/JMS correction, but too tired for that now so will do tom; otherwise right now creates a new variable)
 
         #check
         #print('fjindex', ak.to_list(fj_idx_lep)[0:100])

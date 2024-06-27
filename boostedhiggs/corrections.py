@@ -740,6 +740,7 @@ jmsValues["msoftdrop"] = {
 }
 
 
+#def get_jmsr(fatjets, jets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
 def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
     """Calculates post JMS/R masses and shifts"""
     jmsr_shifted_vars = {}
@@ -755,19 +756,15 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)
             # scale to JMR nom, down, up (minimum at 0)
-            jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]  #this is for jmR
-            jms_nom, jms_down, jms_up = jmsValues[mkey][year]  #this is for jmS
+            r_nom, r_down, r_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            s_nom, s_down, s_up = jmsValues[mkey][year]
+            tdict["nominal"]           = mass * s_nom  * r_nom
+            tdict["JMS_down"]   = mass * s_down * r_nom
+            tdict["JMS_up"]     = mass * s_up   * r_nom
+            tdict["JMR_down"]   = mass * s_nom  * r_down
+            tdict["JMR_up"]     = mass * s_nom  * r_up
 
-            mass_jms = mass * jms_nom
-            mass_jmr = mass * jmr_nom
 
-            tdict[""] = mass_jms * jmr_nom
-            tdict["JMS_down"] = mass_jmr * jms_down
-            tdict["JMS_up"] = mass_jmr * jms_up
-
-            tdict["JMR_down"] = mass_jmr * jmr_down
-            tdict["JMR_up"] = mass_jms * jmr_up
-            tdict["nominal"] = mass_jms * jmr_nom #added june 25 10:04 pm, thanks mohammad! need to save this nominal value since nominal correction is NOT equal to 1
 
         jmsr_shifted_vars[mkey] = tdict
 
