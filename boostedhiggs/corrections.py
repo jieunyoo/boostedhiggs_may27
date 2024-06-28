@@ -748,13 +748,15 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
     for mkey in jmsr_vars: #the key is msoftdrop, do this for nominal, down, then up
         tdict = {}
 
-        fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
+        if not isData:
+            fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
         #preCorrection =  fatjets["msdcorr"]
-        #mass = pad_val(fatjets[mkey], num_jets, axis=1)
-        mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
+            mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
 
         if isData:
+            mass = pad_val(fatjets[mkey], num_jets, axis=1)
             tdict[""] = mass
+            nominalVMass = mass
         else:
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)

@@ -338,8 +338,11 @@ class vhProcessor(processor.ProcessorABC):
         #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         #correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
-        correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
 
+        if self.isMC:
+            correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
+        else:
+            correctedVbosonNominalMass = Vboson_Jet_mass #ie., NOT corrected
         #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
         #check
@@ -461,8 +464,6 @@ class vhProcessor(processor.ProcessorABC):
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
 
-#try putting this back in and change definitions in utils file
-#can delete these now, and just use the fat jet variables above, e.g., fj_mass_UP and down
         for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
             if shift != "" and not self._systematics:
                 continue
