@@ -423,16 +423,10 @@ class vhProcessor(processor.ProcessorABC):
         }
 
         fatjetvars = {
-            #"fj_pt": candidatefj.pt,
-            #"fj_eta": candidatefj.eta,
-            #"fj_phi": candidatefj.phi,
-            #"fj_mass": candidatefj.msdcorr,
-            #"fj_pt": second_fj.pt,
-            "fj_pt": Vboson_Jet.pt, #this is the corrected one i think!
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_mass": correctedVbosonNominalMass, #note: not currently msdcorr correctd
-
+            "fj_pt": Vboson_Jet.pt, #corrected for JEC/JES
+            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
         }
 
         variables = {**variables, **fatjetvars}
