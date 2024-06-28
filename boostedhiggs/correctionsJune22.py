@@ -681,7 +681,6 @@ def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, 
 
     for jec_var in jec_vars:
         tdict = {"": jets[jec_var]}
-        #print('tdict', ak.to_list(tdict))
         if apply_jecs:
             for key, shift in jecs.items():
                 for var in ["up", "down"]:
@@ -736,16 +735,14 @@ jmsValues["msoftdrop"] = {
     "2017": [0.982, 0.978, 0.986],
     # Use 2017 values for 2018 until 2018 are released
     "2018": [0.982, 0.978, 0.986],
-    #"2018": [1,1,1],
 }
 
 
-#def get_jmsr(fatjets, jets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
 def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
     """Calculates post JMS/R masses and shifts"""
     jmsr_shifted_vars = {}
 
-    for mkey in jmsr_vars: #the key is msoftdrop, do this for nominal, down, then up
+    for mkey in jmsr_vars:
         tdict = {}
 
         mass = pad_val(fatjets[mkey], num_jets, axis=1)
@@ -756,14 +753,6 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)
             # scale to JMR nom, down, up (minimum at 0)
-            #r_nom, r_down, r_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
-            #s_nom, s_down, s_up = jmsValues[mkey][year]
-            #tdict[""] =  mass_jms * jmr_nom
-            #tdict["nominal"]           = mass * s_nom  * r_nom
-            #tdict["JMS_down"]   = mass * s_down * r_nom
-            #tdict["JMS_up"]     = mass * s_up   * r_nom
-            #tdict["JMR_down"]   = mass * s_nom  * r_down
-            #tdict["JMR_up"]     = mass * s_nom  * r_up
             jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
             jms_nom, jms_down, jms_up = jmsValues[mkey][year]
 
@@ -775,24 +764,47 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             tdict["JMS_up"] = mass_jmr * jms_up
             tdict["JMR_down"] = mass_jms * jmr_down
             tdict["JMR_up"] = mass_jms * jmr_up
-            tdict["nominal"] = mass_jms * jmr_nom
-            nominalVMass = mass_jms * jmr_nom
-
-
 
         jmsr_shifted_vars[mkey] = tdict
 
-    return nominalVMass, jmsr_shifted_vars
+    return jmsr_shifted_vars
 
 
-#def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
-def getJECVariables(fatjetvars, pt_shift=None):
-#    """
-#    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
-#    """
+def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
+    """
+    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
+    """
     variables = {}
+
     ptlabel = pt_shift if pt_shift is not None else ""
-    shift = ptlabel 
+
+    if met_shift is not None:
+        metlabel = met_shift
+        if met_shift == "UES_up":
+            metvar = met.MET_UnclusteredEnergy.up
+        elif met_shift == "UES_down":
+            metvar = met.MET_UnclusteredEnergy.down
+    else:
+        metlabel = ""
+        if ptlabel != "":
+            if ptlabel == "JES_up":
+                metvar = met.JES_jes.up
+            elif ptlabel == "JES_down":
+                metvar = met.JES_jes.down
+            # elif ptlabel == "JER_up":
+            #     metvar = met.JER.up
+            # elif ptlabel == "JER_down":
+            #     metvar = met.JER.down
+            else:
+                if "up" in ptlabel:
+                    metvar = met[ptlabel.replace("_up", "")].up
+                elif "down" in ptlabel:
+                    metvar = met[ptlabel.replace("_down", "")].down
+        else:
+            metvar = met
+
+    shift = ptlabel + metlabel
+
     candidatefj = ak.zip(
         {
             "pt": fatjetvars[f"fj_pt{ptlabel}"],
@@ -803,13 +815,40 @@ def getJECVariables(fatjetvars, pt_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    variables[f"rec_V_m{shift}"] = candidatefj.mass
-    variables[f"rec_V_pt{shift}"] = candidatefj.pt
+    candidateNeutrinoJet = ak.zip(
+        {
+            "pt": metvar.pt,
+            "eta": candidatefj.eta,
+            "phi": met.phi,
+            "mass": 0,
+            "charge": 0,
+        },
+        with_name="PtEtaPhiMCandidate",
+        behavior=candidate.behavior,
+    )
+    rec_W_lnu = candidatelep_p4 + candidateNeutrinoJet
+    rec_W_qq = candidatefj - candidatelep_p4
+    rec_higgs = rec_W_qq + rec_W_lnu
+
+    variables[f"rec_higgs_m{shift}"] = rec_higgs.mass
+    variables[f"rec_higgs_pt{shift}"] = rec_higgs.pt
+
+    if shift == "":
+        variables[f"rec_W_qq_m{shift}"] = rec_W_qq.mass
+        variables[f"rec_W_qq_pt{shift}"] = rec_W_qq.pt
+
+        variables[f"rec_W_lnu_m{shift}"] = rec_W_lnu.mass
+        variables[f"rec_W_lnu_pt{shift}"] = rec_W_lnu.pt
+
     return variables
 
-#def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
-def getJMSRVariables(fatjetvars, mass_shift=None):
+
+def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
+    """
+    get variables affected by JMS_up, JMS_down, JMR_up, JMR_down
+    """
     variables = {}
+
     candidatefj = ak.zip(
         {
             "pt": fatjetvars["fj_pt"],
@@ -820,8 +859,30 @@ def getJMSRVariables(fatjetvars, mass_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
-    variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
+    candidateNeutrinoJet = ak.zip(
+        {
+            "pt": met.pt,
+            "eta": candidatefj.eta,
+            "phi": met.phi,
+            "mass": 0,
+            "charge": 0,
+        },
+        with_name="PtEtaPhiMCandidate",
+        behavior=candidate.behavior,
+    )
+    rec_W_lnu = candidatelep_p4 + candidateNeutrinoJet
+    rec_W_qq = candidatefj - candidatelep_p4
+    rec_higgs = rec_W_qq + rec_W_lnu
+
+    variables[f"rec_higgs_m{mass_shift}"] = rec_higgs.mass
+    variables[f"rec_higgs_pt{mass_shift}"] = rec_higgs.pt
+
+    if mass_shift == "":
+        variables[f"rec_W_qq_m{mass_shift}"] = rec_W_qq.mass
+        variables[f"rec_W_qq_pt{mass_shift}"] = rec_W_qq.pt
+
+        variables[f"rec_W_lnu_m{mass_shift}"] = rec_W_lnu.mass
+        variables[f"rec_W_lnu_pt{mass_shift}"] = rec_W_lnu.pt
 
     return variables
 

@@ -28,8 +28,8 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    #getJECVariables,
-    #getJMSRVariables,
+    getJECVariables,
+    getJMSRVariables,
     met_factory,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
@@ -336,9 +336,11 @@ class vhProcessor(processor.ProcessorABC):
 
 
         #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        #correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
+        correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
 
-
-        jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
         #check
         #print('fjindex', ak.to_list(fj_idx_lep)[0:100])
@@ -429,7 +431,7 @@ class vhProcessor(processor.ProcessorABC):
             "fj_pt": Vboson_Jet.pt, #this is the corrected one i think!
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_mass": second_fj.msdcorr, #this is the uncorrected one (not JMR corrected)
+            "fj_mass": correctedVbosonNominalMass, #note: not currently msdcorr correctd
 
         }
 
@@ -467,17 +469,17 @@ class vhProcessor(processor.ProcessorABC):
 
 #try putting this back in and change definitions in utils file
 #can delete these now, and just use the fat jet variables above, e.g., fj_mass_UP and down
-   #     for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
-   #         if shift != "" and not self._systematics:
-   #             continue
-   #         jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
-   #         variables = {**variables, **jecvariables}
+        for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
+            if shift != "" and not self._systematics:
+                continue
+            jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
+            variables = {**variables, **jecvariables}
 
-   #     for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-   #         if shift != "" and not self._systematics:
-   #             continue
-   #         jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-   #         variables = {**variables, **jmsrvariables}
+        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+            if shift != "" and not self._systematics:
+                continue
+            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
+            variables = {**variables, **jmsrvariables}
 
  
         # Selection ***********************************************************************************************************************************************

@@ -28,8 +28,10 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJMSRVariables,
+
+    get_jmsr2,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
@@ -58,13 +60,24 @@ def build_p4(cand):
     )
 
 def VScore(goodFatJetsSelected):
-    num = ( goodFatJetsSelected.particleNetMD_Xbb + goodFatJetsSelected.particleNetMD_Xcc + goodFatJetsSelected.particleNetMD_Xqq)
-    den = ( goodFatJetsSelected.particleNetMD_Xbb + goodFatJetsSelected.particleNetMD_Xcc + goodFatJetsSelected.particleNetMD_Xqq + goodFatJetsSelected.particleNetMD_QCD)
+    num = (
+        goodFatJetsSelected.particleNetMD_Xbb
+        + goodFatJetsSelected.particleNetMD_Xcc
+        + goodFatJetsSelected.particleNetMD_Xqq
+    )
+    den = (
+        goodFatJetsSelected.particleNetMD_Xbb
+        + goodFatJetsSelected.particleNetMD_Xcc
+        + goodFatJetsSelected.particleNetMD_Xqq
+        + goodFatJetsSelected.particleNetMD_QCD
+    )
     score = num / den
     return score
 
-#class vhProcessor(processor.ProcessorABC):
-class fakeRateProcessor(processor.ProcessorABC):
+
+
+#class HwwProcessor(processor.ProcessorABC):
+class vhProcessor(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -237,10 +250,12 @@ class fakeRateProcessor(processor.ProcessorABC):
             & (np.abs(muons.dz) < 0.1)
             & (np.abs(muons.dxy) < 0.02)
         )
+
         n_good_muons = ak.sum(good_muons, axis=1)
 
         # OBJECT: electrons
         electrons = ak.with_field(events.Electron, 1, "flavor")
+
         good_electrons = (
             (electrons.pt > 38)
             & (np.abs(electrons.eta) < 2.5)
@@ -252,54 +267,48 @@ class fakeRateProcessor(processor.ProcessorABC):
             & (np.abs(electrons.dxy) < 0.05)
             & (electrons.sip3d <= 4.0)
         )
+
         n_good_electrons = ak.sum(good_electrons, axis=1)
 
         # OBJECT: candidate lepton
         goodleptons = ak.concatenate([muons[good_muons], electrons[good_electrons]], axis=1)  # concat muons and electrons
         goodleptons = goodleptons[ak.argsort(goodleptons.pt, ascending=False)]  # sort by pt
+
         candidatelep = ak.firsts(goodleptons)  # pick highest pt
         candidatelep_p4 = build_p4(candidatelep)  # build p4 for candidate lepton
 
         lep_reliso = (
             candidatelep.pfRelIso04_all if hasattr(candidatelep, "pfRelIso04_all") else candidatelep.pfRelIso03_all
         )  # reliso for candidate lepton
-        lep_miso = candidatelep.miniPFRelIso_all  # miniso for candidate lepton; note the selection is now only for the muom and was moved above to an object selection (previously was a cut)
+        lep_miso = candidatelep.miniPFRelIso_all  # miniso for candidate lepton
+
         ngood_leptons = ak.num(goodleptons, axis=1)
-
-#** for fake rate estimation - loose *****************************************************************************
-        
-        loose_muons = ( (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId) )
-        loose_electrons = ( (electrons.pt > 38) & (np.abs(electrons.eta) < 2.4) & (electrons.mvaFall17V2noIso_WPL) & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
-        n_loose_electrons = ak.sum(loose_electrons, axis=1)
-        n_loose_muons = ak.sum(loose_muons, axis=1)
-        looseleptons = ak.concatenate( [muons[loose_muons], electrons[loose_electrons]], axis=1)  
-        looseleptons = looseleptons[ ak.argsort(looseleptons.pt, ascending=False) ]  # sort by pt
-        nloose_leptons = ak.num(looseleptons, axis=1)
-        candidatelep_loose = ak.firsts(looseleptons)  # pick highest pt
-        candidatelep_p4_loose = build_p4(candidatelep_loose)  # build p4 for candidate lepton
-
-#**************************************************************
 
         # OBJECT: AK8 fatjets
         fatjets = events.FatJet
         fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
-        #fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
+        #fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         good_fatjets = fatjets[fatjet_selector]
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
 
+        #JETS**************************************************
+        #this applies JEC to all the fat jets
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
+        
 
         # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
-        jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
+        #this applies jmsr to higgs jet - need to fix to apply to V
+        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
 
+        #*************************************************************************
         # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
         deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
         minDeltaR = ak.argmin(deltaR_lepton_all_jets, axis=1)
@@ -312,22 +321,48 @@ class fakeRateProcessor(processor.ProcessorABC):
         VCandidateVScore = VScore(second_fj)
         VCandidate_Mass = second_fj.msdcorr
 
-     
-        #dupliciate for FR  *************************************************************************
-        deltaR_lepton_all_jets_loose = candidatelep_p4_loose.delta_r(good_fatjets)
-        minDeltaR_loose = ak.argmin(deltaR_lepton_all_jets_loose, axis=1)
-        fatJetIndices_loose = ak.local_index(good_fatjets, axis=1)
-        mask1_loose = fatJetIndices_loose != minDeltaR_loose
-        fj_idx_lep_loose = ak.argmin( good_fatjets.delta_r(candidatelep_p4_loose), axis=1, keepdims=True )
-        candidatefj_loose = ak.firsts(good_fatjets[fj_idx_lep_loose])
-        lep_fj_dr_loose = candidatefj_loose.delta_r(candidatelep_p4_loose)
-        
-        allScores_loose = VScore(good_fatjets)
-        masked_loose = allScores_loose[mask1_loose]
-        secondFJ_loose = good_fatjets[allScores_loose == ak.max(masked_loose, axis=1)]
-        second_fj_loose = ak.firsts(secondFJ_loose)
+        dr_two_jets = candidatefj.delta_r(second_fj)
+
+        #check
+        #print('higgs', ak.to_list(good_fatjets[fj_idx_lep].pt)[0:100])
+        #print('V boson', ak.to_list(secondFJ.pt)[0:100])
+
+
+        #for V boson
+        #only for V boson, since need up and down
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
+            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True
+        )
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
+
+        #print('v boson mass', ak.to_list(Vboson_Jet.mass)[0:200])
+
+
+        #need to correct V boson mass for softdrop, then for JMR
+        #this seems to not consider the msdcorr corr
+
+        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        #print('corrected jet mass', ak.to_list(Vboson_Jet_mass)[0:200])
+
+#jmsr_vars = ["msoftdrop"]
+
+        jmsr_shifted_fatjetvars = get_jmsr2(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"] 
+        #print('correctedVbosonNominalMass', ak.to_list(correctedVbosonNominalMass)[0:100])
+
+        #duplicates above to check i am gettnig similar things, but because of the seed
+
+
+        #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+
+        #check
+        #print('fjindex', ak.to_list(fj_idx_lep)[0:100])
+        #print('VbosonJet pt', ak.to_list(Vboson_Jet.pt)[0:100]) #this is the corrected pt, e.g., 245.99, 208.8
+        #corrected jet pt seems to shift pt lower a little
+        #print('second fj pt', ak.to_list(second_fj.pt)[0:100])  #ths is the uncorrected pt, e.g., 246.23, 209.19
 
         #*************************************************************************
+
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
         met = met_factory.build(events.MET, jets, {}) if self.isMC else events.MET
@@ -340,12 +375,13 @@ class fakeRateProcessor(processor.ProcessorABC):
         )
 
         goodjets = jets[jet_selector]
+
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
         ak4_bjet_candidate = jets[bjet_selector]
 
         # bjet counts for SR and TTBar Control Region
-        #VH version
+        #V H version
         dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
         dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
         ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
@@ -360,20 +396,11 @@ class fakeRateProcessor(processor.ProcessorABC):
             axis=1,
         )
 
-        # ************************************************************************************
-        #need duplicate for loose 
-        dr_ak8Jets_HiggsCandidateJet_loose = goodjets.delta_r(candidatefj_loose)
-        dr_ak8Jets_VCandidateJet_loose = goodjets.delta_r(second_fj_loose)
-        ak4_outsideBothJets_loose = goodjets[ (dr_ak8Jets_HiggsCandidateJet_loose > 0.8) & (dr_ak8Jets_VCandidateJet_loose  > 0.8) ]
-        NumOtherJetsOutsideBothJets_loose = ak.num(ak4_outsideBothJets_loose)
-        n_bjets_M_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
-        n_bjets_T_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
-        # ************************************************************************************        
 
-       
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
         )
+
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
 
@@ -395,7 +422,7 @@ class fakeRateProcessor(processor.ProcessorABC):
             "met_pt": met.pt,
 
             "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "ReconHiggsCandidateFatJet_pt": candidatefj.pt,
+            "ReconHiggsCandidateFatJet_pt": candidatefj.pt, #THIS IS THE UNCORRECTED PT!!
             "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
             "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
         
@@ -403,25 +430,25 @@ class fakeRateProcessor(processor.ProcessorABC):
             "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
 	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
-            #"dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
+            "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
+            "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking
 
-            #for fake rate 
-            "lep_pt_loose": candidatelep_loose.pt,
-            "lep_fj_dr_loose": lep_fj_dr_loose,
-	        "lep_eta_loose": candidatelep_loose.eta,
-            "numberLeptons_loose": nloose_leptons,
-            "numberBJets_Medium_OutsideFatJets_loose": n_bjets_M_OutsideBothJets_loose,
-	        "numberBJets_Tight_OutsideFatJets_loose": n_bjets_T_OutsideBothJets_loose,
-            "n_loose_electrons": n_loose_electrons,
-            "n_loose_muons": n_loose_muons,
-       
+            "fj_massCheck": jmsr_shifted_fatjetvars["msoftdrop"]["nominal"],
+            "fj_mass_JMS_down": jmsr_shifted_fatjetvars["msoftdrop"]["JMS_down"],
+            "fj_mass_JMS_up": jmsr_shifted_fatjetvars["msoftdrop"]["JMS_up"],
+            "fj_mass_JMR_down": jmsr_shifted_fatjetvars["msoftdrop"]["JMR_down"],
+            "fj_mass_JMR_up": jmsr_shifted_fatjetvars["msoftdrop"]["JMR_up"],
         }
 
         fatjetvars = {
-            "fj_pt": candidatefj.pt,
-            "fj_eta": candidatefj.eta,
-            "fj_phi": candidatefj.phi,
-            "fj_mass": candidatefj.msdcorr,
+            "fj_eta": second_fj.eta,
+            "fj_phi": second_fj.phi,
+
+            #these are the corrected ones
+            "fj_pt": Vboson_Jet.pt, #this is the corrected one i think!
+            "fj_mass": second_fj.msdcorr, #this is the uncorrected one (not JMR corrected)
+            "fj_mass": jmsr_shifted_fatjetvars["msoftdrop"]["nominal"],
+
         }
 
         variables = {**variables, **fatjetvars}
@@ -429,37 +456,26 @@ class fakeRateProcessor(processor.ProcessorABC):
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
             # JEC vars
-            for shift, vals in jec_shifted_fatjetvars["pt"].items():
-                if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])
+            #for shift, vals in jec_shifted_fatjetvars["pt"].items():
+             #   if shift != "":
+              #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  
 
-            # JMSR vars
-            for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
+#farouk applies pt shift to only the higgs, i need to apply it to the V,
+            for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
-                    fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
+                    #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
+
+         #   
+         #   for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
+         #       if shift != "":
+         #           fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
+                    #print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-        #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
 
-    #        for met_shift in ["UES_up", "UES_down"]:
-    #            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
-    #            variables = {**variables, **jecvariables}
-
-    #    for shift in jec_shifted_fatjetvars["pt"]: commenting this out now june24 8:30 am as we don't need right now systematics on the fat jet for this pass
-    #        if shift != "" and not self._systematics:
-    #            continue
-    #        jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
-    #        variables = {**variables, **jecvariables}
-
-   #     for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-   #         if shift != "" and not self._systematics:
-   #             continue
-   #         jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-   #         variables = {**variables, **jmsrvariables}
-
- 
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:
             # trigger
@@ -473,26 +489,26 @@ class fakeRateProcessor(processor.ProcessorABC):
                 self.add_selection(name="Trigger", sel=trigger[ch], channel=ch)
 
         self.add_selection(name="METFilters", sel=metfilters)
-        #self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_good_electrons == 0), channel="mu")
-        #self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
+        self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_good_electrons == 0), channel="mu")
+        self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        #fj_pt_sel = candidatefj.pt > 250   # this puts the selection on the candidate fj, may need to add this for the V 
-        #if self.isMC:  # make an OR of all the JECs
-        #    for k, v in self.jecs.items():
-        #        for var in ["up", "down"]:
-        #            fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
-
-        #self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+        #fj_pt_sel = candidatefj.pt > 250   Farouk
+        fj_pt_sel = second_fj.pt > 250   # put back, this now for V only.... should be for higgs as well?
+        if self.isMC:  # make an OR of all the JECs
+            for k, v in self.jecs.items():
+                for var in ["up", "down"]:
+                    #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+        self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt > 30))  #this is for the SFs, invert this for the QCD bkg
+        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 )) #keeping at 30, can increase to 40 in post-processing to check
+        self.add_selection(name="MET", sel=(met.pt > 30))
 
-        #we also add a MET cut, but can do offline so can use these files for checks
 
         # gen-level matching
         signal_mask = None
@@ -671,16 +687,14 @@ class fakeRateProcessor(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-            for var_ in [
-                "rec_higgs_m",
-                "rec_higgs_pt",
-                "rec_W_qq_m",
-                "rec_W_qq_pt",
-                "rec_W_lnu_m",
-                "rec_W_lnu_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+      #      for var_ in [
+                #"rec_higgs_m",
+                #"rec_higgs_pt",
+      #          "rec_V_m",
+      #          "rec_V_pt",
+      #      ]:
+      #          if var_ in output[ch].keys():
+      #              output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
