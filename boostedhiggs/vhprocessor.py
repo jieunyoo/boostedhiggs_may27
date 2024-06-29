@@ -333,14 +333,12 @@ class vhProcessor(processor.ProcessorABC):
         )
         VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-
-
         #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         #correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
 
         if self.isMC:
-            correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
+            correctedVbosonNominalMass = ak.firsts(jmsr_shifted_fatjetvars["msoftdrop"]["nominal"])
         else:
             correctedVbosonNominalMass = Vboson_Jet_mass #ie., NOT corrected
         #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
@@ -428,7 +426,7 @@ class vhProcessor(processor.ProcessorABC):
         fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_pt": Vboson_Jet.pt, #corrected for JEC/JES
+            "fj_pt": ak.firsts(Vboson_Jet.pt), #corrected for JEC/JES
             "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
         }
 
