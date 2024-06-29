@@ -114,11 +114,11 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     #systs_dict["ttH"]["pdf_Higgs_ttH"] = n
     #systs_dict_values["ttH"]["pdf_Higgs_ttH"] = (1.03, None)
 
-    n = rl.NuisanceParameter("pdf_Higgs_qqbar", "lnN")
-    systs_dict["WH"]["pdf_Higgs_qqbar"] = n
-    systs_dict_values["WH"]["pdf_Higgs_qqbar"] = (1.017, None)
-    systs_dict["ZH"]["pdf_Higgs_qqbar"] = n
-    systs_dict_values["ZH"]["pdf_Higgs_qqbar"] = (1.013, None)
+  #  n = rl.NuisanceParameter("pdf_Higgs_qqbar", "lnN")
+  #  systs_dict["WH"]["pdf_Higgs_qqbar"] = n
+  #  systs_dict_values["WH"]["pdf_Higgs_qqbar"] = (1.017, None)
+  #  systs_dict["ZH"]["pdf_Higgs_qqbar"] = n
+  #  systs_dict_values["ZH"]["pdf_Higgs_qqbar"] = (1.013, None)
 
     # QCD scale
     #n = rl.NuisanceParameter("QCDscale_ggH", "lnN")
@@ -133,24 +133,24 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     #systs_dict["ttH"]["QCDscale_ttH"] = n
     #systs_dict_values["ttH"]["QCDscale_ttH"] = (1.058, 0.908)
 
-    n = rl.NuisanceParameter("QCDscale_VH", "lnN")
-    systs_dict["WH"]["QCDscale_VH"] = n
-    systs_dict_values["WH"]["QCDscale_VH"] = (1.005, 0.993)
-    systs_dict["ZH"]["QCDscale_VH"] = n
-    systs_dict_values["ZH"]["QCDscale_VH"] = (1.038, 0.97)
+  #  n = rl.NuisanceParameter("QCDscale_VH", "lnN")
+  #  systs_dict["WH"]["QCDscale_VH"] = n
+  #  systs_dict_values["WH"]["QCDscale_VH"] = (1.005, 0.993)
+  #  systs_dict["ZH"]["QCDscale_VH"] = n
+  #  systs_dict_values["ZH"]["QCDscale_VH"] = (1.038, 0.97)
 
     # alphas
-    n = rl.NuisanceParameter("alpha_s", "lnN")
-    #systs_dict["ggF"]["alpha_s"] = n
+ #   n = rl.NuisanceParameter("alpha_s", "lnN")
+ #   #systs_dict["ggF"]["alpha_s"] = n
     #systs_dict_values["ggF"]["alpha_s"] = (1.026, None)
     #systs_dict["VBF"]["alpha_s"] = n
     #systs_dict_values["VBF"]["alpha_s"] = (1.005, None)
     #systs_dict["ttH"]["alpha_s"] = n
     #systs_dict_values["ttH"]["alpha_s"] = (1.020, None)
-    systs_dict["WH"]["alpha_s"] = n
-    systs_dict_values["WH"]["alpha_s"] = (1.009, None)
-    systs_dict["ZH"]["alpha_s"] = n
-    systs_dict_values["ZH"]["alpha_s"] = (1.009, None)
+ #   systs_dict["WH"]["alpha_s"] = n
+ #   systs_dict_values["WH"]["alpha_s"] = (1.009, None)
+ #   systs_dict["ZH"]["alpha_s"] = n
+ #   systs_dict_values["ZH"]["alpha_s"] = (1.009, None)
 
     return systs_dict, systs_dict_values
 

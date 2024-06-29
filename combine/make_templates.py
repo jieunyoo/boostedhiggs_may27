@@ -368,7 +368,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
         hist2.axis.Variable(
-            list(range(20, 140, mass_binning)),
+            list(range(30, 140, mass_binning)),
             name="mass_observable",
             label=r"V softdrop mass [GeV]",
             overflow=True,
@@ -444,6 +444,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                         if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
+                        if sample_to_use == "TTbar"]
+                            nominal *= df["top_reweighting"]
 
                     ###################################
                     if sample_to_use == "EWKvjets":
@@ -461,6 +463,17 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     )
 
                     # ------------------- Common systematics  -------------------
+#june 29th 3:58 pm, add farouk's systematic for reweighting
+                    if sample_to_use == "TTbar":
+                        nominal_noreweighting = nominal / df["top_reweighting"]
+                        shape_up = nominal_noreweighting * (df["top_reweighting"] ** 2) 
+                        shape_down = nominal_noreweighting 
+                    else:
+                        shape_up = nominal
+                        shape_down = nominal
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["rec_V_m"],weight=shape_up,)
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["rec_V_m"],weight=shape_up,)
+
 
                     for syst, (yrs, smpls, var) in {
                         **SYSTEMATICS_correlated,

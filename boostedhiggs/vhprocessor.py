@@ -31,8 +31,10 @@ from boostedhiggs.corrections import (
     getJECVariables,
     getJMSRVariables,
     met_factory,
+    add_TopPtReweighting,
 )
-from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
+from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
+
 
 from .run_tagger_inference import runInferenceTriton
 
@@ -564,6 +566,12 @@ class vhProcessor(processor.ProcessorABC):
                 variables["weight_ewkcorr"] = ewk_corr
                 variables["weight_qcdcorr"] = qcd_corr
                 variables["weight_altqcdcorr"] = alt_qcd_corr
+
+                #add top pt reweighting from farouk's repo, june 29th: 3:50 pm version
+                #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+                if "TT" in dataset:
+                    tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
+                    variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
                 if "HToWW" in dataset:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
