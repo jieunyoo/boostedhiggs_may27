@@ -28,8 +28,8 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJMSRVariables,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
     add_TopPtReweighting,
 )
@@ -323,33 +323,14 @@ class vhProcessor(processor.ProcessorABC):
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
-        #check
-        #print('higgs', ak.to_list(good_fatjets[fj_idx_lep].pt)[0:100])
-        #print('V boson', ak.to_list(secondFJ.pt)[0:100])
-
-
-        #for V boson
         #only for V boson, since need up and down
-        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
-            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True
-        )
-        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
-
-        #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        #correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
-
         if self.isMC:
-            correctedVbosonNominalMass = ak.firsts(jmsr_shifted_fatjetvars["msoftdrop"]["nominal"])
-        else:
-            correctedVbosonNominalMass = Vboson_Jet_mass #ie., NOT corrected
-        #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+            Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
+            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True)
+            VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-        #check
-        #print('fjindex', ak.to_list(fj_idx_lep)[0:100])
-        #print('VbosonJet pt', ak.to_list(Vboson_Jet.pt)[0:100]) #this is the corrected pt, e.g., 245.99, 208.8
-        #corrected jet pt seems to shift pt lower a little
-        #print('second fj pt', ak.to_list(second_fj.pt)[0:100])  #ths is the uncorrected pt, e.g., 246.23, 209.19
+            Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+            correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
 
         #*************************************************************************
 
@@ -418,64 +399,50 @@ class vhProcessor(processor.ProcessorABC):
         
             "numberAK4JetsOutsideFatJets": NumOtherJetsOutsideBothJets,
             "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
-	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
+	    "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
-            "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking
+            "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking purposes only
        
         }
 
-        fatjetvars = {
+        if self.isMC:
+            fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
             "fj_pt": ak.firsts(Vboson_Jet.pt), #corrected for JEC/JES
             "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
-        }
+            }
+        else:
+            fatjetvars = {
+            "fj_eta": second_fj.eta,
+            "fj_phi": second_fj.phi,
+            "fj_pt": second_fj.pt,  #don't correct data!
+            "fj_mass": second_fj.msdcorr
+            }
+
 
         variables = {**variables, **fatjetvars}
 
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
-            # JEC vars
-            #for shift, vals in jec_shifted_fatjetvars["pt"].items():
-             #   if shift != "":
-              #      fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  
-
 #farouk applies pt shift to only the higgs, i need to apply it to the V,
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
                     #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
 
-            #keeping this as this is already the chosen above as the V
-            # JMSR vars
-            #print('items', ak.to_list(jmsr_shifted_fatjetvars["msoftdrop"].items())[0:100])
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
-                    #print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
         #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
-
 #            for met_shift in ["UES_up", "UES_down"]:
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
-
-        for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
-            if shift != "" and not self._systematics:
-                continue
-            jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
-            variables = {**variables, **jecvariables}
-
-        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-            if shift != "" and not self._systematics:
-                continue
-            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-            variables = {**variables, **jmsrvariables}
-
  
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:

@@ -722,21 +722,35 @@ jmrValues = {}
 # jet mass resolution: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # nominal, down, up (these are switched in the github!!!)
 jmrValues["msoftdrop"] = {
-    "2016": [1.0, 0.8, 1.2],
-    "2017": [1.09, 1.04, 1.14],
+    #"2016": [1.0, 0.8, 1.2],
+    #"2017": [1.09, 1.04, 1.14],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [1.09, 1.04, 1.14],
+    #"2018": [1.09, 1.04, 1.14],
+
+#change to nominal, up, down
+    "2016": [1.0, 1.2, 0.8],
+    "2017": [1.09, 1.14, 1.04],
+    # Use 2017 values for 2018 until 2018 are released
+    "2018": [1.09, 1.14, 1.04],
+
 }
 
 # jet mass scale
 # W-tagging PUPPI softdrop JMS values: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # 2016 values
 jmsValues["msoftdrop"] = {
-    "2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
-    "2017": [0.982, 0.978, 0.986],
+    #"2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
+    #"2017": [0.982, 0.978, 0.986],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [0.982, 0.978, 0.986],
+    #"2018": [0.982, 0.978, 0.986],
     #"2018": [1,1,1],
+
+    "2016": [1.00, 1.0094, 0.9906],  # nominal, up, down
+    "2017": [0.982, 0.986, 0.978],
+    # Use 2017 values for 2018 until 2018 are released
+    "2018": [0.982, 0.986, 0.978],
+    #"2018": [1,1,1],
+
 }
 
 
@@ -753,11 +767,11 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
         #preCorrection =  fatjets["msdcorr"]
             mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
 
-        if isData:
-            mass = pad_val(fatjets[mkey], num_jets, axis=1)
-            tdict[""] = mass
-            nominalVMass = mass
-        else:
+        #if isData:
+         #   mass = pad_val(fatjets[mkey], num_jets, axis=1)
+          #  tdict[""] = mass
+           # nominalVMass = mass
+        #else:
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)
             # scale to JMR nom, down, up (minimum at 0)
@@ -769,18 +783,22 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             #tdict["JMS_up"]     = mass * s_up   * r_nom
             #tdict["JMR_down"]   = mass * s_nom  * r_down
             #tdict["JMR_up"]     = mass * s_nom  * r_up
-            jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
-            jms_nom, jms_down, jms_up = jmsValues[mkey][year]
+            #jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            #jms_nom, jms_down, jms_up = jmsValues[mkey][year]
+
+            jmr_nom, jmr_up, jmr_down = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            jms_nom, jms_up, jms_down = jmsValues[mkey][year]
 
             mass_jms = mass * jms_nom
             mass_jmr = mass * jmr_nom
 
             tdict[""] = mass_jms * jmr_nom
-            tdict["JMS_down"] = mass_jmr * jms_down
             tdict["JMS_up"] = mass_jmr * jms_up
-            tdict["JMR_down"] = mass_jms * jmr_down
+            tdict["JMS_down"] = mass_jmr * jms_down
+
             tdict["JMR_up"] = mass_jms * jmr_up
-            tdict["nominal"] = mass_jms * jmr_nom
+            tdict["JMR_down"] = mass_jms * jmr_down
+            #tdict["nominal"] = mass_jms * jmr_nom #don't need this since saving it in a diff. way
             nominalVMass = mass_jms * jmr_nom
 
 
