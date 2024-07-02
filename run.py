@@ -35,7 +35,8 @@ def main(args):
     # if --macos is specified in args, process only the files provided
     if args.macos:
         files = {}
-        files[args.sample] = [f"rootfiles2/rootfiles/{args.sample}/file{i+1}.root" for i in range(1)]
+        #files[args.sample] = [f"rootfiles2/rootfiles/{args.sample}/file{i+1}.root" for i in range(1)]
+        files[args.sample] = [f"{args.sample}/file{i+1}.root" for i in range(1)]
 
     # if --local is specified in args, process only the args.sample provided
     elif args.local:
@@ -155,6 +156,17 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+    elif args.processor == "frloose":
+        from boostedhiggs.fakeRateLooseButNotTight import fakeRateLooseButNotTight
+
+        p = fakeRateLooseButNotTight(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
 
     elif args.processor == "lumi":
         from boostedhiggs.lumi_processor import LumiProcessor
