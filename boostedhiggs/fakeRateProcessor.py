@@ -28,8 +28,8 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJMSRVariables,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
@@ -298,7 +298,7 @@ class fakeRateProcessor(processor.ProcessorABC):
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
-        jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
+        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
 
         # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
         deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
@@ -401,17 +401,17 @@ class fakeRateProcessor(processor.ProcessorABC):
         
             "numberAK4JetsOutsideFatJets": NumOtherJetsOutsideBothJets,
             "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
-	        "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
+	    "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             #"dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
 
             #for fake rate 
             "lep_pt_loose": candidatelep_loose.pt,
             "lep_fj_dr_loose": lep_fj_dr_loose,
-	        "lep_eta_loose": candidatelep_loose.eta,
+	    "lep_eta_loose": candidatelep_loose.eta,
             "numberLeptons_loose": nloose_leptons,
             "numberBJets_Medium_OutsideFatJets_loose": n_bjets_M_OutsideBothJets_loose,
-	        "numberBJets_Tight_OutsideFatJets_loose": n_bjets_T_OutsideBothJets_loose,
+	    "numberBJets_Tight_OutsideFatJets_loose": n_bjets_T_OutsideBothJets_loose,
             "n_loose_electrons": n_loose_electrons,
             "n_loose_muons": n_loose_muons,
        
@@ -487,10 +487,10 @@ class fakeRateProcessor(processor.ProcessorABC):
         #self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
-        self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
-        self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt > 30))  #this is for the SFs, invert this for the QCD bkg
+        #self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
+        #self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
+        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
+        self.add_selection(name="metRevertCut", sel=(met.pt < 30))  #this is for the SFs, invert this for the QCD bkg
 
         #we also add a MET cut, but can do offline so can use these files for checks
 
