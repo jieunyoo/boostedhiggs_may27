@@ -156,6 +156,17 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+    elif args.processor == "frdy":
+        from boostedhiggs.fakeRateDYSF import fakeRateDYSF
+
+        p = fakeRateDYSF(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
     elif args.processor == "frloose":
         from boostedhiggs.fakeRateLooseButNotTight import fakeRateLooseButNotTight
 
