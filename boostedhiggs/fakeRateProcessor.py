@@ -269,7 +269,13 @@ class fakeRateProcessor(processor.ProcessorABC):
 #** for fake rate estimation - loose *****************************************************************************
         
         loose_muons = ( (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId) )
-        loose_electrons = ( (electrons.pt > 38) & (np.abs(electrons.eta) < 2.4) & (electrons.mvaFall17V2noIso_WPL) & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
+        loose_electrons = ( 
+        (electrons.pt > 38) & 
+        (np.abs(electrons.eta) < 2.4) & 
+        (electrons.mvaFall17V2noIso_WPL) & 
+        & (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
+        ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
+
         n_loose_electrons = ak.sum(loose_electrons, axis=1)
         n_loose_muons = ak.sum(loose_muons, axis=1)
         looseleptons = ak.concatenate( [muons[loose_muons], electrons[loose_electrons]], axis=1)  
@@ -374,6 +380,11 @@ class fakeRateProcessor(processor.ProcessorABC):
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
         )
+
+
+        mt_lep_met_loose = np.sqrt(
+            2.0 * candidatelep_p4_loose.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4_loose.delta_phi(met)))
+        )
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
 
@@ -391,6 +402,8 @@ class fakeRateProcessor(processor.ProcessorABC):
   
             "lep_fj_dr": lep_fj_dr, #  lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
             "lep_met_mt": mt_lep_met, 
+
+            "lep_met_mt_loose": mt_lep_met_loose, 
             "met_fj_dphi": met_fj_dphi,
             "met_pt": met.pt,
 
@@ -490,7 +503,7 @@ class fakeRateProcessor(processor.ProcessorABC):
         #self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         #self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt < 30))  #this is for the SFs, invert this for the QCD bkg
+        self.add_selection(name="metRevertCut", sel=(met.pt > 30))  #this is for the SFs, invert this for the QCD bkg
 
         #we also add a MET cut, but can do offline so can use these files for checks
 
