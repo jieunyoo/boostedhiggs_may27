@@ -394,6 +394,11 @@ class fakeRateDYSF(processor.ProcessorABC):
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
         )
+
+
+        mt_lep_met_loose = np.sqrt(
+            2.0 * candidatelep_p4_loose.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4_loose.delta_phi(met)))
+        )
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
 
@@ -411,6 +416,7 @@ class fakeRateDYSF(processor.ProcessorABC):
 
             "lep_isolation_loose": lep_reliso_loose,
             "lep_misolation_loose": lep_miso_loose,
+            "lep_met_mt_loose": mt_lep_met_loose,
   
             "lep_fj_dr": lep_fj_dr, #  lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
             "lep_met_mt": mt_lep_met, 
