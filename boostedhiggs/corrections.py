@@ -809,13 +809,45 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
 
 
 #def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
-def getJECVariables(fatjetvars, pt_shift=None):
+def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
+#def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
+#def getJECVariables(fatjetvars, pt_shift=None):
 #    """
 #    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
 #    """
     variables = {}
+    print('fatjetpt', ak.to_list(fatjetvars["fj_pt"][0:200]))
+    print('met', met)
+
     ptlabel = pt_shift if pt_shift is not None else ""
-    shift = ptlabel 
+    if met_shift is not None:
+        metlabel = met_shift
+        if met_shift == "UES_up":
+            metvar = met.MET_UnclusteredEnergy.up
+        elif met_shift == "UES_down":
+            metvar = met.MET_UnclusteredEnergy.down
+    else:
+        metlabel = ""
+        if ptlabel != "":
+            if ptlabel == "JES_up":
+                metvar = met.JES_jes.up
+            elif ptlabel == "JES_down":
+                metvar = met.JES_jes.down
+            # elif ptlabel == "JER_up":
+            #     metvar = met.JER.up
+            # elif ptlabel == "JER_down":
+            #     metvar = met.JER.down
+            else:
+                if "up" in ptlabel:
+                    metvar = met[ptlabel.replace("_up", "")].up
+                elif "down" in ptlabel:
+                    metvar = met[ptlabel.replace("_down", "")].down
+        else:
+            metvar = met
+
+    shift = ptlabel + metlabel
+
+    #shift = ptlabel 
     candidatefj = ak.zip(
         {
             "pt": fatjetvars[f"fj_pt{ptlabel}"],
@@ -831,7 +863,6 @@ def getJECVariables(fatjetvars, pt_shift=None):
     return variables
 
 #def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
-def getJMSRVariables(fatjetvars, mass_shift=None):
     variables = {}
     candidatefj = ak.zip(
         {
