@@ -315,7 +315,19 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         VScore_WJet = VScore(candidatefj)
         #print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
 
-        jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
+
+        if self.isMC:
+            Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets( events, good_fatjets[:,0:1], self._year, not self.isMC, self.jecs, fatjets=True)
+            #Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets( events, candidatefj, self._year, not self.isMC, self.jecs, fatjets=True)
+            VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
+
+            Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[:,0:1], num_jets=1, year=self._year, isData=not self.isMC)
+            correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        else:
+            Vboson_Jet = candidatefj
+
+        #******************************************************
+
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
@@ -383,28 +395,30 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
             "lep_met_mt": mt_lep_met,
             #"met_fj_dphi": met_fjlep_dphi,
             "met_pt": met.pt,
-	        "lep_eta": candidatelep.eta,
+	    "lep_eta": candidatelep.eta,
             "numberLeptons": ngood_leptons,
             #"numberFatJet": n_fatjets,
             "ReconLepton_flavor": candidatelep.flavor,
-	        "WJet_pt": candidatefj.pt,
+	    "WJet_pt": candidatefj.pt,
             "VScore_WJet": VScore_WJet,
             
-	        "numberAK4JetsOutsideFatJet": NumOtherJetsOutsideJet,
-	        "numberBJets_Medium_OutsideWFatJet": n_bjets_M_OutsideJet,
-	        "numberBJets_Tight_OutsideWFatJet": n_bjets_T_OutsideJet,
-	        "numberBJets_Loose_OutsideWFatJet": n_bjets_L_OutsideJet,
+	    "numberAK4JetsOutsideFatJet": NumOtherJetsOutsideJet,
+	    "numberBJets_Medium_OutsideWFatJet": n_bjets_M_OutsideJet,
+	    "numberBJets_Tight_OutsideWFatJet": n_bjets_T_OutsideJet,
+	    "numberBJets_Loose_OutsideWFatJet": n_bjets_L_OutsideJet,
+
+            "VbosonJECcorrectedPT": Vboson_Jet.pt,
         }
 
 
         
 
         fatjetvars = {   
-            "fj_pt": WJet_corrected.pt,
-            #"fj_pt": candidatefj.pt,
+            #"fj_pt": WJet_corrected.pt,
+            "fj_pt": candidatefj.pt,
             "fj_eta": candidatefj.eta,
             "fj_phi": candidatefj.phi,
-            "fj_mass": candidatefj.msdcorr, #note don't use this now for the mass, use massNominal until I fit this naming
+            "fj_mass": correctedVbosonNominalMass, #corrected for msoftdrop then JMS
         }
 
         variables = {**variables, **fatjetvars}
