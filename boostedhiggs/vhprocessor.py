@@ -331,6 +331,8 @@ class vhProcessor(processor.ProcessorABC):
 
             Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
             correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        else:
+            Vboson_Jet = second_fj
 
         #*************************************************************************
 
@@ -432,7 +434,7 @@ class vhProcessor(processor.ProcessorABC):
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
-                    print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
+                    #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
 
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
@@ -447,11 +449,12 @@ class vhProcessor(processor.ProcessorABC):
 #                variables = {**variables, **jecvariables}
  
 #7/6 4:52 pm, putting back in JEC variables function =try this to get the pt shifts on the mass
-        for shift in jec_shifted_fatjetvars_V["pt"]:
-            if shift != "" and not self._systematics:
-                 continue
-            jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
-            variables = {**variables, **jecvariables}
+        
+            for shift in jec_shifted_fatjetvars_V["pt"]:
+                if shift != "" and not self._systematics:
+                     continue
+                jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
+                variables = {**variables, **jecvariables}
 
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:

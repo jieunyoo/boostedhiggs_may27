@@ -273,7 +273,8 @@ class fakeRateProcessor(processor.ProcessorABC):
         (electrons.pt > 38) & 
         (np.abs(electrons.eta) < 2.4) & 
         (electrons.mvaFall17V2noIso_WPL) & 
-        & (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
+        (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
+        &
         ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
 
         n_loose_electrons = ak.sum(loose_electrons, axis=1)
@@ -503,7 +504,7 @@ class fakeRateProcessor(processor.ProcessorABC):
         #self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         #self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt > 30))  #this is for the SFs, invert this for the QCD bkg
+        self.add_selection(name="metRevertCut", sel=(met.pt < 30))  #this is for the SFs, invert this for the QCD bkg
 
         #we also add a MET cut, but can do offline so can use these files for checks
 

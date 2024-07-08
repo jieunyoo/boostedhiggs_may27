@@ -816,8 +816,8 @@ def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
 #    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
 #    """
     variables = {}
-    print('fatjetpt', ak.to_list(fatjetvars["fj_pt"][0:200]))
-    print('met', met)
+    #print('fatjetpt', ak.to_list(fatjetvars["fj_pt"][0:200]))
+    #print('met', met)
 
     ptlabel = pt_shift if pt_shift is not None else ""
     if met_shift is not None:
