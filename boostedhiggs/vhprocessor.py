@@ -29,7 +29,7 @@ from boostedhiggs.corrections import (
     get_jec_jets,
     get_jmsr,
     getJECVariables,
-    #getJMSRVariables,
+    getJMSRVariables,
     met_factory,
     add_TopPtReweighting,
 )
@@ -324,15 +324,14 @@ class vhProcessor(processor.ProcessorABC):
         dr_two_jets = candidatefj.delta_r(second_fj)
 
         #only for V boson, since need up and down
-        if self.isMC:
-            Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
-            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True)
-            VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
+        #if self.isMC:
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True) 
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-            Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-            correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
-        else:
-            Vboson_Jet = second_fj
+        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        #else:
+         #   Vboson_Jet = second_fj
 
         #*************************************************************************
 
@@ -450,11 +449,17 @@ class vhProcessor(processor.ProcessorABC):
  
 #7/6 4:52 pm, putting back in JEC variables function =try this to get the pt shifts on the mass
         
-            for shift in jec_shifted_fatjetvars_V["pt"]:
-                if shift != "" and not self._systematics:
-                     continue
-                jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
-                variables = {**variables, **jecvariables}
+        for shift in jec_shifted_fatjetvars_V["pt"]:
+            if shift != "" and not self._systematics:
+                continue
+            jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
+            variables = {**variables, **jecvariables}
+
+        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+            if shift != "" and not self._systematics:
+                continue
+            jmsrvariables = getJMSRVariables(fatjetvars, met, mass_shift=shift)
+            variables = {**variables, **jmsrvariables}
 
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:
@@ -656,7 +661,7 @@ class vhProcessor(processor.ProcessorABC):
                         )
                         pnet_df = self.ak_to_pandas(pnet_vars)
                         scores = {"fj_ParT_score": pnet_df[sigs].sum(axis=1).values}
-                        print('scores', scores)
+                        #print('scores', scores)
 
                         hidNeurons = {}
                         for key in pnet_vars:
@@ -673,14 +678,14 @@ class vhProcessor(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-      #      for var_ in [
+            for var_ in [
                 #"rec_higgs_m",
                 #"rec_higgs_pt",
-      #          "rec_V_m",
-      #          "rec_V_pt",
-      #      ]:
-      #          if var_ in output[ch].keys():
-      #              output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+                "rec_V_m",
+                "rec_V_pt",
+            ]:
+                if var_ in output[ch].keys():
+                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
