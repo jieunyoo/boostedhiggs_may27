@@ -458,7 +458,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="nominal",
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=nominal,
                     )
 
@@ -471,8 +471,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     else:
                         shape_up = nominal
                         shape_down = nominal
-                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
-                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["rec_V_m"],weight=shape_up,)
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["rec_V_m"],weight=shape_up,)
 
 
                     for syst, (yrs, smpls, var) in {
@@ -491,7 +491,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["fj_mass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_up,
                         )
 
@@ -499,7 +499,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["fj_mass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_down,
                         )
 
@@ -521,7 +521,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_up",
                             Region=region,
-                            mass_observable=df["fj_mass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_up,
                         )
 
@@ -529,7 +529,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Sample=sample_to_use,
                             Systematic=f"{syst}_down",
                             Region=region,
-                            mass_observable=df["fj_mass"],
+                            mass_observable=df["rec_V_m"],
                             weight=shape_down,
                         )
 
@@ -570,7 +570,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_up",
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_up,
                     )
 
@@ -578,7 +578,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_pdf_acceptance_down",
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_down,
                     )
 
@@ -630,7 +630,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_up",
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_up,
                     )
 
@@ -638,7 +638,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample=sample_to_use,
                         Systematic="weight_qcd_scale_down",
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=shape_down,
                     )
 
@@ -648,11 +648,11 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     for syst, (yrs, smpls, var) in { **JEC_systs_uncorrelated_others}.items():
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df["fj_mass" + var[ch] + "_up"]
-                            shape_down = df["fj_mass" + var[ch] + "_down"]
+                            shape_up = df["rec_V_m" + var[ch] + "_up"]
+                            shape_down = df["rec_V_m" + var[ch] + "_down"]
                         else:
-                            shape_up = df["fj_mass"]
-                            shape_down = df["fj_mass"]
+                            shape_up = df["rec_V_m"]
+                            shape_down = df["rec_V_m"]
 
                         hists.fill(
                             Sample=sample_to_use,
@@ -677,7 +677,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                                region_sel = region_sel.replace("rec_V_pt", "rec_V_pt" + var[ch] + f"_{variation}")
+                                region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
 
                             df = data.copy()
                             df = df.query(region_sel)
@@ -702,9 +702,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             ###################################
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                                shape_variation = df["fj_mass" + var[ch] + f"_{variation}"]
+                                shape_variation = df["rec_V_m" + var[ch] + f"_{variation}"]
                             else:
-                                shape_variation = df["fj_mass"]
+                                shape_variation = df["rec_V_m"]
 
                             hists.fill(
                                 Sample=sample_to_use,
@@ -736,7 +736,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         Sample="Fake",
                         Systematic=syst,
                         Region=region,
-                        mass_observable=df["fj_mass"],
+                        mass_observable=df["rec_V_m"],
                         weight=df["event_weight"],
                     )
 

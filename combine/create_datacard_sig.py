@@ -30,7 +30,7 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, add_ttbar_constraint=True, add_wjets_constraint=True):
+def create_datacard(hists_templates, add_ttbar_constraint=False, add_wjets_constraint=False):
 
     # define the model
     model = rl.Model("testModel")
@@ -38,10 +38,10 @@ def create_datacard(hists_templates, add_ttbar_constraint=True, add_wjets_constr
     # define the signal and control regions
     SIG_regions = list(hists_templates.axes["Region"])
 
-    SIG_regions.remove("TopCR")
-    SIG_regions.remove("WJetsCR")
+    #SIG_regions.remove("TopCR")
+    #SIG_regions.remove("WJetsCR")
 
-    CONTROL_regions = ["TopCR", "WJetsCR"]
+    #CONTROL_regions = ["TopCR", "WJetsCR"]
 
     if add_ttbar_constraint:
         ttbarnormSF = rl.IndependentParameter("ttbarnormSF", 1.0, 0, 10)
@@ -50,7 +50,7 @@ def create_datacard(hists_templates, add_ttbar_constraint=True, add_wjets_constr
         wjetsnormSF = rl.IndependentParameter("wjetsnormSF", 1.0, 0, 10)
 
     # fill datacard with systematics and rates
-    for ChName in SIG_regions + CONTROL_regions:
+    for ChName in SIG_regions: # + CONTROL_regions:
         Samples = samples.copy()
 
         ch = rl.Channel(ChName)
@@ -59,8 +59,8 @@ def create_datacard(hists_templates, add_ttbar_constraint=True, add_wjets_constr
         for sName in Samples:
 
             templ = get_template(hists_templates, sName, ChName)
-            if templ == 0:
-                continue
+            #if templ == 0:
+                #continue
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
             sample = rl.TemplateSample(ch.name + "_" + labels[sName], stype, templ)
 
