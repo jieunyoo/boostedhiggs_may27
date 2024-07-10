@@ -1,48 +1,57 @@
-# Datacard for <Channel (WJetsCR) instance at 0x7fa4f2d39d00> generated on 2024-07-01 10:31:07.275750
+# Datacard for <Channel (WJetsCR) instance at 0x7f083e291fa0> generated on 2024-07-10 14:33:06.531232
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 6 # number of samples minus 1
-kmax 35 # number of nuisance parameters
+kmax 44 # number of nuisance parameters
 shapes * WJetsCR testModel.root testModel:WJetsCR_$PROCESS testModel:WJetsCR_$PROCESS_$SYSTEMATIC
 bin WJetsCR
 observation 9640.000
 bin                                              WJetsCR        WJetsCR        WJetsCR        WJetsCR        WJetsCR        WJetsCR        WJetsCR
 process                                            ttbar          wjets      singletop          zjets           wzqq        diboson       ewkvjets
 process                                                1              2              3              4              5              6              7
-rate                                            1214.122       6922.120        119.172        387.134         45.265         68.988        142.154
+rate                                            1223.671       6938.510        119.847        387.199         45.624         69.716        142.195
 BR_hww lnN                                 0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153  0.9848/1.0153
 CMS_HWW_boosted_QCDScaleacc_wjets shape                -         1.0000              -              -              -              -              -
-CMS_HWW_boosted_W_d1kappa_EW lnN                       -         0.9647              -         0.9753              -              -              -
+CMS_HWW_boosted_W_d1kappa_EW lnN                       -         0.9647              -         0.9747              -              -              -
 CMS_HWW_boosted_W_d2kappa_EW lnN                       -         0.9677              -              -              -              -              -
 CMS_HWW_boosted_W_d3kappa_EW lnN                       -         0.9647              -              -              -              -              -
-CMS_HWW_boosted_Z_d2kappa_EW lnN                       -              -              -         0.9777              -              -              -
-CMS_HWW_boosted_Z_d3kappa_EW lnN                       -              -              -         0.9756              -              -              -
-CMS_HWW_boosted_btagSFbcCorrelated lnN     1.0301/1.1452  0.9968/1.0807  1.0329/1.1595  0.9951/1.0656  1.0035/1.0658  1.0064/1.0482  1.0061/1.1283
-CMS_HWW_boosted_btagSFbc_2018 lnN          1.0096/1.1670  0.9837/1.0943  1.0083/1.1860  0.9859/1.0750  0.9927/1.0777  0.9979/1.0567  0.9810/1.1551
-CMS_HWW_boosted_btagSFlightCorrelated lnN  1.0039/1.0201  1.0018/1.0166         1.0116         1.0069  1.0010/1.0229  1.0013/1.0332  1.0020/1.0151
-CMS_HWW_boosted_btagSFlight_2018 lnN       1.0031/1.0209  1.0012/1.0173  1.0014/1.0120         1.0071  1.0002/1.0238  0.9995/1.0349  1.0014/1.0156
+CMS_HWW_boosted_Z_d2kappa_EW lnN                       -              -              -         0.9770              -              -              -
+CMS_HWW_boosted_Z_d3kappa_EW lnN                       -              -              -         0.9750              -              -              -
+CMS_HWW_boosted_btagSFbcCorrelated lnN     1.0302/1.1450  0.9967/1.0808  1.0329/1.1593  0.9954/1.0662  1.0035/1.0652  1.0063/1.0477  1.0059/1.1276
+CMS_HWW_boosted_btagSFbc_2018 lnN          1.0099/1.1667  0.9837/1.0943  1.0085/1.1857  0.9862/1.0757  0.9927/1.0771  0.9979/1.0561  0.9809/1.1544
+CMS_HWW_boosted_btagSFlightCorrelated lnN  1.0038/1.0198  1.0018/1.0166         1.0101         1.0075  1.0010/1.0226  1.0012/1.0330  1.0020/1.0151
+CMS_HWW_boosted_btagSFlight_2018 lnN       1.0030/1.0205  1.0012/1.0172         1.0104         1.0077  1.0002/1.0235  0.9995/1.0346  1.0014/1.0156
 CMS_HWW_boosted_d1K_NLO lnN                            -  0.8983/1.0308              -              -              -              -              -
 CMS_HWW_boosted_d2K_NLO lnN                            -  0.9098/1.0192              -              -              -              -              -
 CMS_HWW_boosted_d3K_NLO lnN                            -  0.9522/0.9768              -              -              -              -              -
-CMS_HWW_boosted_ele_identification lnN            1.0043         0.9891         0.9734         0.9911         0.9838         0.9960         0.9839
-CMS_HWW_boosted_ele_isolation lnN                 1.0031         0.9879         0.9722         0.9893         0.9810         0.9946         0.9822
-CMS_HWW_boosted_ele_reconstruction lnN            1.0046         0.9893         0.9735         0.9911         0.9833         0.9959         0.9838
-CMS_HWW_boosted_ele_trigger lnN                   1.0040         0.9888         0.9730         0.9904         0.9827         0.9953         0.9831
-CMS_HWW_boosted_jmr_2018 shape                    1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_HWW_boosted_jms_2018 shape                    1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_HWW_boosted_mu_identification lnN             1.0062         0.9781         0.9588         0.9875         0.9866         0.9711         0.9681
-CMS_HWW_boosted_mu_isolation lnN                  1.0057         0.9774         0.9584         0.9868         0.9861         0.9705         0.9676
-CMS_HWW_boosted_mu_trigger lnN                    1.0066         0.9784         0.9593         0.9878         0.9869         0.9716         0.9685
-CMS_HWW_boosted_mu_trigger_iso lnN                1.0057         0.9774         0.9584         0.9868         0.9861         0.9705         0.9676
+CMS_HWW_boosted_ele_identification lnN            1.0044         0.9890         0.9736         0.9904         0.9840         0.9961         0.9839
+CMS_HWW_boosted_ele_isolation lnN                 1.0032         0.9879         0.9724         0.9887         0.9811         0.9947         0.9822
+CMS_HWW_boosted_ele_reconstruction lnN            1.0047         0.9893         0.9737         0.9905         0.9835         0.9959         0.9838
+CMS_HWW_boosted_ele_trigger lnN                   1.0041         0.9888         0.9732         0.9898         0.9829         0.9953         0.9831
+CMS_HWW_boosted_mu_identification lnN             1.0062         0.9781         0.9593         0.9876         0.9868         0.9714         0.9685
+CMS_HWW_boosted_mu_isolation lnN                  1.0057         0.9774         0.9589         0.9868         0.9862         0.9708         0.9680
+CMS_HWW_boosted_mu_trigger lnN                    1.0066         0.9784         0.9598         0.9878         0.9870         0.9720         0.9689
+CMS_HWW_boosted_mu_trigger_iso lnN                1.0057         0.9774         0.9589         0.9868         0.9862         0.9708         0.9680
 CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
 CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-WJetsCR_diboson_mcstat lnN                             -              -              -              -              -         1.1672              -
+CMS_scale_j_Abs shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_Abs_2018 shape                        1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_BBEC1 shape                           1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_BBEC1_2018 shape                      1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_EC2 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_EC2_2018 shape                        1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_FlavQCD shape                         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_HF shape                              1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_HF_2018 shape                         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_RelBal shape                          1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_scale_j_RelSample_2018 shape                  1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+WJetsCR_diboson_mcstat lnN                             -              -              -              -              -         1.1667              -
 WJetsCR_ewkvjets_mcstat lnN                            -              -              -              -              -              -         1.0835
-WJetsCR_singletop_mcstat lnN                           -              -         1.0605              -              -              -              -
-WJetsCR_ttbar_mcstat lnN                          1.0161              -              -              -              -              -              -
+WJetsCR_singletop_mcstat lnN                           -              -         1.0602              -              -              -              -
+WJetsCR_ttbar_mcstat lnN                          1.0163              -              -              -              -              -              -
 WJetsCR_wjets_mcstat lnN                               -         1.0096              -              -              -              -              -
-WJetsCR_wzqq_mcstat lnN                                -              -              -              -         1.1083              -              -
-WJetsCR_zjets_mcstat lnN                               -              -              -         1.0551              -              -              -
+WJetsCR_wzqq_mcstat lnN                                -              -              -              -         1.1077              -              -
+WJetsCR_zjets_mcstat lnN                               -              -              -         1.0553              -              -              -
 miniisolation_SF_unc lnN                   0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200  0.9800/1.0200
 wjetsnormSF extArg testModel.root:testModel
 wjetsnormSF_effect_WJetsCR_wjets rateParam WJetsCR wjets (1*@0) wjetsnormSF
