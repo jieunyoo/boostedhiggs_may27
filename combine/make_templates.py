@@ -677,7 +677,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                                region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
+                                region_sel = region_sel.replace("rec_V_pt", "rec_V_pt" + var[ch] + f"_{variation}")
 
                             df = data.copy()
                             df = df.query(region_sel)
