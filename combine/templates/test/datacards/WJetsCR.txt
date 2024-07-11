@@ -1,7 +1,7 @@
-# Datacard for <Channel (WJetsCR) instance at 0x7f083e291fa0> generated on 2024-07-10 14:33:06.531232
+# Datacard for <Channel (WJetsCR) instance at 0x7febdfb7df70> generated on 2024-07-11 09:29:56.102001
 imax 1 # number of categories ('bins' but here we are using shape templates)
 jmax 6 # number of samples minus 1
-kmax 44 # number of nuisance parameters
+kmax 35 # number of nuisance parameters
 shapes * WJetsCR testModel.root testModel:WJetsCR_$PROCESS testModel:WJetsCR_$PROCESS_$SYSTEMATIC
 bin WJetsCR
 observation 9640.000
@@ -27,6 +27,8 @@ CMS_HWW_boosted_ele_identification lnN            1.0044         0.9890         
 CMS_HWW_boosted_ele_isolation lnN                 1.0032         0.9879         0.9724         0.9887         0.9811         0.9947         0.9822
 CMS_HWW_boosted_ele_reconstruction lnN            1.0047         0.9893         0.9737         0.9905         0.9835         0.9959         0.9838
 CMS_HWW_boosted_ele_trigger lnN                   1.0041         0.9888         0.9732         0.9898         0.9829         0.9953         0.9831
+CMS_HWW_boosted_jmr_2018 shape                    1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
+CMS_HWW_boosted_jms_2018 shape                    1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 CMS_HWW_boosted_mu_identification lnN             1.0062         0.9781         0.9593         0.9876         0.9868         0.9714         0.9685
 CMS_HWW_boosted_mu_isolation lnN                  1.0057         0.9774         0.9589         0.9868         0.9862         0.9708         0.9680
 CMS_HWW_boosted_mu_trigger lnN                    1.0066         0.9784         0.9598         0.9878         0.9870         0.9720         0.9689
@@ -34,17 +36,6 @@ CMS_HWW_boosted_mu_trigger_iso lnN                1.0057         0.9774         
 CMS_lumi_13TeV_2018 lnN                           1.0150         1.0150         1.0150         1.0150         1.0150         1.0150         1.0150
 CMS_pileup_2018 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 CMS_pileup_id shape                               1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_Abs shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_Abs_2018 shape                        1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_BBEC1 shape                           1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_BBEC1_2018 shape                      1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_EC2 shape                             1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_EC2_2018 shape                        1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_FlavQCD shape                         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_HF shape                              1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_HF_2018 shape                         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_RelBal shape                          1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
-CMS_scale_j_RelSample_2018 shape                  1.0000         1.0000         1.0000         1.0000         1.0000         1.0000         1.0000
 WJetsCR_diboson_mcstat lnN                             -              -              -              -              -         1.1667              -
 WJetsCR_ewkvjets_mcstat lnN                            -              -              -              -              -              -         1.0835
 WJetsCR_singletop_mcstat lnN                           -              -         1.0602              -              -              -              -
