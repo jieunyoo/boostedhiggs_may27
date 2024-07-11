@@ -380,6 +380,15 @@ class fakeRateDYSF(processor.ProcessorABC):
             axis=1,
         )
 
+
+
+        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
         # ************************************************************************************
         #need duplicate for loose 
         dr_ak8Jets_HiggsCandidateJet_loose = goodjets.delta_r(candidatefj_loose)
@@ -388,7 +397,13 @@ class fakeRateDYSF(processor.ProcessorABC):
         NumOtherJetsOutsideBothJets_loose = ak.num(ak4_outsideBothJets_loose)
         n_bjets_M_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
         n_bjets_T_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
-        # ************************************************************************************        
+
+        ak4_outsideHiggs_loose = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV_loose = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs_loose = ak.sum( ak4_outsideHiggs_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs_loose = ak.sum( ak4_outsideHiggs_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV_loose = ak.sum( ak4_outsideV_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV_loose = ak.sum( ak4_outsideV_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
 
        
         mt_lep_met = np.sqrt(
@@ -461,6 +476,16 @@ class fakeRateDYSF(processor.ProcessorABC):
             "V_fj_pt": second_fj.pt,
             "V_fj_pt_loose": second_fj_loose.pt,
 
+       #extra b jet stuff
+            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
+            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
+            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
+            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
+
+            "numberBJets_Medium_OutsideHiggs_loose": n_bjets_M_OutsideHiggs_loose,
+            "numberBJets_Tight_OutsideHiggs_loose": n_bjets_T_OutsideHiggs_loose,
+            "numberBJets_Medium_OutsideV_loose": n_bjets_M_OutsideV_loose,
+            "numberBJets_Tight_OutsideV_loose": n_bjets_T_OutsideV_loose,
        
         }
 
@@ -520,8 +545,6 @@ class fakeRateDYSF(processor.ProcessorABC):
                 self.add_selection(name="Trigger", sel=trigger[ch], channel=ch)
 
         self.add_selection(name="METFilters", sel=metfilters)
-        #self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_good_electrons == 0), channel="mu")
-        #self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
@@ -534,10 +557,7 @@ class fakeRateDYSF(processor.ProcessorABC):
         #self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
-        #self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
-        #self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 20 ))
-        self.add_selection(name="metRevertCut", sel=(met.pt > 30))  #this is for the SFs, invert this for the QCD bkg
+        self.add_selection(name="metRevertCut", sel=(met.pt < 30))  #this is for the SFs, invert this for the QCD bkg
 
         #we also add a MET cut, but can do offline so can use these files for checks
 

@@ -357,15 +357,17 @@ class fakeRateProcessor(processor.ProcessorABC):
         dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
         ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
 
+
         NumOtherJetsOutsideBothJets = ak.num(ak4_outsideBothJets)
-        n_bjets_M_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],
-            axis=1,
-        )
-        n_bjets_T_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"],
-            axis=1,
-        )
+        n_bjets_M_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
 
         # ************************************************************************************
         #need duplicate for loose 
@@ -375,6 +377,14 @@ class fakeRateProcessor(processor.ProcessorABC):
         NumOtherJetsOutsideBothJets_loose = ak.num(ak4_outsideBothJets_loose)
         n_bjets_M_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
         n_bjets_T_OutsideBothJets_loose = ak.sum( ak4_outsideBothJets_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+        ak4_outsideHiggs_loose = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV_loose = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs_loose = ak.sum( ak4_outsideHiggs_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs_loose = ak.sum( ak4_outsideHiggs_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV_loose = ak.sum( ak4_outsideV_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV_loose = ak.sum( ak4_outsideV_loose.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
         # ************************************************************************************        
 
        
@@ -429,6 +439,18 @@ class fakeRateProcessor(processor.ProcessorABC):
             "n_loose_electrons": n_loose_electrons,
             "n_loose_muons": n_loose_muons,
        
+       #extra b jet stuff
+            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
+            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
+            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
+            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
+
+            "numberBJets_Medium_OutsideHiggs_loose": n_bjets_M_OutsideHiggs_loose,
+            "numberBJets_Tight_OutsideHiggs_loose": n_bjets_T_OutsideHiggs_loose,
+            "numberBJets_Medium_OutsideV_loose": n_bjets_M_OutsideV_loose,
+            "numberBJets_Tight_OutsideV_loose": n_bjets_T_OutsideV_loose,
+
+
         }
 
         fatjetvars = {
