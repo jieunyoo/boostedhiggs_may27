@@ -35,8 +35,9 @@ from boostedhiggs.corrections import (
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
 
-
 from .run_tagger_inference import runInferenceTriton
+
+from .SkimmerABC import *
 
 warnings.filterwarnings("ignore", message="Found duplicate branch ")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -88,7 +89,6 @@ class vhProcessor(processor.ProcessorABC):
         systematics=False,
         getLPweights=False,
         uselooselep=False,
-        #fakevalidation=False,
     ):
         self._year = year
         self._yearmod = yearmod
@@ -185,6 +185,17 @@ class vhProcessor(processor.ProcessorABC):
         self.isMC = hasattr(events, "genWeight")
 
         nevents = len(events)
+
+        print('events',events)
+
+        #if self.isMC: 
+         #   cutoff = 4
+          #  pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
+           # pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
+           # print('pw_pass', pw_pass)
+           # events = events[pw_pass]
+
+
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
@@ -208,6 +219,10 @@ class vhProcessor(processor.ProcessorABC):
         if self.isMC:
             for ch in self._channels:
                 self.weights[ch].add("genweight", events.genWeight)
+
+
+
+
 
         ######################
         # Trigger
@@ -329,7 +344,10 @@ class vhProcessor(processor.ProcessorABC):
         VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        #correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+
+        correctedVbosonNominalMass = candidatefj.mass
+        #print('correctedMass', ak.to_list(correctedVbosonNominalMass)[0:200])
         #else:
          #   Vboson_Jet = second_fj
 
@@ -368,6 +386,15 @@ class vhProcessor(processor.ProcessorABC):
             axis=1,
         )
 
+        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+
+
 
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
@@ -375,6 +402,17 @@ class vhProcessor(processor.ProcessorABC):
 
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
+
+
+
+        if self.isMC: 
+            cutoff = 4.
+            cutOnPU = np.ones(nevents,dtype='bool')
+            pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
+            pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
+            #print('pw_pass', pw_pass)
+
+           # events = events[pw_pass]
 
         ######################
         # Store variables
@@ -407,6 +445,15 @@ class vhProcessor(processor.ProcessorABC):
        #check JEC
             "VbosonJECcorrectedPT": Vboson_Jet.pt,
             "VbosonJetregularPT": second_fj.pt,
+
+            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
+            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
+            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
+            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
+
+            "pileupWeightCheck": pw_pass
+
+
         }
 
         if self.isMC:
@@ -414,7 +461,10 @@ class vhProcessor(processor.ProcessorABC):
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
             "fj_pt":second_fj.pt, 
-            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
+            #"fj_mass": ak.firsts(correctedVbosonNominalMass), #corrected for msdcorr, and then JMR/JMS
+            #"fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
+            
+            "fj_mass": candidatefj.msdcorr, #corrected for msdcorr, and then JMR/JMS
             }
         else:
             fatjetvars = {
@@ -449,11 +499,12 @@ class vhProcessor(processor.ProcessorABC):
  
 #7/6 4:52 pm, putting back in JEC variables function =try this to get the pt shifts on the mass
         
-        for shift in jec_shifted_fatjetvars_V["pt"]:
-            if shift != "" and not self._systematics:
-                continue
-            jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
-            variables = {**variables, **jecvariables}
+#7/11 11:25 am commenting out the shifts since we don't need these per cristina
+        #for shift in jec_shifted_fatjetvars_V["pt"]:
+        #    if shift != "" and not self._systematics:
+        #        continue
+        #    jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
+        #    variables = {**variables, **jecvariables}
 
         for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
             if shift != "" and not self._systematics:
@@ -462,6 +513,10 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **jmsrvariables}
 
         # Selection ***********************************************************************************************************************************************
+
+        #only for MC! need to fix this so it applies only for MC
+        self.add_selection(name = "PileupWeight", sel=pw_pass)
+
         for ch in self._channels:
             # trigger
             if ch == "mu":
