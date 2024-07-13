@@ -559,6 +559,29 @@ def add_lepton_weight(weights, lepton, year, lepton_type="muon"):
             weights.add(f"{corr}_{lepton_type}", values["nominal"], values["up"], values["down"])
 
 
+def get_pileup_weight_raghav(year: str, nPU: np.ndarray):
+    """
+    Should be able to do something similar to lepton weight but w pileup
+    e.g. see here: https://cms-nanoaod-integration.web.cern.ch/commonJSONSFs/LUMI_puWeights_Run2_UL/
+    """
+    cset = correctionlib.CorrectionSet.from_file(get_pog_json("pileup", year))
+
+    year_to_corr = {
+        "2016": "Collisions16_UltraLegacy_goldenJSON",
+        "2016APV": "Collisions16_UltraLegacy_goldenJSON",
+        "2017": "Collisions17_UltraLegacy_goldenJSON",
+        "2018": "Collisions18_UltraLegacy_goldenJSON",
+    }
+
+    values = {}
+
+    values["nominal"] = cset[year_to_corr[year]].evaluate(nPU, "nominal")
+    values["up"] = cset[year_to_corr[year]].evaluate(nPU, "up")
+    values["down"] = cset[year_to_corr[year]].evaluate(nPU, "down")
+
+    return values
+
+
 def get_pileup_weight(year: str, mod: str, nPU: np.ndarray):
     """
     Should be able to do something similar to lepton weight but w pileup
@@ -722,16 +745,16 @@ jmrValues = {}
 # jet mass resolution: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # nominal, down, up (these are switched in the github!!!)
 jmrValues["msoftdrop"] = {
-    "2016": [1.0, 0.8, 1.2],
-    "2017": [1.09, 1.04, 1.14],
+   # "2016": [1.0, 0.8, 1.2],
+   # "2017": [1.09, 1.04, 1.14],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [1.09, 1.04, 1.14],
+   # "2018": [1.09, 1.04, 1.14],
 
 #change to nominal, up, down
-    #"2016": [1.0, 1.2, 0.8],
-    #"2017": [1.09, 1.14, 1.04],
+    "2016": [1.0, 1.2, 0.8],
+    "2017": [1.09, 1.14, 1.04],
     # Use 2017 values for 2018 until 2018 are released
-    #"2018": [1.09, 1.14, 1.04],
+    "2018": [1.09, 1.14, 1.04],
 
 }
 
@@ -739,16 +762,16 @@ jmrValues["msoftdrop"] = {
 # W-tagging PUPPI softdrop JMS values: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # 2016 values
 jmsValues["msoftdrop"] = {
-    "2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
-    "2017": [0.982, 0.978, 0.986],
+    #"2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
+    #"2017": [0.982, 0.978, 0.986],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [0.982, 0.978, 0.986],
+    #"2018": [0.982, 0.978, 0.986],
     #"2018": [1,1,1],
 
-    #"2016": [1.00, 1.0094, 0.9906],  # nominal, up, down
-    #"2017": [0.982, 0.986, 0.978],
+    "2016": [1.00, 1.0094, 0.9906],  # nominal, up, down
+    "2017": [0.982, 0.986, 0.978],
     # Use 2017 values for 2018 until 2018 are released
-    #"2018": [0.982, 0.986, 0.978],
+    "2018": [0.982, 0.986, 0.978],
     #"2018": [1,1,1],
 
 }
@@ -762,13 +785,18 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
     for mkey in jmsr_vars: #the key is msoftdrop, do this for nominal, down, then up
         tdict = {}
 
-        if not isData:
-            fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
-        #preCorrection =  fatjets["msdcorr"]
-            mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
+#        if not isData:
+        fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
+        mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
 
+#        if isData:
+#            mass = pad_val(fatjets[mkey], num_jets, axis=1)
+#            tdict[""] = mass
+#            nominalVMass = mass
+
+
+        #mass = pad_val(fatjets[mkey], num_jets, axis=1)
         if isData:
-            mass = pad_val(fatjets[mkey], num_jets, axis=1)
             tdict[""] = mass
             nominalVMass = mass
         else:
@@ -800,6 +828,7 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
             tdict["JMR_down"] = mass_jms * jmr_down
             #tdict["nominal"] = mass_jms * jmr_nom #don't need this since saving it in a diff. way
             nominalVMass = mass_jms * jmr_nom
+            #print('nominal', nominalVMass)
 
 
 
@@ -1079,3 +1108,4 @@ def add_TopPtReweighting(topPt):
     toppt_weight1 = np.exp(0.0615 - 0.0005 * np.clip(topPt[:, 0], 0.0, 500.0))
     toppt_weight2 = np.exp(0.0615 - 0.0005 * np.clip(topPt[:, 1], 0.0, 500.0))
     return np.sqrt(toppt_weight1 * toppt_weight2)
+

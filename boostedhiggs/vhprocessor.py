@@ -183,18 +183,8 @@ class vhProcessor(processor.ProcessorABC):
 
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
-
         nevents = len(events)
-
-        print('events',events)
-
-        #if self.isMC: 
-         #   cutoff = 4
-          #  pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
-           # pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
-           # print('pw_pass', pw_pass)
-           # events = events[pw_pass]
-
+        #print('events',events)
 
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
@@ -344,12 +334,9 @@ class vhProcessor(processor.ProcessorABC):
         VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        #correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
 
-        correctedVbosonNominalMass = candidatefj.mass
         #print('correctedMass', ak.to_list(correctedVbosonNominalMass)[0:200])
-        #else:
-         #   Vboson_Jet = second_fj
 
         #*************************************************************************
 
@@ -411,6 +398,8 @@ class vhProcessor(processor.ProcessorABC):
             pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
             pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
             #print('pw_pass', pw_pass)
+        else:
+            pw_pass = np.ones(nevents,dtype='bool')
 
            # events = events[pw_pass]
 
@@ -443,8 +432,8 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
        
        #check JEC
-            "VbosonJECcorrectedPT": Vboson_Jet.pt,
-            "VbosonJetregularPT": second_fj.pt,
+       #     "VbosonJECcorrectedPT": Vboson_Jet.pt,
+       #     "VbosonJetregularPT": second_fj.pt,
 
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
@@ -456,30 +445,17 @@ class vhProcessor(processor.ProcessorABC):
 
         }
 
-        if self.isMC:
-            fatjetvars = {
+        fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_pt":second_fj.pt, 
-            #"fj_mass": ak.firsts(correctedVbosonNominalMass), #corrected for msdcorr, and then JMR/JMS
-            #"fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
-            
-            "fj_mass": candidatefj.msdcorr, #corrected for msdcorr, and then JMR/JMS
+            "fj_pt":ak.firsts(Vboson_Jet.pt),
+            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
+            #"fj_mass": second_fj.msdcorr
             }
-        else:
-            fatjetvars = {
-            "fj_eta": second_fj.eta,
-            "fj_phi": second_fj.phi,
-            "fj_pt": second_fj.pt,  #don't correct data!
-            "fj_mass": second_fj.msdcorr
-            }
-
-
         variables = {**variables, **fatjetvars}
 
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
-#farouk applies pt shift to only the higgs, i need to apply it to the V,
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
@@ -506,11 +482,12 @@ class vhProcessor(processor.ProcessorABC):
         #    jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
         #    variables = {**variables, **jecvariables}
 
-        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-            if shift != "" and not self._systematics:
-                continue
-            jmsrvariables = getJMSRVariables(fatjetvars, met, mass_shift=shift)
-            variables = {**variables, **jmsrvariables}
+        
+        #for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+         #   if shift != "" and not self._systematics:
+          #      continue
+          #  jmsrvariables = getJMSRVariables(fatjetvars, met, mass_shift=shift)
+          #  variables = {**variables, **jmsrvariables}
 
         # Selection ***********************************************************************************************************************************************
 
@@ -733,14 +710,14 @@ class vhProcessor(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-            for var_ in [
+            #for var_ in [
                 #"rec_higgs_m",
                 #"rec_higgs_pt",
-                "rec_V_m",
-                "rec_V_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+            #    "rec_V_m",
+            #    "rec_V_pt",
+           # ]:
+            #    if var_ in output[ch].keys():
+            #        output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
