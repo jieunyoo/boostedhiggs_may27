@@ -837,10 +837,7 @@ def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int 
     return nominalVMass, jmsr_shifted_vars
 
 
-#def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
-def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
-#def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
-#def getJECVariables(fatjetvars, pt_shift=None):
+def getJECVariables_Higgs(fatjetvars, met, pt_shift=None, met_shift=None):
 #    """
 #    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
 #    """
@@ -887,6 +884,59 @@ def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
+    variables[f"rec_H_pt{shift}"] = candidatefj.pt
+    return variables
+
+
+
+#def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
+def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
+#    """
+#    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
+#    """
+    variables = {}
+    #print('fatjetpt', ak.to_list(fatjetvars["fj_pt"][0:200]))
+    #print('met', ak.to_list(met)[0:500])
+
+    ptlabel = pt_shift if pt_shift is not None else ""
+    if met_shift is not None:
+        metlabel = met_shift
+        if met_shift == "UES_up":
+            metvar = met.MET_UnclusteredEnergy.up
+        elif met_shift == "UES_down":
+            metvar = met.MET_UnclusteredEnergy.down
+    else:
+        metlabel = ""
+        if ptlabel != "":
+            if ptlabel == "JES_up":
+                metvar = met.JES_jes.up
+                #print('metvar', ak.to_list(metvar)[0:500])
+            elif ptlabel == "JES_down":
+                metvar = met.JES_jes.down
+            # elif ptlabel == "JER_up":
+            #     metvar = met.JER.up
+            # elif ptlabel == "JER_down":
+            #     metvar = met.JER.down
+            else:
+                if "up" in ptlabel:
+                    metvar = met[ptlabel.replace("_up", "")].up
+                elif "down" in ptlabel:
+                    metvar = met[ptlabel.replace("_down", "")].down
+        else:
+            metvar = met
+
+    shift = ptlabel + metlabel
+
+    candidatefj = ak.zip(
+        {
+            "pt": fatjetvars[f"fj_pt{ptlabel}"],
+            "eta": fatjetvars["fj_eta"],
+            "phi": fatjetvars["fj_phi"],
+            "mass": fatjetvars["fj_mass"],
+        },
+        with_name="PtEtaPhiMCandidate",
+        behavior=candidate.behavior,
+    )
     variables[f"rec_V_m{shift}"] = candidatefj.mass
     variables[f"rec_V_pt{shift}"] = candidatefj.pt
     return variables
@@ -904,7 +954,7 @@ def getJMSRVariables(fatjetvars, met, mass_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
+    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass 
     variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
 
     return variables

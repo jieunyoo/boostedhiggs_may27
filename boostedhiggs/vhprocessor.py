@@ -29,6 +29,7 @@ from boostedhiggs.corrections import (
     get_jec_jets,
     get_jmsr,
     getJECVariables,
+    getJECVariables_Higgs,
     getJMSRVariables,
     met_factory,
     add_TopPtReweighting,
@@ -299,7 +300,7 @@ class vhProcessor(processor.ProcessorABC):
         NumFatjets = ak.num(good_fatjets)
 
         #JETS**************************************************
-        #this applies JEC to all the fat jets
+        #this applies JEC to all the fat jets (same as farouk)
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
@@ -328,10 +329,8 @@ class vhProcessor(processor.ProcessorABC):
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
-        #only for V boson, since need up and down
+        #only for V boson, since need up and down - need to fix later to be for Higgs as well
         #if self.isMC:
-        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True) 
-        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
@@ -381,15 +380,12 @@ class vhProcessor(processor.ProcessorABC):
         n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
 
 
-
-
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
         )
 
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
-
 
 
         if self.isMC: 
@@ -421,7 +417,7 @@ class vhProcessor(processor.ProcessorABC):
             "met_pt": met.pt,
 
             "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "ReconHiggsCandidateFatJet_pt": candidatefj.pt, #THIS IS THE UNCORRECTED PT!!
+            "ReconHiggsCandidateFatJet_pt": candidatefj.pt, #Higgs
             "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
             "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
         
@@ -432,27 +428,25 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
        
        #check JEC
-       #     "VbosonJECcorrectedPT": Vboson_Jet.pt,
-       #     "VbosonJetregularPT": second_fj.pt,
-
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
             "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
             "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
-
             "pileupWeightCheck": pw_pass
-
 
         }
 
         fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_pt":ak.firsts(Vboson_Jet.pt),
-            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
-            #"fj_mass": second_fj.msdcorr
+            "fj_pt": second_fj.pt,
+            "fj_mass": correctedVbosonNominalMass,
             }
         variables = {**variables, **fatjetvars}
+
+#
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True) 
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
@@ -473,26 +467,38 @@ class vhProcessor(processor.ProcessorABC):
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
  
-#7/6 4:52 pm, putting back in JEC variables function =try this to get the pt shifts on the mass
-        
 #7/11 11:25 am commenting out the shifts since we don't need these per cristina
-        #for shift in jec_shifted_fatjetvars_V["pt"]:
-        #    if shift != "" and not self._systematics:
-        #        continue
-        #    jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
-        #    variables = {**variables, **jecvariables}
+  #      for shift in jec_shifted_fatjetvars_V["pt"]:
+  #          if shift != "" and not self._systematics:
+  #              continue
+  #          jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
+  #          variables = {**variables, **jecvariables}
+   #NOTe; still no MET uncertainty     
 
-        
-        #for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+
+            higgsPT_vars = {
+            "h_fj_eta": candidatefj.eta,
+            "h_fj_phi": candidatefj.phi,
+            "h_fj_pt": candidatefj.pt,
+            "h_fj_mass": candidatefj.mass,
+            }
+            for shift, vals in jec_shifted_fatjetvars["pt"].items():
+                if shift != "":
+                    fatjetvars_sys[f"h_fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
+            variables = {**variables, **fatjetvars_sys}
+            fatjetvars = {**fatjetvars, **fatjetvars_sys}
+
+        #for shift in jec_shifted_fatjetvars["pt"]:
          #   if shift != "" and not self._systematics:
           #      continue
-          #  jmsrvariables = getJMSRVariables(fatjetvars, met, mass_shift=shift)
-          #  variables = {**variables, **jmsrvariables}
+           # jecvariables = getJECVariables_Higgs(higgsPT_vars, met, pt_shift=shift, met_shift=None)
+     #       variables = {**variables, **jecvariables}
+
 
         # Selection ***********************************************************************************************************************************************
 
         #only for MC! need to fix this so it applies only for MC
-        self.add_selection(name = "PileupWeight", sel=pw_pass)
+        #self.add_selection(name = "PileupWeight", sel=pw_pass)
 
         for ch in self._channels:
             # trigger
@@ -517,7 +523,10 @@ class vhProcessor(processor.ProcessorABC):
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
                     #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+                    #fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+                    #print('secondfj var',  ( ak.to_list(second_fj[v][var].pt)[0:500]))
+#add also Higgs
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
@@ -585,9 +594,9 @@ class vhProcessor(processor.ProcessorABC):
 
                 #add top pt reweighting from farouk's repo, june 29th: 3:50 pm version
                 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
-                if "TT" in dataset:
-                    tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
-                    variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
+                #if "TT" in dataset:
+                #    tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
+                #    variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
                 if "HToWW" in dataset:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
@@ -710,14 +719,14 @@ class vhProcessor(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-            #for var_ in [
+            for var_ in [
                 #"rec_higgs_m",
                 #"rec_higgs_pt",
-            #    "rec_V_m",
-            #    "rec_V_pt",
-           # ]:
-            #    if var_ in output[ch].keys():
-            #        output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+                "rec_V_m",
+                "rec_V_pt",
+            ]:
+                if var_ in output[ch].keys():
+                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
