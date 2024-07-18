@@ -102,55 +102,55 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     # Theory Systematics. (convention: https://gitlab.cern.ch/hh/naming-conventions#theory-uncertainties)
 
     # PDF
-    #n = rl.NuisanceParameter("pdf_Higgs_gg", "lnN")
-    #systs_dict["ggF"]["pdf_Higgs_gg"] = n
-    #systs_dict_values["ggF"]["pdf_Higgs_gg"] = (1.019, None)
+    n = rl.NuisanceParameter("pdf_Higgs_gg", "lnN")
+    systs_dict["ggF"]["pdf_Higgs_gg"] = n
+    systs_dict_values["ggF"]["pdf_Higgs_gg"] = (1.019, None)
 
-    #n = rl.NuisanceParameter("pdf_Higgs_qqHH", "lnN")
-    #systs_dict["VBF"]["pdf_Higgs_qqHH"] = n
-    #systs_dict_values["VBF"]["pdf_Higgs_qqHH"] = (1.021, 0.979)
+    n = rl.NuisanceParameter("pdf_Higgs_qqHH", "lnN")
+    systs_dict["VBF"]["pdf_Higgs_qqHH"] = n
+    systs_dict_values["VBF"]["pdf_Higgs_qqHH"] = (1.021, 0.979)
 
-    #n = rl.NuisanceParameter("pdf_Higgs_ttH", "lnN")
-    #systs_dict["ttH"]["pdf_Higgs_ttH"] = n
-    #systs_dict_values["ttH"]["pdf_Higgs_ttH"] = (1.03, None)
+    n = rl.NuisanceParameter("pdf_Higgs_ttH", "lnN")
+    systs_dict["ttH"]["pdf_Higgs_ttH"] = n
+    systs_dict_values["ttH"]["pdf_Higgs_ttH"] = (1.03, None)
 
-  #  n = rl.NuisanceParameter("pdf_Higgs_qqbar", "lnN")
-  #  systs_dict["WH"]["pdf_Higgs_qqbar"] = n
-  #  systs_dict_values["WH"]["pdf_Higgs_qqbar"] = (1.017, None)
-  #  systs_dict["ZH"]["pdf_Higgs_qqbar"] = n
-  #  systs_dict_values["ZH"]["pdf_Higgs_qqbar"] = (1.013, None)
+    n = rl.NuisanceParameter("pdf_Higgs_qqbar", "lnN")
+    systs_dict["WH"]["pdf_Higgs_qqbar"] = n
+    systs_dict_values["WH"]["pdf_Higgs_qqbar"] = (1.017, None)
+    systs_dict["ZH"]["pdf_Higgs_qqbar"] = n
+    systs_dict_values["ZH"]["pdf_Higgs_qqbar"] = (1.013, None)
 
     # QCD scale
-    #n = rl.NuisanceParameter("QCDscale_ggH", "lnN")
-    #systs_dict["ggF"]["QCDscale_ggH"] = n
-    #systs_dict_values["ggF"]["QCDscale_ggH"] = (1.039, None)
+    n = rl.NuisanceParameter("QCDscale_ggH", "lnN")
+    systs_dict["ggF"]["QCDscale_ggH"] = n
+    systs_dict_values["ggF"]["QCDscale_ggH"] = (1.039, None)
 
-    #n = rl.NuisanceParameter("QCDscale_qqH", "lnN")
-    #systs_dict["VBF"]["QCDscale_qqH"] = n
-    #systs_dict_values["VBF"]["QCDscale_qqH"] = (1.004, 0.997)
+    n = rl.NuisanceParameter("QCDscale_qqH", "lnN")
+    systs_dict["VBF"]["QCDscale_qqH"] = n
+    systs_dict_values["VBF"]["QCDscale_qqH"] = (1.004, 0.997)
 
-    #n = rl.NuisanceParameter("QCDscale_ttH", "lnN")
-    #systs_dict["ttH"]["QCDscale_ttH"] = n
-    #systs_dict_values["ttH"]["QCDscale_ttH"] = (1.058, 0.908)
+    n = rl.NuisanceParameter("QCDscale_ttH", "lnN")
+    systs_dict["ttH"]["QCDscale_ttH"] = n
+    systs_dict_values["ttH"]["QCDscale_ttH"] = (1.058, 0.908)
 
-  #  n = rl.NuisanceParameter("QCDscale_VH", "lnN")
-  #  systs_dict["WH"]["QCDscale_VH"] = n
-  #  systs_dict_values["WH"]["QCDscale_VH"] = (1.005, 0.993)
-  #  systs_dict["ZH"]["QCDscale_VH"] = n
-  #  systs_dict_values["ZH"]["QCDscale_VH"] = (1.038, 0.97)
+    n = rl.NuisanceParameter("QCDscale_VH", "lnN")
+    systs_dict["WH"]["QCDscale_VH"] = n
+    systs_dict_values["WH"]["QCDscale_VH"] = (1.005, 0.993)
+    systs_dict["ZH"]["QCDscale_VH"] = n
+    systs_dict_values["ZH"]["QCDscale_VH"] = (1.038, 0.97)
 
     # alphas
- #   n = rl.NuisanceParameter("alpha_s", "lnN")
- #   #systs_dict["ggF"]["alpha_s"] = n
-    #systs_dict_values["ggF"]["alpha_s"] = (1.026, None)
-    #systs_dict["VBF"]["alpha_s"] = n
-    #systs_dict_values["VBF"]["alpha_s"] = (1.005, None)
-    #systs_dict["ttH"]["alpha_s"] = n
-    #systs_dict_values["ttH"]["alpha_s"] = (1.020, None)
- #   systs_dict["WH"]["alpha_s"] = n
- #   systs_dict_values["WH"]["alpha_s"] = (1.009, None)
- #   systs_dict["ZH"]["alpha_s"] = n
- #   systs_dict_values["ZH"]["alpha_s"] = (1.009, None)
+    n = rl.NuisanceParameter("alpha_s", "lnN")
+    systs_dict["ggF"]["alpha_s"] = n
+    systs_dict_values["ggF"]["alpha_s"] = (1.026, None)
+    systs_dict["VBF"]["alpha_s"] = n
+    systs_dict_values["VBF"]["alpha_s"] = (1.005, None)
+    systs_dict["ttH"]["alpha_s"] = n
+    systs_dict_values["ttH"]["alpha_s"] = (1.020, None)
+    systs_dict["WH"]["alpha_s"] = n
+    systs_dict_values["WH"]["alpha_s"] = (1.009, None)
+    systs_dict["ZH"]["alpha_s"] = n
+    systs_dict_values["ZH"]["alpha_s"] = (1.009, None)
 
     return systs_dict, systs_dict_values
 
@@ -336,88 +336,50 @@ def systs_from_parquets(years):
         }
 
     # ------------------- JECs -------------------
-
-    # systematics correlated across all years
-    JEC_systs_correlated = {
-        #rl.NuisanceParameter("unclustered_Energy", "shape"): ( #Farouk uses this, think we don't have this, so am commenting this out
-        #    "UES",
-        #    sigs + bkgs,
-       # ),
-#        # individual sources
-        rl.NuisanceParameter("CMS_scale_j_FlavQCD", "shape"): (
-            "JES_FlavorQCD",
-            sigs + bkgs,
-        ),
-        rl.NuisanceParameter("CMS_scale_j_RelBal", "shape"): (
-            "JES_RelativeBal",
-            sigs + bkgs,
-        ),
-        rl.NuisanceParameter("CMS_scale_j_HF", "shape"): (
-            "JES_HF",
-            sigs + bkgs,
-        ),
-        rl.NuisanceParameter("CMS_scale_j_BBEC1", "shape"): (
-            "JES_BBEC1",
-            sigs + bkgs,
-        ),
-        rl.NuisanceParameter("CMS_scale_j_EC2", "shape"): (
-            "JES_EC2",
-            sigs + bkgs,
-        ),
-        rl.NuisanceParameter("CMS_scale_j_Abs", "shape"): (
-            "JES_Absolute",
-            sigs + bkgs,
-        ),
-    }
-
     # systematics uncorrelated across all years
     JEC_systs_uncorrelated = {}
     for year in years:
         JEC_systs_uncorrelated = {
             **JEC_systs_uncorrelated,
             **{
-                rl.NuisanceParameter(f"CMS_res_j_{year}", "shape"): (
-                    f"JER_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
-                    f"JMR_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
-                    f"JMS_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}", "shape"): (
-                    f"JES_BBEC1_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"CMS_scale_j_RelSample_{year}", "shape"): (
-                    f"JES_RelativeSample_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"CMS_scale_j_EC2_{year}", "shape"): (
-                    f"JES_EC2_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"CMS_scale_j_HF_{year}", "shape"): (
-                    f"JES_HF_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"CMS_scale_j_Abs_{year}", "shape"): (
-                    f"JES_Absolute_{year}",
-                    sigs + bkgs,
-                ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): ( f"JMR_{year}", sigs + bkgs,   ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): ( f"JMS_{year}",  sigs + bkgs, ),
+        },
+}
+
+    JEC_systs_uncorrelated_individual = {}
+    for year in years:
+        JEC_systs_uncorrelated_individual = {
+            **JEC_systs_uncorrelated_individual,
+            **{
+                rl.NuisanceParameter(f"CMS_res_j_{year}", "shape"): (   f"JER_{year}", sigs + bkgs, ),
+
+                rl.NuisanceParameter(f"CMS_scale_j_RelSample_{year}", "shape"): (  f"JES_RelativeSample_{year}", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_FlavQCD", "shape"): ("JES_FlavorQCD",sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_RelBal", "shape"): ( "JES_RelativeBal", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_HF", "shape"): ( "JES_HF", sigs + bkgs,),
+                rl.NuisanceParameter("CMS_scale_j_BBEC1", "shape"): ( "JES_BBEC1", sigs + bkgs,),
+                rl.NuisanceParameter("CMS_scale_j_EC2", "shape"): ( "JES_EC2", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_Abs", "shape"): ( "JES_Absolute", sigs + bkgs,),
+                rl.NuisanceParameter("CMS_scale_j_HF", "shape"): ( "JES_HF", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_BBEC1", "shape"): ( "JES_BBEC1", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_EC2", "shape"): ( "JES_EC2",  sigs + bkgs,  ),
+                rl.NuisanceParameter("CMS_scale_j_Abs", "shape"): ( "JES_Absolute",  sigs + bkgs, ),
+
+             #rl.NuisanceParameter("unclustered_Energy", "shape"): ( #Farouk uses this, think we don't have this, so am commenting this out
+                #    "UES", sigs + bkgs, ),
             },
         }
+
 
     SYSTEMATICS = {
         **SYSTEMATICS_correlated,
         **SYSTEMATICS_uncorrelated,
         **BTAG_systs_correlated,
         **BTAG_systs_uncorrelated,
-        **JEC_systs_correlated,
-        **JEC_systs_uncorrelated,
+        #**JEC_systs_correlated,
+        **JEC_systs_uncorrelated,  #JMS, JMS
+        **JEC_systs_uncorrelated_individual, #JER, individual JECs
     }
 
     return SYSTEMATICS
