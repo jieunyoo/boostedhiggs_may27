@@ -18,7 +18,7 @@ import warnings
 
 import pandas as pd
 import rhalphalib as rl
-from systematics import systs_from_parquets, systs_not_from_parquets
+from systematics import systs_from_parquets, systs_not_from_parquets, systs_from_parquets2
 from utils import get_template, labels, load_templates, samples, shape_to_num, sigs
 
 rl.ParametericSample.PreferRooParametricHist = True
@@ -36,8 +36,11 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
     sys_from_parquets = systs_from_parquets(years)
 
+    sys_from_parquets2 = systs_from_parquets2(years)
+
     # define the model
     model = rl.Model("testModel")
+    #print('model', model)
 
     # define the signal and control regions ********this is different from Faroku
     SIG_regions = ["SR1"]
@@ -90,6 +93,7 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
             # SYSTEMATICS FROM PARQUETS
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
+                #print('sys_value', sys_value)
                 if sName in list_of_samples:
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
@@ -107,6 +111,29 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                     else:
                         nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
                         sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
+
+            for sys_value, (sys_name, list_of_samples) in sys_from_parquets2.items():
+                print('sys_name', sys_name)
+                if sName in list_of_samples:
+                    syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
+                    syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
+                    nominal = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": "nominal"}].values()
+
+                    if sys_value.combinePrior == "lnN":
+                        eff_up = shape_to_num(syst_up, nominal)
+                        eff_do = shape_to_num(syst_do, nominal)
+
+                        if math.isclose(eff_up, eff_do, rel_tol=1e-2):  # if up and down are the same
+                            sample.setParamEffect(sys_value, max(eff_up, eff_do))
+                        else:
+                            sample.setParamEffect(sys_value, max(eff_up, eff_do), min(eff_up, eff_do))
+
+                    else:
+                        nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
+                        sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
+
+
+
 
             ch.addSample(sample)
 

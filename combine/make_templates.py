@@ -183,6 +183,15 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
             },
         }
 
+    JES_systs_correlated_individual = {
+        "JES_FlavorQCD": (  years,  sigs + bkgs, {"ele": "JES_FlavorQCD", "mu": "JES_FlavorQCD"},),
+        "JES_RelativeBal": ( years, sigs + bkgs, {"ele": "JES_RelativeBal", "mu": "JES_RelativeBal"},),
+        "JES_HF": ( years, sigs + bkgs, {"ele": "JES_HF", "mu": "JES_HF"},),
+        "JES_BBEC1": ( years, sigs + bkgs, {"ele": "JES_BBEC1", "mu": "JES_BBEC1"}, ),
+        "JES_EC2": ( years, sigs + bkgs, {"ele": "JES_EC2", "mu": "JES_EC2"}, ),
+        "JES_Absolute": ( years, sigs + bkgs, {"ele": "JES_Absolute", "mu": "JES_Absolute"},),
+    }
+
     JES_systs_uncorrelated_individual = {}
     for year in years:
         if "APV" in year:
@@ -197,12 +206,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         f"JES_EC2_{year}": ( year, sigs + bkgs, {"ele": f"JES_EC2_{yearlabel}", "mu": f"JES_EC2_{yearlabel}"},),
         f"JES_HF_{year}": ( year, sigs + bkgs, {"ele": f"JES_HF_{yearlabel}", "mu": f"JES_HF_{yearlabel}"}, ),
         f"JES_Absolute_{year}": ( year, sigs + bkgs, {"ele": f"JES_Absolute_{yearlabel}", "mu": f"JES_Absolute_{yearlabel}"}, ),
-        "JES_FlavorQCD": (  years,  sigs + bkgs, {"ele": "JES_FlavorQCD", "mu": "JES_FlavorQCD"},),
-        "JES_RelativeBal": ( years, sigs + bkgs, {"ele": "JES_RelativeBal", "mu": "JES_RelativeBal"},),
-        "JES_HF": ( years, sigs + bkgs, {"ele": "JES_HF", "mu": "JES_HF"},),
-        "JES_BBEC1": ( years, sigs + bkgs, {"ele": "JES_BBEC1", "mu": "JES_BBEC1"}, ),
-        "JES_EC2": ( years, sigs + bkgs, {"ele": "JES_EC2", "mu": "JES_EC2"}, ),
-        "JES_Absolute": ( years, sigs + bkgs, {"ele": "JES_Absolute", "mu": "JES_Absolute"},),
+
         #UES": (years, sigs + bkgs, {"ele": "UES", "mu": "UES"},
         },
     }
@@ -438,7 +442,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     #JET PT - so we are looking at up/down variations, cutting on those and making new histos
                 """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
                 #note, this indents one tab to left, since are looping over regions again
-                for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual}.items(): 
+                for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual, **JES_systs_correlated_individual}.items(): 
                     for variation in ["up", "down"]:
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
@@ -471,7 +475,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
                 print('finished V, now trying higgs')
                 #this repeats the earlier code block but does individual jet corrections for HIGGS PT
-                for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual}.items():
+                for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual, **JES_systs_correlated_individual}.items():
                     for variation in ["up", "down"]:
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
@@ -501,7 +505,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 shape_variation = df["fj_mass"]
 
-                            hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}_higgs", Region=region, mass_observable=shape_variation, weight=nominal, )
+                            hists.fill( Sample=sample_to_use, Systematic=f"higgs_{syst}{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
 
 
     if add_fake:
