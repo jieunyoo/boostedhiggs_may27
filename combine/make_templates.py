@@ -298,8 +298,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                         if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
-                        if sample_to_use == "TTbar":
-                            nominal *= df["top_reweighting"]
+                 #       if sample_to_use == "TTbar":
+                 #           nominal *= df["top_reweighting"]
 
                     ###################################
                     if sample_to_use == "EWKvjets":
@@ -312,17 +312,15 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     # ------------------- Common systematics  -------------------
 #june 29th 3:58 pm, add farouk's systematic for reweighting
-                    if sample_to_use == "TTbar":
-                        nominal_noreweighting = nominal / df["top_reweighting"]
-                        shape_up = nominal_noreweighting * (df["top_reweighting"] ** 2) 
-                        shape_down = nominal_noreweighting 
-                        shape_up = nominal
-                        shape_down = nominal
-                    else:
-                        shape_up = nominal
-                        shape_down = nominal
-                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
-                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
+          #          if sample_to_use == "TTbar":
+          #              nominal_noreweighting = nominal / df["top_reweighting"]
+          #              shape_up = nominal_noreweighting * (df["top_reweighting"] ** 2) 
+#                        shape_down = nominal_noreweighting 
+#                    else:
+#                        shape_up = nominal
+#                        shape_down = nominal
+#                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
+                    #hists.fill(Sample=sample_to_use, Systematic="top_reweighting_down", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
 
                     #*******************************
                     for syst, (yrs, smpls, var) in {
@@ -445,18 +443,19 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                                 region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
-                                print('region-sel', region_sel)
+                                #print('region-sel', region_sel)
                             df = data.copy()
                             df = df.query(region_sel)
                             # ------------------- Nominal -------------------
                             if is_data:
-                                nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
+                                #nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
+                                nominal = np.ones_like(df["fj_mass"])  # for data (nominal is 1)
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight
                                 if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
-                                if sample_to_use == "TTbar":
-                                    nominal *= df["top_reweighting"]
+                                #if sample_to_use == "TTbar":
+                                #    nominal *= df["top_reweighting"]
                             ###################################
                             if sample_to_use == "EWKvjets":
                                 threshold = 20
@@ -465,11 +464,12 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             ###################################
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                                 #shape_variation = df["fj_mass" + var[ch] + f"_{variation}"]
-                            #else:
+                                shape_variation = df["fj_mass"]
+                            else:
                                 shape_variation = df["fj_mass"]
 
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
-
+                print('finished V, now trying higgs')
                 #this repeats the earlier code block but does individual jet corrections for HIGGS PT
                 for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual}.items():
                     for variation in ["up", "down"]:
@@ -481,13 +481,14 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             df = df.query(region_sel)
                             # ------------------- Nominal -------------------
                             if is_data:
-                                nominal = np.ones_like(df["h_fj_pt"])  # for data (nominal is 1)
+                                #nominal = np.ones_like(df["h_fj_pt"])  # for data (nominal is 1)
+                                nominal = np.ones_like(df["fj_mass"])  # for data (nominal is 1)
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight
                                 if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
-                                if sample_to_use == "TTbar":
-                                    nominal *= df["top_reweighting"]
+                                #if sample_to_use == "TTbar":
+                                #    nominal *= df["top_reweighting"]
                             ###################################
                             if sample_to_use == "EWKvjets":
                                 threshold = 20
@@ -495,8 +496,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 nominal = nominal[nominal < threshold]
                             ###################################
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                shape_variation = df["fj_mass"]
                                 #shape_variation = df["fj_mass" + var[ch] + f"_{variation}"]
-                            #else:
+                            else:
                                 shape_variation = df["fj_mass"]
 
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}_higgs", Region=region, mass_observable=shape_variation, weight=nominal, )
@@ -542,8 +544,8 @@ def fix_neg_yields(h):
 def main(args):
     years = args.years.split(",")
     channels = args.channels.split(",")
-    #with open("config_make_templates.yaml", "r") as stream:
-    with open("simple.yaml", "r") as stream:
+    with open("config_make_templates.yaml", "r") as stream:
+    #with open("simple.yaml", "r") as stream:
         config = yaml.safe_load(stream)
 
     if len(years) == 4:
