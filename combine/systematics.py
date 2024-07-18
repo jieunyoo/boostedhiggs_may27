@@ -377,8 +377,6 @@ def systs_from_parquets(years):
                     f"JES_Absolute_{year}",
                     sigs + bkgs,
                 ),
-
-
              #rl.NuisanceParameter("unclustered_Energy", "shape"): ( #Farouk uses this, think we don't have this, so am commenting this out
                 #    "UES", sigs + bkgs, ),
             },
@@ -400,6 +398,15 @@ def systs_from_parquets(years):
 
 
 def systs_from_parquets2(years):
+    JEC_systs_correlated_individual_higgs = {
+                rl.NuisanceParameter("CMS_scale_j_FlavQCD_higgs", "shape"): ("JES_FlavorQCD_higgs",sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_RelBal_higgs", "shape"): ( "JES_RelativeBal_higgs", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_HF_higgs", "shape"): ( "JES_HF_higgs", sigs + bkgs,),
+                rl.NuisanceParameter("CMS_scale_j_BBEC1_higgs", "shape"): ( "JES_BBEC1_higgs", sigs + bkgs,),
+                rl.NuisanceParameter("CMS_scale_j_EC2_higgs", "shape"): ( "JES_EC2_higgs", sigs + bkgs, ),
+                rl.NuisanceParameter("CMS_scale_j_Abs_higgs", "shape"): ( "JES_Absolute_higgs", sigs + bkgs,),
+}
+
     JEC_systs_uncorrelated_individual_higgs = {}
     for year in years:
         JEC_systs_uncorrelated_individual_higgs = {
@@ -407,25 +414,29 @@ def systs_from_parquets2(years):
             **{
                 rl.NuisanceParameter(f"CMS_res_j_{year}_higgs", "shape"): (   f"JER_{year}_higgs", sigs + bkgs, ),
 
-                rl.NuisanceParameter(f"CMS_scale_j_RelSample_higgs_{year}", "shape"): (  f"JES_RelativeSample_higgs_{year}", sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_FlavQCD_higgs", "shape"): ("JES_FlavorQCD_higgs",sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_RelBal_higgs", "shape"): ( "JES_RelativeBal_higgs", sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_HF_higgs", "shape"): ( "JES_HF_higgs", sigs + bkgs,),
-                rl.NuisanceParameter("CMS_scale_j_BBEC1_higgs", "shape"): ( "JES_BBEC1_higgs", sigs + bkgs,),
-                rl.NuisanceParameter("CMS_scale_j_EC2_higgs", "shape"): ( "JES_EC2_higgs", sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_Abs_higgs", "shape"): ( "JES_Absolute_higgs", sigs + bkgs,),
-                rl.NuisanceParameter("CMS_scale_j_HF_higgs", "shape"): ( "JES_HF_higgs", sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_BBEC1_higgs", "shape"): ( "JES_BBEC1_higgs", sigs + bkgs, ),
-                rl.NuisanceParameter("CMS_scale_j_EC2_higgs", "shape"): ( "JES_EC2_higgs",  sigs + bkgs,  ),
-                rl.NuisanceParameter("CMS_scale_j_Abs_higgs", "shape"): ( "JES_Absolute_higgs",  sigs + bkgs, ),
+                rl.NuisanceParameter(f"CMS_scale_j_RelSample_{year}_higgs", "shape"): (  f"JES_RelativeSample_{year}_higgs", sigs + bkgs, ),
+                rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}_higgs", "shape"): (f"JES_BBEC1_{year}_higgs",sigs + bkgs,),
 
+                rl.NuisanceParameter(f"CMS_scale_j_EC2_{year}_higgs", "shape"): (
+                    f"JES_EC2_{year}_higgs",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_HF_{year}_higgs", "shape"): (
+                    f"JES_HF_{year}_higgs",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"CMS_scale_j_Abs_{year}_higgs", "shape"): (
+                    f"JES_Absolute_{year}_higgs",
+                    sigs + bkgs,
+                ),
              #rl.NuisanceParameter("unclustered_Energy", "shape"): ( #Farouk uses this, think we don't have this, so am commenting this out
                 #    "UES", sigs + bkgs, ),
             },
         }
 
+
     SYS = {
-        **JEC_systs_uncorrelated_individual_higgs, #JER, individual JECs
+        **JEC_systs_uncorrelated_individual_higgs, **JEC_systs_correlated_individual_higgs#JER, individual JECs
     }
 
     return SYS

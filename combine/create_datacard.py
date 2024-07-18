@@ -119,18 +119,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
                     nominal = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": "nominal"}].values()
 
-                    if sys_value.combinePrior == "lnN":
-                        eff_up = shape_to_num(syst_up, nominal)
-                        eff_do = shape_to_num(syst_do, nominal)
-
-                        if math.isclose(eff_up, eff_do, rel_tol=1e-2):  # if up and down are the same
-                            sample.setParamEffect(sys_value, max(eff_up, eff_do))
-                        else:
-                            sample.setParamEffect(sys_value, max(eff_up, eff_do), min(eff_up, eff_do))
-
-                    else:
-                        nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
-                        sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
+                    nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
+                    sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
 
 

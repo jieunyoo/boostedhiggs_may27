@@ -505,7 +505,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 shape_variation = df["fj_mass"]
 
-                            hists.fill( Sample=sample_to_use, Systematic=f"higgs_{syst}{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
+                            hists.fill( Sample=sample_to_use, Systematic=f"{syst}_higgs_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
 
 
     if add_fake:

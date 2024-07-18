@@ -14,11 +14,11 @@ samples:
     - Data
 regions_sel:
     # put any "selection name: selection" here to store it in the templates       #to do: do we want Higgs jet pt > 250 or V jet > 250 or both?
-    "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (fj_ParT_score > 0.9) & (met_pt > 30) & (rec_V_m > 70) & (rec_V_pt > 250) & (ReconHiggsCandidateFatJet_pt > 250)
-    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (rec_V_m > 30) & (met_pt > 30)  & (rec_V_pt > 250) & (ReconHiggsCandidateFatJet_pt > 250)
-    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (rec_V_m > 30) & (met_pt > 30) & (rec_V_m < 70)  & (rec_V_pt > 250) &  (ReconHiggsCandidateFatJet_pt > 250)
+    "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (fj_ParT_score > 0.9) & (met_pt > 30) & (fj_mass > 70) & (fj_mass < 120) & (fj_pt > 250) & (h_fj_pt > 250)
+    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250)
+    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_mass > 40) & (met_pt > 30) & (fj_mass < 70)  & (fj_pt > 250) &  (h_fj_pt > 250)
 
 samples_dir:
-    "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/july9_newSystematics/
+    "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/july18_systematics/
 
 model_path: /uscms/home/jieun201/nobackup/YOURWORKINGAREA/model.onnx
