@@ -28,15 +28,17 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    #getJECVariables,
-    #getJMSRVariables,
+    getJECVariables,
+    getJECVariables_Higgs,
+    getJMSRVariables,
     met_factory,
     add_TopPtReweighting,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
 
-
 from .run_tagger_inference import runInferenceTriton
+
+from .SkimmerABC import *
 
 warnings.filterwarnings("ignore", message="Found duplicate branch ")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -76,7 +78,8 @@ def VScore(goodFatJetsSelected):
 
 
 
-class fakeRateLooseButNotTight(processor.ProcessorABC):
+#class HwwProcessor(processor.ProcessorABC):
+class vhProcessor(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -87,7 +90,6 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
         systematics=False,
         getLPweights=False,
         uselooselep=False,
-        #fakevalidation=False,
     ):
         self._year = year
         self._yearmod = yearmod
@@ -182,8 +184,9 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
 
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
-
         nevents = len(events)
+        #print('events',events)
+
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
@@ -207,6 +210,10 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
         if self.isMC:
             for ch in self._channels:
                 self.weights[ch].add("genweight", events.genWeight)
+
+
+
+
 
         ######################
         # Trigger
@@ -240,26 +247,33 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
         # OBJECT: muons
         muons = ak.with_field(events.Muon, 0, "flavor")
 
-#here, we use LOOSE BUT NOT TIGHT OBJECTS
+
         good_muons = (
-        (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId)  
-& ( (np.abs(muons.dz) > 0.1) | (np.abs(muons.dxy) > 0.02) | (~muons.mediumId) | ((muons.pfRelIso04_all > 0.20) & (muons.pt < 55))   )  
+        (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId)
+& ( (np.abs(muons.dz) > 0.1) | (np.abs(muons.dxy) > 0.02) | (~muons.mediumId) | ((muons.pfRelIso04_all > 0.20) & (muons.pt < 55))   )
         )
+
 
         n_good_muons = ak.sum(good_muons, axis=1)
 
         # OBJECT: electrons
         electrons = ak.with_field(events.Electron, 1, "flavor")
 
-#here, we use LOOSE BUT NOT TIGHT OBJECTS
+
         good_electrons = (
         (electrons.pt > 38) & (np.abs(electrons.eta) < 2.5) & (electrons.mvaFall17V2noIso_WPL)
         & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))
+        & (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
+
         & (
         (np.abs(electrons.dz) > 0.1) | (np.abs(electrons.dxy) > 0.05) | (electrons.sip3d > 4.0) | (~electrons.mvaFall17V2noIso_WP90)
- | ((electrons.pfRelIso03_all > 0.15) & (electrons.pt < 120))
   )
         )
+
+
+
+
+
 
         n_good_electrons = ak.sum(good_electrons, axis=1)
 
@@ -287,11 +301,11 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
         NumFatjets = ak.num(good_fatjets)
 
         #JETS**************************************************
-        #this applies JEC to all the fat jets
+        #this applies JEC to all the fat jets (same as farouk)
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
-        
+        #******************************************************
 
         # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
@@ -316,14 +330,13 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
-        #only for V boson, since need up and down
-        if self.isMC:
-            Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(
-            events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True)
-            VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
+        #only for V boson, since need up and down - need to fix later to be for Higgs as well
+        #if self.isMC:
 
-            Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-            correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
+
+        #print('correctedMass', ak.to_list(correctedVbosonNominalMass)[0:200])
 
         #*************************************************************************
 
@@ -360,6 +373,13 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
             axis=1,
         )
 
+        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
 
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
@@ -367,6 +387,33 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
 
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
+
+
+        if self.isMC: 
+            cutoff = 4.
+            cutOnPU = np.ones(nevents,dtype='bool')
+            pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
+            pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
+            #print('pw_pass', pw_pass)
+        else:
+            pw_pass = np.ones(nevents,dtype='bool')
+
+           # events = events[pw_pass]
+
+#add in higgs mass for fun
+        candidateNeutrino = ak.zip(
+                {
+                    "pt": met.pt,
+                    "eta": candidatelep_p4.eta,
+                    "phi": met.phi,
+                    "mass": 0,
+                    "charge": 0,
+                },
+                with_name="PtEtaPhiMCandidate",behavior=candidate.behavior,)
+
+        rec1 = candidatelep_p4 + candidateNeutrino
+        rec2 = candidatefj - candidatelep_p4
+        rec_higgs = rec1 + rec2
 
         ######################
         # Store variables
@@ -386,7 +433,7 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
             "met_pt": met.pt,
 
             "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "ReconHiggsCandidateFatJet_pt": candidatefj.pt, #THIS IS THE UNCORRECTED PT!!
+            "h_fj_pt": candidatefj.pt, #Higgs
             "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
             "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
         
@@ -395,31 +442,31 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
 	    "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
-            "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking purposes only
+            "higgsMass": rec_higgs.mass,
        
+       #check JEC
+            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
+            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
+            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
+            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
+            "pileupWeightCheck": pw_pass
+
         }
 
-        if self.isMC:
-            fatjetvars = {
+        fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-            "fj_pt": ak.firsts(Vboson_Jet.pt), #corrected for JEC/JES
-            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
+            "fj_pt": second_fj.pt,
+            "fj_mass": correctedVbosonNominalMass,
             }
-        else:
-            fatjetvars = {
-            "fj_eta": second_fj.eta,
-            "fj_phi": second_fj.phi,
-            "fj_pt": second_fj.pt,  #don't correct data!
-            "fj_mass": second_fj.msdcorr
-            }
-
-
         variables = {**variables, **fatjetvars}
+
+#
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True) 
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
-#farouk applies pt shift to only the higgs, i need to apply it to the V,
             for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
@@ -437,7 +484,39 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
  
+#7/11 11:25 am commenting out the shifts since we don't need these per cristina
+  #      for shift in jec_shifted_fatjetvars_V["pt"]:
+  #          if shift != "" and not self._systematics:
+  #              continue
+  #          jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
+  #          variables = {**variables, **jecvariables}
+   #NOTe; still no MET uncertainty     
+
+
+            higgsPT_vars = {
+            "h_fj_eta": candidatefj.eta,
+            "h_fj_phi": candidatefj.phi,
+            "h_fj_pt": candidatefj.pt,
+            "h_fj_mass": candidatefj.mass,
+            }
+            for shift, vals in jec_shifted_fatjetvars["pt"].items():
+                if shift != "":
+                    fatjetvars_sys[f"h_fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
+            variables = {**variables, **fatjetvars_sys}
+            fatjetvars = {**fatjetvars, **fatjetvars_sys}
+
+        #for shift in jec_shifted_fatjetvars["pt"]:
+         #   if shift != "" and not self._systematics:
+          #      continue
+           # jecvariables = getJECVariables_Higgs(higgsPT_vars, met, pt_shift=shift, met_shift=None)
+     #       variables = {**variables, **jecvariables}
+
+
         # Selection ***********************************************************************************************************************************************
+
+        #only for MC! need to fix this so it applies only for MC
+        #self.add_selection(name = "PileupWeight", sel=pw_pass)
+
         for ch in self._channels:
             # trigger
             if ch == "mu":
@@ -461,7 +540,10 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
                     #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+                    #fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
+                    #print('secondfj var',  ( ak.to_list(second_fj[v][var].pt)[0:500]))
+#add also Higgs
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
 
@@ -637,7 +719,7 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
                         )
                         pnet_df = self.ak_to_pandas(pnet_vars)
                         scores = {"fj_ParT_score": pnet_df[sigs].sum(axis=1).values}
-                        print('scores', scores)
+                        #print('scores', scores)
 
                         hidNeurons = {}
                         for key in pnet_vars:
@@ -654,14 +736,14 @@ class fakeRateLooseButNotTight(processor.ProcessorABC):
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
 
-      #      for var_ in [
+            for var_ in [
                 #"rec_higgs_m",
                 #"rec_higgs_pt",
-      #          "rec_V_m",
-      #          "rec_V_pt",
-      #      ]:
-      #          if var_ in output[ch].keys():
-      #              output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
+                "rec_V_m",
+                "rec_V_pt",
+            ]:
+                if var_ in output[ch].keys():
+                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
