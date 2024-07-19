@@ -79,7 +79,7 @@ def VScore(goodFatJetsSelected):
 
 
 #class HwwProcessor(processor.ProcessorABC):
-class vhProcessor(processor.ProcessorABC):
+class fakeRateLooseButNotTight(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -247,18 +247,17 @@ class vhProcessor(processor.ProcessorABC):
         # OBJECT: muons
         muons = ak.with_field(events.Muon, 0, "flavor")
 
-
         good_muons = (
         (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId)
 & ( (np.abs(muons.dz) > 0.1) | (np.abs(muons.dxy) > 0.02) | (~muons.mediumId) | ((muons.pfRelIso04_all > 0.20) & (muons.pt < 55))   )
         )
 
 
+
         n_good_muons = ak.sum(good_muons, axis=1)
 
         # OBJECT: electrons
         electrons = ak.with_field(events.Electron, 1, "flavor")
-
 
         good_electrons = (
         (electrons.pt > 38) & (np.abs(electrons.eta) < 2.5) & (electrons.mvaFall17V2noIso_WPL)
@@ -269,9 +268,6 @@ class vhProcessor(processor.ProcessorABC):
         (np.abs(electrons.dz) > 0.1) | (np.abs(electrons.dxy) > 0.05) | (electrons.sip3d > 4.0) | (~electrons.mvaFall17V2noIso_WP90)
   )
         )
-
-
-
 
 
 
@@ -300,12 +296,17 @@ class vhProcessor(processor.ProcessorABC):
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
 
+        #check fat jet pt
+        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
+
         #JETS**************************************************
         #this applies JEC to all the fat jets (same as farouk)
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
         #******************************************************
+
+        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
 
         # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
@@ -327,6 +328,13 @@ class vhProcessor(processor.ProcessorABC):
         second_fj = ak.firsts(secondFJ)
         VCandidateVScore = VScore(second_fj)
         VCandidate_Mass = second_fj.msdcorr
+
+        #get index of the V
+        maxScoreIndexMask = (allScores == ak.max(masked, axis=1))
+        #VIndex = ak.firsts(fatJetIndices[maxScoreIndexMask])
+        VIndex = fatJetIndices[maxScoreIndexMask]
+        #print('vIndex', ak.to_list(VIndex)[0:100])
+        #print('fj_idx', ak.to_list(fj_idx_lep)[0:100])
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
@@ -461,15 +469,11 @@ class vhProcessor(processor.ProcessorABC):
             }
         variables = {**variables, **fatjetvars}
 
-#
-        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets(events, secondFJ, self._year, not self.isMC, self.jecs, fatjets=True) 
-        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
-
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
-            for shift, vals in jec_shifted_fatjetvars_V["pt"].items():
+            for shift, vals in jec_shifted_fatjetvars["pt"].items():
                 if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VIndex])  #to do: change this to the V
                     #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
 
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
@@ -479,17 +483,9 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-        #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
 #            for met_shift in ["UES_up", "UES_down"]:
 #                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
 #                variables = {**variables, **jecvariables}
- 
-#7/11 11:25 am commenting out the shifts since we don't need these per cristina
-  #      for shift in jec_shifted_fatjetvars_V["pt"]:
-  #          if shift != "" and not self._systematics:
-  #              continue
-  #          jecvariables = getJECVariables(fatjetvars, met, pt_shift=shift, met_shift=None)
-  #          variables = {**variables, **jecvariables}
    #NOTe; still no MET uncertainty     
 
 
@@ -501,15 +497,9 @@ class vhProcessor(processor.ProcessorABC):
             }
             for shift, vals in jec_shifted_fatjetvars["pt"].items():
                 if shift != "":
-                    fatjetvars_sys[f"h_fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep])  #to do: change this to the V
+                    fatjetvars_sys[f"h_fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep]) 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
-
-        #for shift in jec_shifted_fatjetvars["pt"]:
-         #   if shift != "" and not self._systematics:
-          #      continue
-           # jecvariables = getJECVariables_Higgs(higgsPT_vars, met, pt_shift=shift, met_shift=None)
-     #       variables = {**variables, **jecvariables}
 
 
         # Selection ***********************************************************************************************************************************************
@@ -534,15 +524,10 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        #fj_pt_sel = candidatefj.pt > 250   Farouk
-        fj_pt_sel = second_fj.pt > 250   # put back, this now for V only.... should be for higgs as well?
+        fj_pt_sel = second_fj.pt > 250   
         if self.isMC:  # make an OR of all the JECs
             for k, v in self.jecs.items():
                 for var in ["up", "down"]:
-                    #fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 200) #Farouk uses candidatefj
-                    #fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) #changed to V
-                    #print('secondfj var',  ( ak.to_list(second_fj[v][var].pt)[0:500]))
-#add also Higgs
                     fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
         #*************************
