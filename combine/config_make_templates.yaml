@@ -11,6 +11,7 @@ samples:
     - WZQQ
     - Diboson
     - EWKvjets
+    - Fake
     - Data
 regions_sel:
     # put any "selection name: selection" here to store it in the templates    

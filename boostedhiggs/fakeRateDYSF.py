@@ -276,8 +276,22 @@ class fakeRateDYSF(processor.ProcessorABC):
 
 #** for fake rate estimation - loose *****************************************************************************
         
+
+
         loose_muons = ( (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId) )
-        loose_electrons = ( (electrons.pt > 38) & (np.abs(electrons.eta) < 2.4) & (electrons.mvaFall17V2noIso_WPL) & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
+        
+        #loose_electrons = ( (electrons.pt > 38) & (np.abs(electrons.eta) < 2.4) & (electrons.mvaFall17V2noIso_WPL) & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
+
+
+        loose_electrons = ( 
+        (electrons.pt > 38) & 
+        (np.abs(electrons.eta) < 2.4) & 
+        (electrons.mvaFall17V2noIso_WPL) & 
+        (((electrons.pfRelIso03_all < 0.15) & (electrons.pt < 120)) | (electrons.pt >= 120))
+        &
+        ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
+
+
         n_loose_electrons = ak.sum(loose_electrons, axis=1)
         n_loose_muons = ak.sum(loose_muons, axis=1)
         looseleptons = ak.concatenate( [muons[loose_muons], electrons[loose_electrons]], axis=1)  

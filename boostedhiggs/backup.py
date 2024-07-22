@@ -28,13 +28,13 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-
-    get_jmsr2,
-    #getJECVariables,
-    #getJMSRVariables,
+    getJECVariables,
+    getJMSRVariables,
     met_factory,
+    add_TopPtReweighting,
 )
-from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
+from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
+
 
 from .run_tagger_inference import runInferenceTriton
 
@@ -335,24 +335,14 @@ class vhProcessor(processor.ProcessorABC):
         )
         VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-        #print('v boson mass', ak.to_list(Vboson_Jet.mass)[0:200])
-
-
-        #need to correct V boson mass for softdrop, then for JMR
-        #this seems to not consider the msdcorr corr
-
+        #Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        #print('corrected jet mass', ak.to_list(Vboson_Jet_mass)[0:200])
+        #correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"]
 
-#jmsr_vars = ["msoftdrop"]
-
-        jmsr_shifted_fatjetvars = get_jmsr2(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
-        correctedVbosonNominalMass = jmsr_shifted_fatjetvars["msoftdrop"]["nominal"] 
-        #print('correctedVbosonNominalMass', ak.to_list(correctedVbosonNominalMass)[0:100])
-
-        #duplicates above to check i am gettnig similar things, but because of the seed
-
-
+        if self.isMC:
+            correctedVbosonNominalMass = ak.firsts(jmsr_shifted_fatjetvars["msoftdrop"]["nominal"])
+        else:
+            correctedVbosonNominalMass = Vboson_Jet_mass #ie., NOT corrected
         #jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
 
         #check
@@ -432,23 +422,14 @@ class vhProcessor(processor.ProcessorABC):
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "V_noJEC_fatJetPT": second_fj.pt, #saving this for checking
-
-            "fj_massCheck": jmsr_shifted_fatjetvars["msoftdrop"]["nominal"],
-            "fj_mass_JMS_down": jmsr_shifted_fatjetvars["msoftdrop"]["JMS_down"],
-            "fj_mass_JMS_up": jmsr_shifted_fatjetvars["msoftdrop"]["JMS_up"],
-            "fj_mass_JMR_down": jmsr_shifted_fatjetvars["msoftdrop"]["JMR_down"],
-            "fj_mass_JMR_up": jmsr_shifted_fatjetvars["msoftdrop"]["JMR_up"],
+       
         }
 
         fatjetvars = {
             "fj_eta": second_fj.eta,
             "fj_phi": second_fj.phi,
-
-            #these are the corrected ones
-            "fj_pt": Vboson_Jet.pt, #this is the corrected one i think!
-            "fj_mass": second_fj.msdcorr, #this is the uncorrected one (not JMR corrected)
-            "fj_mass": jmsr_shifted_fatjetvars["msoftdrop"]["nominal"],
-
+            "fj_pt": ak.firsts(Vboson_Jet.pt), #corrected for JEC/JES
+            "fj_mass": correctedVbosonNominalMass, #corrected for msdcorr, and then JMR/JMS
         }
 
         variables = {**variables, **fatjetvars}
@@ -466,16 +447,36 @@ class vhProcessor(processor.ProcessorABC):
                     fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VbosonIndex])  #to do: change this to the V
                     #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
 
-         #   
-         #   for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
-         #       if shift != "":
-         #           fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
+            #keeping this as this is already the chosen above as the V
+            # JMSR vars
+            #print('items', ak.to_list(jmsr_shifted_fatjetvars["msoftdrop"].items())[0:100])
+            for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
+                if shift != "":
+                    fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
                     #print('fatjetvars_sys[f"fj_mass{shift}"]', ak.to_list(fatjetvars_sys[f"fj_mass{shift}"])[0:100])
 
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
+        #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
 
+#            for met_shift in ["UES_up", "UES_down"]:
+#                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
+#                variables = {**variables, **jecvariables}
+
+        for shift in jec_shifted_fatjetvars_V["pt"]:  #note there was a bug earlier, i didn't put "V"
+            if shift != "" and not self._systematics:
+                continue
+            jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
+            variables = {**variables, **jecvariables}
+
+        for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
+            if shift != "" and not self._systematics:
+                continue
+            jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
+            variables = {**variables, **jmsrvariables}
+
+ 
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:
             # trigger
@@ -565,6 +566,12 @@ class vhProcessor(processor.ProcessorABC):
                 variables["weight_ewkcorr"] = ewk_corr
                 variables["weight_qcdcorr"] = qcd_corr
                 variables["weight_altqcdcorr"] = alt_qcd_corr
+
+                #add top pt reweighting from farouk's repo, june 29th: 3:50 pm version
+                #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+                if "TT" in dataset:
+                    tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
+                    variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
                 if "HToWW" in dataset:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)

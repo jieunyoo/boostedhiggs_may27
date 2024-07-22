@@ -559,6 +559,29 @@ def add_lepton_weight(weights, lepton, year, lepton_type="muon"):
             weights.add(f"{corr}_{lepton_type}", values["nominal"], values["up"], values["down"])
 
 
+def get_pileup_weight_raghav(year: str, nPU: np.ndarray):
+    """
+    Should be able to do something similar to lepton weight but w pileup
+    e.g. see here: https://cms-nanoaod-integration.web.cern.ch/commonJSONSFs/LUMI_puWeights_Run2_UL/
+    """
+    cset = correctionlib.CorrectionSet.from_file(get_pog_json("pileup", year))
+
+    year_to_corr = {
+        "2016": "Collisions16_UltraLegacy_goldenJSON",
+        "2016APV": "Collisions16_UltraLegacy_goldenJSON",
+        "2017": "Collisions17_UltraLegacy_goldenJSON",
+        "2018": "Collisions18_UltraLegacy_goldenJSON",
+    }
+
+    values = {}
+
+    values["nominal"] = cset[year_to_corr[year]].evaluate(nPU, "nominal")
+    values["up"] = cset[year_to_corr[year]].evaluate(nPU, "up")
+    values["down"] = cset[year_to_corr[year]].evaluate(nPU, "down")
+
+    return values
+
+
 def get_pileup_weight(year: str, mod: str, nPU: np.ndarray):
     """
     Should be able to do something similar to lepton weight but w pileup
@@ -681,6 +704,7 @@ def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, 
 
     for jec_var in jec_vars:
         tdict = {"": jets[jec_var]}
+        #print('tdict', ak.to_list(tdict))
         if apply_jecs:
             for key, shift in jecs.items():
                 for var in ["up", "down"]:
@@ -721,63 +745,110 @@ jmrValues = {}
 # jet mass resolution: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # nominal, down, up (these are switched in the github!!!)
 jmrValues["msoftdrop"] = {
-    "2016": [1.0, 0.8, 1.2],
-    "2017": [1.09, 1.04, 1.14],
+   # "2016": [1.0, 0.8, 1.2],
+   # "2017": [1.09, 1.04, 1.14],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [1.09, 1.04, 1.14],
+   # "2018": [1.09, 1.04, 1.14],
+
+#change to nominal, up, down
+    "2016": [1.0, 1.2, 0.8],
+    "2017": [1.09, 1.14, 1.04],
+    # Use 2017 values for 2018 until 2018 are released
+    "2018": [1.09, 1.14, 1.04],
+
 }
 
 # jet mass scale
 # W-tagging PUPPI softdrop JMS values: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # 2016 values
 jmsValues["msoftdrop"] = {
-    "2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
-    "2017": [0.982, 0.978, 0.986],
+    #"2016": [1.00, 0.9906, 1.0094],  # nominal, down, up
+    #"2017": [0.982, 0.978, 0.986],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [0.982, 0.978, 0.986],
+    #"2018": [0.982, 0.978, 0.986],
+    #"2018": [1,1,1],
+
+    "2016": [1.00, 1.0094, 0.9906],  # nominal, up, down
+    "2017": [0.982, 0.986, 0.978],
+    # Use 2017 values for 2018 until 2018 are released
+    "2018": [0.982, 0.986, 0.978],
+    #"2018": [1,1,1],
+
 }
 
 
+#def get_jmsr(fatjets, jets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
 def get_jmsr(fatjets, num_jets: int, year: str, isData: bool = False, seed: int = 42) -> Dict:
     """Calculates post JMS/R masses and shifts"""
     jmsr_shifted_vars = {}
 
-    for mkey in jmsr_vars:
+    for mkey in jmsr_vars: #the key is msoftdrop, do this for nominal, down, then up
         tdict = {}
 
-        mass = pad_val(fatjets[mkey], num_jets, axis=1)
+#        if not isData:
+        fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
+        mass = pad_val(fatjets["msdcorr"], num_jets, axis=1)
 
+#        if isData:
+#            mass = pad_val(fatjets[mkey], num_jets, axis=1)
+#            tdict[""] = mass
+#            nominalVMass = mass
+
+
+        #mass = pad_val(fatjets[mkey], num_jets, axis=1)
         if isData:
             tdict[""] = mass
+            nominalVMass = mass
         else:
             np.random.seed(seed)
             smearing = np.random.normal(size=mass.shape)
             # scale to JMR nom, down, up (minimum at 0)
-            jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
-            jms_nom, jms_down, jms_up = jmsValues[mkey][year]
+            #r_nom, r_down, r_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            #s_nom, s_down, s_up = jmsValues[mkey][year]
+            #tdict[""] =  mass_jms * jmr_nom
+            #tdict["nominal"]           = mass * s_nom  * r_nom
+            #tdict["JMS_down"]   = mass * s_down * r_nom
+            #tdict["JMS_up"]     = mass * s_up   * r_nom
+            #tdict["JMR_down"]   = mass * s_nom  * r_down
+            #tdict["JMR_up"]     = mass * s_nom  * r_up
+            #jmr_nom, jmr_down, jmr_up = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            #jms_nom, jms_down, jms_up = jmsValues[mkey][year]
+
+            jmr_nom, jmr_up, jmr_down = [((smearing * max(jmrValues[mkey][year][i] - 1, 0)) + 1) for i in range(3)]
+            jms_nom, jms_up, jms_down = jmsValues[mkey][year]
 
             mass_jms = mass * jms_nom
             mass_jmr = mass * jmr_nom
 
             tdict[""] = mass_jms * jmr_nom
-            tdict["JMS_down"] = mass_jmr * jms_down
             tdict["JMS_up"] = mass_jmr * jms_up
-            tdict["JMR_down"] = mass_jms * jmr_down
+            tdict["JMS_down"] = mass_jmr * jms_down
+
             tdict["JMR_up"] = mass_jms * jmr_up
+            tdict["JMR_down"] = mass_jms * jmr_down
+            #tdict["nominal"] = mass_jms * jmr_nom #don't need this since saving it in a diff. way
+            nominalVMass = mass_jms * jmr_nom
+            #print('nominal', nominalVMass)
+
+
 
         jmsr_shifted_vars[mkey] = tdict
 
-    return jmsr_shifted_vars
+    return nominalVMass, jmsr_shifted_vars
 
 
-def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
-    """
-    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
-    """
+#def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=None):
+def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
+#def getJECVariables(fatjetvars, met, pt_shift=None, met_shift=None):
+#def getJECVariables(fatjetvars, pt_shift=None):
+#    """
+#    get variables affected by JES_up, JES_down, JER_up, JER_down, UES_up, UES_down
+#    """
     variables = {}
+    #print('fatjetpt', ak.to_list(fatjetvars["fj_pt"][0:200]))
+    #print('met', met)
 
     ptlabel = pt_shift if pt_shift is not None else ""
-
     if met_shift is not None:
         metlabel = met_shift
         if met_shift == "UES_up":
@@ -805,6 +876,7 @@ def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=N
 
     shift = ptlabel + metlabel
 
+    #shift = ptlabel 
     candidatefj = ak.zip(
         {
             "pt": fatjetvars[f"fj_pt{ptlabel}"],
@@ -815,40 +887,13 @@ def getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=N
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    candidateNeutrinoJet = ak.zip(
-        {
-            "pt": metvar.pt,
-            "eta": candidatefj.eta,
-            "phi": met.phi,
-            "mass": 0,
-            "charge": 0,
-        },
-        with_name="PtEtaPhiMCandidate",
-        behavior=candidate.behavior,
-    )
-    rec_W_lnu = candidatelep_p4 + candidateNeutrinoJet
-    rec_W_qq = candidatefj - candidatelep_p4
-    rec_higgs = rec_W_qq + rec_W_lnu
-
-    variables[f"rec_higgs_m{shift}"] = rec_higgs.mass
-    variables[f"rec_higgs_pt{shift}"] = rec_higgs.pt
-
-    if shift == "":
-        variables[f"rec_W_qq_m{shift}"] = rec_W_qq.mass
-        variables[f"rec_W_qq_pt{shift}"] = rec_W_qq.pt
-
-        variables[f"rec_W_lnu_m{shift}"] = rec_W_lnu.mass
-        variables[f"rec_W_lnu_pt{shift}"] = rec_W_lnu.pt
-
+    variables[f"rec_V_m{shift}"] = candidatefj.mass
+    variables[f"rec_V_pt{shift}"] = candidatefj.pt
     return variables
 
-
-def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
-    """
-    get variables affected by JMS_up, JMS_down, JMR_up, JMR_down
-    """
+#def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
+def getJMSRVariables(fatjetvars, met, mass_shift=None):
     variables = {}
-
     candidatefj = ak.zip(
         {
             "pt": fatjetvars["fj_pt"],
@@ -859,30 +904,8 @@ def getJMSRVariables(fatjetvars, candidatelep_p4, met, mass_shift=None):
         with_name="PtEtaPhiMCandidate",
         behavior=candidate.behavior,
     )
-    candidateNeutrinoJet = ak.zip(
-        {
-            "pt": met.pt,
-            "eta": candidatefj.eta,
-            "phi": met.phi,
-            "mass": 0,
-            "charge": 0,
-        },
-        with_name="PtEtaPhiMCandidate",
-        behavior=candidate.behavior,
-    )
-    rec_W_lnu = candidatelep_p4 + candidateNeutrinoJet
-    rec_W_qq = candidatefj - candidatelep_p4
-    rec_higgs = rec_W_qq + rec_W_lnu
-
-    variables[f"rec_higgs_m{mass_shift}"] = rec_higgs.mass
-    variables[f"rec_higgs_pt{mass_shift}"] = rec_higgs.pt
-
-    if mass_shift == "":
-        variables[f"rec_W_qq_m{mass_shift}"] = rec_W_qq.mass
-        variables[f"rec_W_qq_pt{mass_shift}"] = rec_W_qq.pt
-
-        variables[f"rec_W_lnu_m{mass_shift}"] = rec_W_lnu.mass
-        variables[f"rec_W_lnu_pt{mass_shift}"] = rec_W_lnu.pt
+    variables[f"rec_V_m{mass_shift}"] = candidatefj.mass #previously wrongly had .mass
+    variables[f"rec_V_pt{mass_shift}"] = candidatefj.pt
 
     return variables
 
@@ -1080,3 +1103,9 @@ def getLPweights(dataset, events, candidatefj, fj_idx_lep, candidatelep_p4):
     pf_cands = np.dstack((pf_cands_px, pf_cands_py, pf_cands_pz, pf_cands_E))
 
     return pf_cands, gen_parts_eta_phi, ak8_jets
+
+def add_TopPtReweighting(topPt):
+    toppt_weight1 = np.exp(0.0615 - 0.0005 * np.clip(topPt[:, 0], 0.0, 500.0))
+    toppt_weight2 = np.exp(0.0615 - 0.0005 * np.clip(topPt[:, 1], 0.0, 500.0))
+    return np.sqrt(toppt_weight1 * toppt_weight2)
+

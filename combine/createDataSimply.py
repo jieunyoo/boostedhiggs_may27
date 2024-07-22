@@ -19,7 +19,7 @@ import warnings
 import pandas as pd
 import rhalphalib as rl
 from systematics import systs_from_parquets, systs_not_from_parquets
-from utils import get_template, labels, load_templates, samples, shape_to_num, sigs, bkgs
+from utils import get_template, labels, load_templates, samples, shape_to_num, sigs
 
 rl.ParametericSample.PreferRooParametricHist = True
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +30,8 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
+#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
 #def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
@@ -38,11 +39,10 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
     # define the model
     model = rl.Model("testModel")
-    #print('model', model)
 
     # define the signal and control regions ********this is different from Faroku
     SIG_regions = ["SR1"]
-    CONTROL_regions = ["TopCR", "WJetsCR"]
+    #CONTROL_regions = ["TopCR", "WJetsCR"]
 
     # SIG_regions = list(hists_templates.axes["Region"])
     # CONTROL_regions = []
@@ -54,23 +54,19 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
         wjetsnormSF = rl.IndependentParameter("wjetsnormSF", 1.0, 0, 10)
 
     # fill datacard with systematics and rates
-    for ChName in SIG_regions + CONTROL_regions:
-        
-        #Samples = samples.copy()
-        #print('Samples', Samples)
+    for ChName in SIG_regions: # + CONTROL_regions:
+        Samples = samples.copy()
+
         ch = rl.Channel(ChName)
         model.addChannel(ch)
 
-        #for sName in Samples:
-        for sName in sigs + bkgs:
-            print('sName', sName)
-	 
+        for sName in Samples:
 
             if (sName in sigs) and (ChName in CONTROL_regions):
                 continue
 
             templ = get_template(hists_templates, sName, ChName)
-            print('templ', templ)
+            #print('templ', templ)
             #if templ == 0:
              #   continue
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
@@ -95,7 +91,6 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
             # SYSTEMATICS FROM PARQUETS
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
-                #print('sys_value', sys_value)
                 if sName in list_of_samples:
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
@@ -114,27 +109,7 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                         nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
                         sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
-
             ch.addSample(sample)
-
-#FAKES templates ***********
-        sName = "Fake"
-        templ = get_template(hists_templates, sName, ChName)
-        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
-
-        for sys_name in ["fakes_SF"]:
-            sys_value = rl.NuisanceParameter(sys_name, "shape")
-            syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
-            syst_do = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Down"}].values()
-            nominal = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": "nominal"}].values()
-
-            nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
-            sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
-
-
-
-#end fakes*********************
-        ch.addSample(sample)
 
         # add data
         data_obs = get_template(hists_templates, "Data", ChName)

@@ -20,7 +20,7 @@ combine_samples_by_name = {
     "HWplusJ_HToWW_M-125": "WH",
     "HZJ_HToWW_M-125": "ZH",
     "GluGluZH_HToWW_M-125_TuneCP5_13TeV-powheg-pythia8": "ZH",
-    "GluGluHToTauTau": "HTauTau",
+    #"GluGluHToTauTau": "HTauTau",
 }
 
 combine_samples = {
@@ -66,21 +66,22 @@ labels = {
     "QCD": "QCD",
 }
 
-#bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
-#sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
-
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
-#bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "QCD"]
-sigs = ["WH", "ZH"]
-samples = sigs + bkgs
+sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
+#bkgs = ["Diboson"]
+
+samples = sigs + bkgs + ["Fake"]
+#samples = sigs + bkgs
 
 
 def get_sum_sumgenweight(pkl_files, year, sample):
     sum_sumgenweight = 0
     for ifile in pkl_files:
+        #print('pkl filse', pkl_files)
         # load and sum the sumgenweight of each
         with open(ifile, "rb") as f:
             metadata = pkl.load(f)
+            #print('metadata', metadata)
         sum_sumgenweight = sum_sumgenweight + metadata[sample][year]["sumgenweight"]
     return sum_sumgenweight
 
