@@ -439,6 +439,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal, )
                         hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal, )
 
+
+#commenting this out; after all this work, it seems we can do this via preprocessing and do lognorm like i thought
+"""
                     #*************end: for region, region_sel in regions_sel.items(): *********************************************
                     #JET PT - so we are looking at up/down variations, cutting on those and making new histos
                 """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
@@ -507,7 +510,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 shape_variation = df["fj_mass"]
 
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_higgs_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
-
+"""
 
     #if add_fake:
     #    for year in years:
