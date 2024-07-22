@@ -19,7 +19,7 @@ import warnings
 import pandas as pd
 import rhalphalib as rl
 from systematics import systs_from_parquets, systs_not_from_parquets, systs_from_parquets2
-from utils import get_template, labels, load_templates, samples, shape_to_num, sigs
+from utils import get_template, labels, load_templates, samples, shape_to_num, sigs, bkgs
 
 rl.ParametericSample.PreferRooParametricHist = True
 logging.basicConfig(level=logging.INFO)
@@ -30,8 +30,8 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
-#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
+#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
     sys_from_parquets = systs_from_parquets(years)
@@ -57,18 +57,22 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
     # fill datacard with systematics and rates
     for ChName in SIG_regions + CONTROL_regions:
-        Samples = samples.copy()
-
+        
+        #Samples = samples.copy()
+        #print('Samples', Samples)
         ch = rl.Channel(ChName)
         model.addChannel(ch)
 
-        for sName in Samples:
+        #for sName in Samples:
+        for sName in sigs + bkgs:
+            print('sName', sName)
+	 
 
             if (sName in sigs) and (ChName in CONTROL_regions):
                 continue
 
             templ = get_template(hists_templates, sName, ChName)
-            #print('templ', templ)
+            print('templ', templ)
             #if templ == 0:
              #   continue
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
@@ -113,7 +117,7 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                         sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets2.items():
-                print('sys_name', sys_name)
+                #print('sys_name', sys_name)
                 if sName in list_of_samples:
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
@@ -121,11 +125,15 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
                     nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
                     sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
-
-
-
+            
 
             ch.addSample(sample)
+
+        sName = "Fake"
+        templ = get_template(hists_templates, sName, ChName)
+        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
+
+        ch.addSample(sample)
 
         # add data
         data_obs = get_template(hists_templates, "Data", ChName)

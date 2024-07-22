@@ -235,7 +235,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         hist2.axis.StrCategory([], name="Sample", growth=True),
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
-        hist2.axis.Variable( list(range(30, 140, mass_binning)), name="mass_observable", label=r"V softdrop mass [GeV]", overflow=True,
+        hist2.axis.Variable( list(range(40, 160, mass_binning)), name="mass_observable", label=r"V softdrop mass [GeV]", overflow=True,
         ),
         storage=hist2.storage.Weight(),
     )
@@ -261,6 +261,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                 parquet_files = glob.glob(f"{out_files}/*_{ch}.parquet")
                 pkl_files = glob.glob(f"{out_files}/*.pkl")
 
+                #print('parquet', parquet_files)
                 if not parquet_files:
                     logging.info(f"No parquet file for {sample}")
                     continue
@@ -316,15 +317,15 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     # ------------------- Common systematics  -------------------
 #june 29th 3:58 pm, add farouk's systematic for reweighting
-          #          if sample_to_use == "TTbar":
-          #              nominal_noreweighting = nominal / df["top_reweighting"]
-          #              shape_up = nominal_noreweighting * (df["top_reweighting"] ** 2) 
-#                        shape_down = nominal_noreweighting 
-#                    else:
-#                        shape_up = nominal
-#                        shape_down = nominal
-#                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
-                    #hists.fill(Sample=sample_to_use, Systematic="top_reweighting_down", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
+                    if sample_to_use == "TTbar":
+                        nominal_noreweighting = nominal / df["top_reweighting"]
+                        shape_up = nominal_noreweighting * (df["top_reweighting"] ** 2) 
+                        shape_down = nominal_noreweighting 
+                    else:
+                        shape_up = nominal
+                        shape_down = nominal
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_up", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
+                    hists.fill(Sample=sample_to_use, Systematic="top_reweighting_down", Region=region, mass_observable=df["fj_mass"],weight=shape_up,)
 
                     #*******************************
                     for syst, (yrs, smpls, var) in {
@@ -458,8 +459,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 nominal = df[f"weight_{ch}"] * xsecweight
                                 if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
-                                #if sample_to_use == "TTbar":
-                                #    nominal *= df["top_reweighting"]
+                                if sample_to_use == "TTbar":
+                                    nominal *= df["top_reweighting"]
                             ###################################
                             if sample_to_use == "EWKvjets":
                                 threshold = 20
@@ -491,8 +492,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 nominal = df[f"weight_{ch}"] * xsecweight
                                 if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
-                                #if sample_to_use == "TTbar":
-                                #    nominal *= df["top_reweighting"]
+                                if sample_to_use == "TTbar":
+                                    nominal *= df["top_reweighting"]
                             ###################################
                             if sample_to_use == "EWKvjets":
                                 threshold = 20
@@ -508,22 +509,46 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_higgs_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
 
 
-    if add_fake:
-        for year in years:
-            data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
-            for selection in presel["ele"]:
-                logging.info(f"Applying {selection} selection on {len(data)} events")
-                data = data.query(presel["ele"][selection])
-            for region in hists.axes["Region"]:
-                df = data.copy()
-                logging.info(f"Applying {region} selection on {len(data)} events")
-                df = df.query(regions_sel[region])
-                logging.info(f"Will fill the histograms with the remaining {len(data)} events")
-                for syst in hists.axes["Systematic"]:
-                    hists.fill( Sample="Fake", Systematic=syst, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+    #if add_fake:
+    #    for year in years:
+    #        data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
+    #        for selection in presel["ele"]:
+    #            logging.info(f"Applying {selection} selection on {len(data)} events")
+    #            data = data.query(presel["ele"][selection])
+    #        for region in hists.axes["Region"]:
+    #            df = data.copy()
+    #            logging.info(f"Applying {region} selection on {len(data)} events")
+   #             df = df.query(regions_sel[region])
+   #             logging.info(f"Will fill the histograms with the remaining {len(data)} events")
+   #             for syst in hists.axes["Systematic"]:
+   #                 hists.fill( Sample="Fake", Systematic=syst, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+   # logging.info(hists)
+   # return hists
+
+#for testing, add uncertainties tom.
+#for now, this assumes input of a parquet that has the selection already made and correct event weights
+
+    for year in years:
+        #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
+        data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/0-1_ele.parquet")
+        print('data', data)
+        for selection in presel["ele"]:
+            logging.info(f"Applying {selection} selection on {len(data)} events")
+
+            
+            data["THWW"] = get_finetuned_score(data, model_path)
+            data = data.query(presel["ele"][selection])
+        for region in hists.axes["Region"]:
+            print('region')
+            df = data.copy()
+            logging.info(f"Applying {region} selection on {len(data)} events")
+            #df = df.query(regions_sel[region])
+            logging.info(f"Will fill the histograms with the remaining {len(data)} events")
+            print('df', df['fj_mass'])
+            #need to rename nonprompt_event_weight as event_weight
+            hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
     logging.info(hists)
     return hists
-
 
 def fix_neg_yields(h):
     """
