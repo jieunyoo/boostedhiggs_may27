@@ -226,8 +226,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
     # add extra selections to preselection
     presel = {
-        "mu": { "tagger>0.50": "THWW>0.50",    },
-         "ele": { "tagger>0.50": "THWW>0.50",        },
+        "mu": { "tagger>0.50": "fj_ParT_score>0.50",    },
+         "ele": { "tagger>0.50": "fj_ParT_score>0.50",        },
         }
 
     mass_binning = 20
@@ -275,7 +275,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     continue
 
                 # use hidNeurons to get the finetuned scores
-                data["THWW"] = get_finetuned_score(data, model_path)
+                #data["THWW"] = get_finetuned_score(data, model_path)
+                data["fj_ParT_score"] = get_finetuned_score(data, model_path)
 
                 # drop hidNeurons which are not needed anymore
                 data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]
@@ -303,18 +304,18 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     if is_data:
                         nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
                     else:
-                        #nominal = df[f"weight_{ch}"] * xsecweight 
-                        df["WFactor"] = df.apply(lambda row: WCalibFactor(row['lep_pt']), axis=1)
-                        print('df[wfactor]', df["WFactor"])
-                        nominal = df[f"weight_{ch}"] * xsecweight * df["WFactor"]
-                        print('df', nominal)
+                        nominal = df[f"weight_{ch}"] * xsecweight 
+                        #df["WFactor"] = df.apply(lambda row: WCalibFactor(row['lep_pt']), axis=1)
+                        #print('df[wfactor]', df["WFactor"])
+                        #nominal = df[f"weight_{ch}"] * xsecweight * df["WFactor"]
+                        #print('df', nominal)
 
 
 
                         if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
-                 #       if sample_to_use == "TTbar":
-                 #           nominal *= df["top_reweighting"]
+                        if sample_to_use == "TTbar":
+                            nominal *= df["top_reweighting"]
 
                     ###################################
                     if sample_to_use == "EWKvjets":
