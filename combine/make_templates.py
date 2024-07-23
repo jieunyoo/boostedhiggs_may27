@@ -23,7 +23,7 @@ from utils import (
     combine_samples_by_name,
     get_finetuned_score,
     get_xsecweight,
-    sigs,
+    sigs, WCalibFactor,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -280,6 +280,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                 # drop hidNeurons which are not needed anymore
                 data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]
 
+                print('data', data)
+
+
                 # apply selection
                 for selection in presel[ch]:
                     logging.info(f"Applying {selection} selection on {len(data)} events")
@@ -287,6 +290,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                 # get the xsecweight
                 xsecweight, sumgenweights, sumpdfweights, sumscaleweights = get_xsecweight(pkl_files, year, sample, sample_to_use, is_data, luminosity)
+
 
                 for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
                     df = data.copy()
@@ -299,7 +303,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     if is_data:
                         nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
                     else:
-                        nominal = df[f"weight_{ch}"] * xsecweight
+                        #nominal = df[f"weight_{ch}"] * xsecweight 
+                        df["WFactor"] = df.apply(lambda row: WCalibFactor(row['lep_pt']), axis=1)
+                        print('df[wfactor]', df["WFactor"])
+                        nominal = df[f"weight_{ch}"] * xsecweight * df["WFactor"]
+                        print('df', nominal)
+
+
 
                         if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
