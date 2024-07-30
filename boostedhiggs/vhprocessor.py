@@ -426,11 +426,21 @@ class vhProcessor(processor.ProcessorABC):
         rec2 = candidatefj - candidatelep_p4
         rec_higgs = rec1 + rec2
 
+        #testMet
+        metUncluster = met.MET_UnclusteredEnergy
+        #print('met.pt', ak.to_list(met)[0:5])
+        #print('metUncluster', ak.to_list(metUncluster)[0:5])
+
         ######################
         # Store variables
         ######################
 
         variables = {
+
+#check met  
+            "met_pt_up": met.MET_UnclusteredEnergy.up.pt,
+            "met_pt_down": met.MET_UnclusteredEnergy.down.pt,
+
             "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
             "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
             "lep_pt": candidatelep.pt,
