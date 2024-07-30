@@ -538,7 +538,7 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 )) #keeping at 30, can increase to 40 in post-processing to check
-        self.add_selection(name="MET", sel=(met.pt > 30))
+        #self.add_selection(name="MET", sel=(met.pt > 30))
 
 
         # gen-level matching
