@@ -708,13 +708,13 @@ def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, 
         if apply_jecs:
             for key, shift in jecs.items():
                 for var in ["up", "down"]:
-                    print('var', var)
-                    print('shift', shift)
+         #           print('var', var)
+          #          print('shift', shift)
                     tdict[f"{key}_{var}"] = jets[shift][var][jec_var]
-                    print(tdict[f"{key}_{var}"])
+           #         print(tdict[f"{key}_{var}"])
 
         jec_shifted_vars[jec_var] = tdict
-        print('jec_shifted vars', jec_shifted_vars[jec_var])
+        #print('jec_shifted vars', jec_shifted_vars[jec_var])
 
     return jets, jec_shifted_vars
 

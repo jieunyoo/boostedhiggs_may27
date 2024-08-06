@@ -355,6 +355,8 @@ class vhProcessor(processor.ProcessorABC):
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
         met = met_factory.build(events.MET, jets, {}) if self.isMC else events.MET
 
+
+##need to get jets where pt is varied; the variable we care about is number B jets; does changing pt change number of b jets
         jet_selector = (
             (jets.pt > 30)
             & (abs(jets.eta) < 5.0)
@@ -362,27 +364,27 @@ class vhProcessor(processor.ProcessorABC):
             & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2))
         )
 
-        goodjets = jets[jet_selector]
+#try printing
+        #print('jet_shiftted', jec_shifted_jetvars['pt'])
+#for shift, vals in jec_shifted_fatjetvars["pt"].items():
 
+
+
+
+        goodjets = jets[jet_selector]
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
         ak4_bjet_candidate = jets[bjet_selector]
-
         # bjet counts for SR and TTBar Control Region
-        #V H version
         dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
         dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
         ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
-
         NumOtherJetsOutsideBothJets = ak.num(ak4_outsideBothJets)
-        n_bjets_M_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],
-            axis=1,
-        )
-        n_bjets_T_OutsideBothJets = ak.sum(
-            ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"],
-            axis=1,
-        )
+        n_bjets_M_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],axis=1, )
+        n_bjets_T_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+
+
 
         ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
         ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
@@ -428,6 +430,7 @@ class vhProcessor(processor.ProcessorABC):
 
         #testMet
         metUncluster = met.MET_UnclusteredEnergy
+        
         #print('met.pt', ak.to_list(met)[0:5])
         #print('metUncluster', ak.to_list(metUncluster)[0:5])
 
@@ -537,18 +540,20 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-        fj_pt_sel = second_fj.pt > 250   
-        if self.isMC:  # make an OR of all the JECs
-            for k, v in self.jecs.items():
-                for var in ["up", "down"]:
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
-        self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
+    #    fj_pt_sel = second_fj.pt > 250   
+    #    if self.isMC:  # make an OR of all the JECs
+    #        for k, v in self.jecs.items():
+    #            for var in ["up", "down"]:
+    #                fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
+    #    self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
         #*************************
+        self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
+        self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 )) #keeping at 30, can increase to 40 in post-processing to check
-        #self.add_selection(name="MET", sel=(met.pt > 30))
+        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 40 )) 
+        self.add_selection(name="MET", sel=(met.pt > 30))
 
 
         # gen-level matching
@@ -575,7 +580,7 @@ class vhProcessor(processor.ProcessorABC):
                 | ((np.random.rand(len(events)) < 0.632) & self.isMC)
             ) & (hem_veto)
 
-            self.add_selection(name="HEMCleaning", sel=~hem_cleaning)
+            #self.add_selection(name="HEMCleaning", sel=~hem_cleaning)
 
 # IF MC**********************************************************************************************************************************************************
         if self.isMC:
