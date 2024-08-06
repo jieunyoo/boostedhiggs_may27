@@ -390,7 +390,7 @@ def systs_from_parquets(years):
         **BTAG_systs_uncorrelated,
         #**JEC_systs_correlated,
         **JEC_systs_uncorrelated,  #JMS, JMS
-        #**JEC_systs_uncorrelated_individual, #JER, individual JECs
-        #**JEC_systs_correlated_individual, #JER, individual JECs
+        **JEC_systs_uncorrelated_individual, #JER, individual JECs
+        **JEC_systs_correlated_individual, #JER, individual JECs
     }
     return SYSTEMATICS

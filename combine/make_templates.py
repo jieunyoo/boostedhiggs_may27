@@ -229,13 +229,14 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         "mu": { "tagger>0.50": "fj_ParT_score>0.50",    },
          "ele": { "tagger>0.50": "fj_ParT_score>0.50",        },
         }
-
-    mass_binning = 20
+    
+    #histBins = [40,60,80,100,120,180]
+    histBins = [40,60,80,100,120,140,160,180]
     hists = hist2.Hist(
         hist2.axis.StrCategory([], name="Sample", growth=True),
         hist2.axis.StrCategory([], name="Systematic", growth=True),
         hist2.axis.StrCategory([], name="Region", growth=True),
-        hist2.axis.Variable( list(range(40, 160, mass_binning)), name="mass_observable", label=r"V softdrop mass [GeV]", overflow=True,
+        hist2.axis.Variable( histBins, name="mass_observable", label=r"V softdrop mass [GeV]", overflow=False,
         ),
         storage=hist2.storage.Weight(),
     )
@@ -276,12 +277,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                 # use hidNeurons to get the finetuned scores
                 #data["THWW"] = get_finetuned_score(data, model_path)
-                data["fj_ParT_score"] = get_finetuned_score(data, model_path)
+                data["T_HWW"] = get_finetuned_score(data, model_path)
+                #print('getting score', data['T_HWW'])
 
                 # drop hidNeurons which are not needed anymore
                 data = data[data.columns.drop(list(data.filter(regex="hidNeuron")))]
 
-                print('data', data)
+                #print('data', data)
 
 
                 # apply selection
@@ -307,16 +309,18 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         nominal = df[f"weight_{ch}"] * xsecweight 
                         #df["WFactor"] = df.apply(lambda row: WCalibFactor(row['lep_pt']), axis=1)
                         #print('df[wfactor]', df["WFactor"])
+                        #print('nominal before W', df[f"weight_{ch}"] * xsecweight)
                         #nominal = df[f"weight_{ch}"] * xsecweight * df["WFactor"]
                         #print('df', nominal)
-
-
-
-                        if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        
+                        if "numberBJets_Medium_OutsideFatJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        #if "numberBJets_Tight_OutsideFatJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
                         if sample_to_use == "TTbar":
                             nominal *= df["top_reweighting"]
 
+                    if sample_to_use == "WH":
+                        nominal *= 0.8
                     ###################################
                     if sample_to_use == "EWKvjets":
                         threshold = 20
@@ -450,27 +454,65 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal, )
                         hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal, )
 
-#for now, this assumes input of a parquet that has the selection already made and correct event weights
+
+                for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual}.items(): 
+                #for syst, (yrs, smpls, var) in {**JES_systs_uncorrelated_individual, **JES_systs_correlated_individual}.items(): 
+                    for variation in ["up", "down"]:
+                        for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
+                            if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
+
+                                #region_sel = region_sel.replace("h_fj_pt", "h_fj_pt" + var[ch] + f"_{variation}")
+
+                                #print('region-sel', region_sel)
+                            df = data.copy()
+                            df = df.query(region_sel)
+                            # ------------------- Nominal -------------------
+                            if is_data:
+                                #nominal = np.ones_like(df["fj_pt"])  # for data (nominal is 1)
+                                nominal = np.ones_like(df["fj_mass"])  # for data (nominal is 1)
+                            else:
+                                nominal = df[f"weight_{ch}"] * xsecweight
+                                if "(numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                                    nominal *= df["weight_btag"]
+                                if sample_to_use == "TTbar":
+                                    nominal *= df["top_reweighting"]
+                            ###################################
+                            if sample_to_use == "EWKvjets":
+                                threshold = 20
+                                df = df[nominal < threshold]
+                                nominal = nominal[nominal < threshold]
+                            ###################################
+                            if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                #shape_variation = df["fj_mass" + var[ch] + f"_{variation}"]
+                                shape_variation = df["fj_mass"]
+                            else:
+                                shape_variation = df["fj_mass"]
+
+                            hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}", Region=region, mass_observable=shape_variation, weight=nominal, )
+
+    #FAKES, for both channels
     for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down"]:
-        for year in years:
-        #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
-            #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/0-1_ele.parquet")
-            data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}.parquet")
+        for year in years:  # e.g. 2018, 2017, 2016APV, 2016
+            #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_{ch}.parquet")
+            data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_ele.parquet")
             print('data', data)
-            #for selection in presel["ele"]:
-            logging.info(f"Applying {selection} selection on {len(data)} events")
-            
-            #data["THWW"] = get_finetuned_score(data, model_path)
-            #data = data.query(presel["ele"][selection])
+
+            for selection in presel[ch]:
+                logging.info(f"Applying {selection} selection on {len(data)} events")
+                data = data.query(presel[ch][selection])
+ 
             for region in hists.axes["Region"]:
                 print('region')
                 df = data.copy()
+                df["T_HWW"] = get_finetuned_score(data, model_path)
                 logging.info(f"Applying {region} selection on {len(data)} events")
-                #df = df.query(regions_sel[region])
-                #logging.info(f"Will fill the histograms with the remaining {len(data)} events")
-                #print('df', df['fj_mass'])
-            #need to rename nonprompt_event_weight as event_weight
-                #hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+                df = df.query(regions_sel[region])
+                logging.info(f"Will fill the histograms with the remaining {len(data)} events")
+
+                print('df', df["fj_mass"])
+                    #need to rename nonprompt_event_weight as event_weight
+                    #hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
                 if variation == "fakes_nominal":
                     hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
                 else:
