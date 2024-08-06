@@ -256,3 +256,14 @@ def get_finetuned_score(data, model_path):
     outputs = ort_sess.run(None, input_dict)
 
     return scipy.special.softmax(outputs[0], axis=1)[:, 0]
+
+def WCalibFactor(a):
+    if a < 250:
+       return 0.8
+       #return 1.408
+    if (a >= 250) and (a < 350):
+        return .8
+        #return 1.299
+    else:
+        return .8
+        #return 1.266
