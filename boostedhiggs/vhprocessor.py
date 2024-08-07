@@ -184,6 +184,8 @@ class vhProcessor(processor.ProcessorABC):
 
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
+        self.isSignal = True if ("HToWW" in dataset) or ("ttHToNonbb" in dataset) else False
+
         nevents = len(events)
         #print('events',events)
 
@@ -202,7 +204,8 @@ class vhProcessor(processor.ProcessorABC):
 
         # sum PDF weight
         sumpdfweight = {}
-        if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
+        #if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
+        if "LHEPdfWeight" in events.fields and self.isMC:
             for i in range(len(events.LHEPdfWeight[0])):
                 sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
 
@@ -429,7 +432,7 @@ class vhProcessor(processor.ProcessorABC):
         rec_higgs = rec1 + rec2
 
         #testMet
-        metUncluster = met.MET_UnclusteredEnergy
+        #metUncluster = met.MET_UnclusteredEnergy
         
         #print('met.pt', ak.to_list(met)[0:5])
         #print('metUncluster', ak.to_list(metUncluster)[0:5])
@@ -441,8 +444,8 @@ class vhProcessor(processor.ProcessorABC):
         variables = {
 
 #check met  
-            "met_pt_up": met.MET_UnclusteredEnergy.up.pt,
-            "met_pt_down": met.MET_UnclusteredEnergy.down.pt,
+            #"met_pt_up": met.MET_UnclusteredEnergy.up.pt,
+            #"met_pt_down": met.MET_UnclusteredEnergy.down.pt,
 
             "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
             "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
@@ -580,7 +583,7 @@ class vhProcessor(processor.ProcessorABC):
                 | ((np.random.rand(len(events)) < 0.632) & self.isMC)
             ) & (hem_veto)
 
-            #self.add_selection(name="HEMCleaning", sel=~hem_cleaning)
+            self.add_selection(name="HEMCleaning", sel=~hem_cleaning)
 
 # IF MC**********************************************************************************************************************************************************
         if self.isMC:
@@ -618,10 +621,10 @@ class vhProcessor(processor.ProcessorABC):
                     tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
                     variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
-                if "HToWW" in dataset:
+                if self.isSignal:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
 
-                if "HToWW" in dataset or "TT" in dataset or "WJets" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the QCD acceptance uncertainty:
                     - we save the individual weights [0, 1, 3, 5, 7, 8]
@@ -642,7 +645,7 @@ class vhProcessor(processor.ProcessorABC):
                                 scale_weights[f"weight_scale{i}"] = events.LHEScaleWeight[:, i]
                     variables = {**variables, **scale_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the PDF acceptance uncertainty:
                     - store 103 variations. 0-100 PDF values
@@ -658,7 +661,7 @@ class vhProcessor(processor.ProcessorABC):
                             pdf_weights[f"weight_pdf{i}"] = events.LHEPdfWeight[:, i]
                     variables = {**variables, **pdf_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     add_ps_weight(
                         self.weights[ch],
                         events.PSWeight if "PSWeight" in events.fields else [],
