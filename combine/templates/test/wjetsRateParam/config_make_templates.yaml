@@ -18,7 +18,7 @@ regions_sel:
     "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (T_HWW > 0.9) & (met_pt > 30) & (fj_pt > 250) & (h_fj_pt > 250)  
     #"TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) &  (fj_mass > 40) & (ReconVCandidateFatJetVScore < 0.9) &  (T_HWW > 0.9)
     
-    "TopCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) 
+    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) 
     #    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) 
 
     #"WJetsCR": (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) & ( fj_mass > 40) &  (ReconVCandidateFatJetVScore < 0.9) & (T_HWW > 0.9)
