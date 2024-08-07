@@ -18,8 +18,9 @@ import warnings
 
 import pandas as pd
 import rhalphalib as rl
-from systematics import systs_from_parquets, systs_not_from_parquets
-from utils import get_template, labels, load_templates, samples, shape_to_num, sigs, bkgs
+from datacard_systematics import systs_from_parquets, systs_not_from_parquets
+from systematics import bkgs, sigs
+from utils import get_template, labels, load_templates, shape_to_num
 
 rl.ParametericSample.PreferRooParametricHist = True
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +31,6 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=False):
 def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
@@ -39,8 +39,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
     # define the model
     model = rl.Model("testModel")
 
-    # define the signal and control regions ********this is different from Faroku
-    SIG_regions = ["SR1"]
+    # define the signal and control regions
+    SIG_regions = ["VBF", "ggFpt250to350", "ggFpt350to500", "ggFpt500toInf"]
     CONTROL_regions = ["TopCR", "WJetsCR"]
 
     if add_ttbar_constraint:
@@ -51,28 +51,20 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
     # fill datacard with systematics and rates
     for ChName in SIG_regions + CONTROL_regions:
-        
+
         ch = rl.Channel(ChName)
         model.addChannel(ch)
 
         for sName in sigs + bkgs:
-            print('sName', sName)
 
             if (sName in sigs) and (ChName in CONTROL_regions):
                 continue
 
             templ = get_template(hists_templates, sName, ChName)
-            print('templ', templ)
-            #if templ == 0:
-             #   continue
+            if templ == 0:
+                continue
             stype = rl.Sample.SIGNAL if sName in sigs else rl.Sample.BACKGROUND
             sample = rl.TemplateSample(ch.name + "_" + labels[sName], stype, templ)
-
-            #if "CR" in ChName:
-             #   sample.autoMCStats(lnN=True)
-
-            #sample.autoMCStats(lnN=True)
-            #sample.autoMCStats()
 
             # SYSTEMATICS NOT FROM PARQUETS
             for syst_on_sample in ["all_samples", sName]:  # apply common systs and per sample systs
@@ -88,7 +80,6 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
             # SYSTEMATICS FROM PARQUETS
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
-                #print('sys_value', sys_value)
                 if sName in list_of_samples:
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
@@ -107,39 +98,42 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                         nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
                         sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
-
             ch.addSample(sample)
 
-#FAKES templates ***********
-   #     sName = "Fake"
-   #     templ = get_template(hists_templates, sName, ChName)
-   #     sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
+        # add Fake
+        sName = "Fake"
+        templ = get_template(hists_templates, sName, ChName)
+        if templ == 0:
+            continue
+        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
 
-   #     sample.setParamEffect(rl.NuisanceParameter("Fake_rate_unc", "lnN"), 1.6)
+        # add Fake unc.
+        sample.setParamEffect(rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_Fake_SF_uncertainty", "lnN"), 1.5)
 
-   #     for sys_name in ["fakes_SF"]:
-   #         sys_value = rl.NuisanceParameter(sys_name, "shape")
-   #         syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
-#            syst_do = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Down"}].values()
-#            nominal = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": "nominal"}].values()
+        name_in_card = {
+            "FR_stat": f"{CMS_PARAMS_LABEL}_FakeRate_statistical_uncertainty",
+            "EWK_SF": f"{CMS_PARAMS_LABEL}_FakeRate_EWK_SF_statistical_uncertainty",
+        }
+        for sys_name in ["FR_stat", "EWK_SF"]:
 
- #           nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
- #           sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
+            sys_value = rl.NuisanceParameter(name_in_card[sys_name], "shape")
+            syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
+            syst_do = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Down"}].values()
+            nominal = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": "nominal"}].values()
 
+            nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
+            sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
+        ch.addSample(sample)
 
-        #ch.addSample(sample)
-
-#end fakes*********************
         # add data
         data_obs = get_template(hists_templates, "Data", ChName)
         ch.setObservation(data_obs)
 
-        ch.autoMCStats(channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",)
-        #ch.autoMCStats(channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",lnN=True)
-
-        #if "CR" not in ChName:
-         #   ch.autoMCStats()
+        # add mcstats
+        ch.autoMCStats(
+            channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
+        )
 
     if add_ttbar_constraint:
         failCh = model["TopCR"]

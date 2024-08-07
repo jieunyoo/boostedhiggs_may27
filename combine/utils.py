@@ -9,6 +9,7 @@ from typing import List
 import numpy as np
 import scipy
 from hist import Hist
+from systematics import sigs
 
 warnings.filterwarnings("ignore", message="Found duplicate branch ")
 
@@ -19,8 +20,8 @@ combine_samples_by_name = {
     "HWminusJ_HToWW_M-125": "WH",
     "HWplusJ_HToWW_M-125": "WH",
     "HZJ_HToWW_M-125": "ZH",
-    "GluGluZH_HToWW_M-125_TuneCP5_13TeV-powheg-pythia8": "ZH",
-    #"GluGluHToTauTau": "HTauTau",
+    "GluGluZH_HToWW_M-125_TuneCP5_13TeV-powheg-pythia8": "ZH",  # TODO: skip
+    "GluGluHToTauTau": "HTauTau",
 }
 
 combine_samples = {
@@ -41,17 +42,16 @@ combine_samples = {
     # TODO: make sure it's WZQQ is NLO in next iteration
     # "DYJets": "WZQQorDYJets",
     # "JetsToQQ": "WZQQorDYJets",
-    "QCD_Pt": "QCD",
 }
 
 # (name in templates, name in cards)
 labels = {
     # sigs
-    "ggF": "ggF",
-    "VBF": "VBF",
-    "ttH": "ttH",
-    "WH": "WH",
-    "ZH": "ZH",
+    "ggF": "ggH_hww",
+    "VBF": "qqH_hww",
+    "ttH": "ttH_hww",
+    "WH": "WH_hww",
+    "ZH": "ZH_hww",
     # BKGS
     "WJetsLNu": "wjets",
     "TTbar": "ttbar",
@@ -63,33 +63,41 @@ labels = {
     "WZQQ": "wzqq",
     # "WZQQorDYJets": "vjets",
     "Fake": "fake",
-    "QCD": "QCD",
 }
 
-bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
-sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
-#bkgs = ["Diboson"]
 
-samples = sigs + bkgs + ["Fake"]
-#samples = sigs + bkgs
+def get_common_sample_name(sample):
+    # first: check if the sample is in one of combine_samples_by_name
+    sample_to_use = None
+    for key in combine_samples_by_name:
+        if key in sample:
+            sample_to_use = combine_samples_by_name[key]
+            break
+
+    # second: if not, combine under common label
+    if sample_to_use is None:
+        for key in combine_samples:
+            if key in sample:
+                sample_to_use = combine_samples[key]
+                break
+            else:
+                sample_to_use = sample
+    return sample_to_use
 
 
 def get_sum_sumgenweight(pkl_files, year, sample):
     sum_sumgenweight = 0
     for ifile in pkl_files:
-        #print('pkl filse', pkl_files)
         # load and sum the sumgenweight of each
         with open(ifile, "rb") as f:
             metadata = pkl.load(f)
-            #print('metadata', metadata)
         sum_sumgenweight = sum_sumgenweight + metadata[sample][year]["sumgenweight"]
     return sum_sumgenweight
 
 
 def get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use):
 
-    if sample_to_use in ["ggF", "VBF", "WH", "ZH"]:
-
+    if (sample_to_use in sigs + ["WJetsLNu", "TTbar"]) and (sample != "ST_s-channel_4f_hadronicDecays"):
         sum_sumpdfweight = {}
         for key in range(103):
             sum_sumpdfweight[key] = 0
@@ -102,15 +110,13 @@ def get_sum_sumpdfweight(pkl_files, year, sample, sample_to_use):
             for key in range(103):
                 sum_sumpdfweight[key] = sum_sumpdfweight[key] + metadata[sample][year]["sumpdfweight"][key]
         return sum_sumpdfweight
-
     else:
         return 1
 
 
 def get_sum_sumscsaleweight(pkl_files, year, sample, sample_to_use):
 
-    if sample_to_use in ["ggF", "VBF", "WH", "ZH", "WJetsLNu", "TTbar"]:
-
+    if (sample_to_use in sigs + ["WJetsLNu", "TTbar", "SingleTop"]) and (sample != "ST_s-channel_4f_hadronicDecays"):
         sum_sumlheweight = {}
         for key in [0, 1, 3, 5, 7, 8, 4]:
             sum_sumlheweight[key] = 0
@@ -256,14 +262,3 @@ def get_finetuned_score(data, model_path):
     outputs = ort_sess.run(None, input_dict)
 
     return scipy.special.softmax(outputs[0], axis=1)[:, 0]
-
-def WCalibFactor(a):
-    if a < 250:
-       return 0.8
-       #return 1.408
-    if (a >= 250) and (a < 350):
-        return .8
-        #return 1.299
-    else:
-        return .8
-        #return 1.266
