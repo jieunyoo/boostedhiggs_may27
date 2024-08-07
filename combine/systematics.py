@@ -201,11 +201,11 @@ def get_systematic_dict(years):
             sigs + bkgs,
             {"ele": "JES_Absolute", "mu": "JES_Absolute"},
         ),
-        "UES": (
-            years,
-            sigs + bkgs,
-            {"ele": "UES", "mu": "UES"},
-        ),
+     #   "UES": (
+     #       years,
+     #       sigs + bkgs,
+     #       {"ele": "UES", "mu": "UES"},
+     #   ),
     }
 
     JEC_systs_uncorrelated = {}
@@ -248,6 +248,30 @@ def get_systematic_dict(years):
                     sigs + bkgs,
                     {"ele": "JER", "mu": "JER"},
                 ),
+            #    f"JMR_{year}": (
+            #        year,
+            #        sigs + bkgs,
+            #        {"ele": "JMR", "mu": "JMR"},
+            #    ),
+            #    f"JMS_{year}": (
+            #        year,
+            #        sigs + bkgs,
+            #        {"ele": "JMS", "mu": "JMS"},
+            #    ),
+            },
+        }
+
+
+    JEC_systs_MASS = {}
+    for year in years:
+        if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
+            yearlabel = "2016"
+        else:
+            yearlabel = year
+
+        JEC_systs_MASS = {
+            **JEC_systs_MASS,
+            **{
                 f"JMR_{year}": (
                     year,
                     sigs + bkgs,
@@ -258,13 +282,15 @@ def get_systematic_dict(years):
                     sigs + bkgs,
                     {"ele": "JMS", "mu": "JMS"},
                 ),
-            },
-        }
+                },
+    }
+
 
     SYST_DICT = {
         "common": {**COMMON_systs_correlated, **COMMON_systs_uncorrelated},
         "btag": {**BTAG_systs_correlated, **BTAG_systs_uncorrelated},
         "JEC": {**JEC_systs_correlated, **JEC_systs_uncorrelated},
+        "JEC_systs_MASS": {**JEC_systs_MASS},
     }
 
     return SYST_DICT

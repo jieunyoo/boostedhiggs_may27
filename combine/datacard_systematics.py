@@ -336,10 +336,10 @@ def systs_from_parquets(years):
             "weight_pdf_acceptance",
             ["TTbar"],
         ),
-        # rl.NuisanceParameter(f"PDF_singletop_ACCEPT_{CMS_PARAMS_LABEL}", "shape"): (
-        #     "weight_pdf_acceptance",
-        #     ["SingleTop"],
-        # ),
+         rl.NuisanceParameter(f"PDF_singletop_ACCEPT_{CMS_PARAMS_LABEL}", "shape"): (
+             "weight_pdf_acceptance",
+             ["SingleTop"],
+         ),
         # QCD scale acceptance
         rl.NuisanceParameter(f"QCDscale_ggH_ACCEPT_{CMS_PARAMS_LABEL}", "shape"): (
             "weight_qcd_scale",
@@ -476,14 +476,14 @@ def systs_from_parquets(years):
                     f"JER_{year}",
                     sigs + bkgs,
                 ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
-                    f"JMR_{year}",
-                    sigs + bkgs,
-                ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
-                    f"JMS_{year}",
-                    sigs + bkgs,
-                ),
+               # rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
+               #     f"JMR_{year}",
+               #     sigs + bkgs,
+               # ),
+               # rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
+               #     f"JMS_{year}",
+               #     sigs + bkgs,
+               # ),
                 rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}", "shape"): (
                     f"JES_BBEC1_{year}",
                     sigs + bkgs,
