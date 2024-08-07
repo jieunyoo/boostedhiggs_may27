@@ -15,12 +15,13 @@ samples:
     - Data
 regions_sel:
     # put any "selection name: selection" here to store it in the templates    
-    "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (T_HWW > 0.9) & (met_pt > 30) & (fj_pt > 250) & (h_fj_pt > 250)  & (fj_mass > 60) & (fj_mass < 120) 
-    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) &  (fj_mass > 40)
+    "SR1": (numberBJets_Medium_OutsideFatJets == 0) & (ReconVCandidateFatJetVScore > 0.9) & (T_HWW > 0.9) & (met_pt > 30) & (fj_pt > 250) & (h_fj_pt > 250)  
+    #"TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) &  (fj_mass > 40) & (ReconVCandidateFatJetVScore < 0.9) &  (T_HWW > 0.9)
     
-    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) & (T_HWW > 0.5)  &  ( ((fj_mass > 40) & (fj_mass < 60) )| (fj_mass > 120))
+    "TopCR": (numberBJets_Medium_OutsideFatJets > 0) & (fj_mass > 40) & (met_pt > 30)  & (fj_pt > 250) & (h_fj_pt > 250) 
+    #    "WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) 
 
-    #"WJetsCR": (numberBJets_Medium_OutsideFatJets == 0) & (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) & ( fj_mass > 40) &  (ReconVCandidateFatJetVScore < 0.9) & (T_HWW > 0.9)
+    #"WJetsCR": (fj_pt > 250) &  (h_fj_pt > 250) & (met_pt > 30) & ( fj_mass > 40) &  (ReconVCandidateFatJetVScore < 0.9) & (T_HWW > 0.9)
 
 samples_dir:
     "2018": /uscms/home/jieun201/nobackup/YOURWORKINGAREA/july20_systematics/

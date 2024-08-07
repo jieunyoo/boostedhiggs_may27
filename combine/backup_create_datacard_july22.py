@@ -18,7 +18,7 @@ import warnings
 
 import pandas as pd
 import rhalphalib as rl
-from systematics import systs_from_parquets, systs_not_from_parquets, systs_from_parquets2
+from systematics import systs_from_parquets, systs_not_from_parquets #, systs_from_parquets2
 from utils import get_template, labels, load_templates, samples, shape_to_num, sigs, bkgs
 
 rl.ParametericSample.PreferRooParametricHist = True
@@ -30,13 +30,13 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
+#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
     sys_from_parquets = systs_from_parquets(years)
 
-    sys_from_parquets2 = systs_from_parquets2(years)
+    #sys_from_parquets2 = systs_from_parquets2(years)
 
     # define the model
     model = rl.Model("testModel")
@@ -116,24 +116,15 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
                         nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
                         sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
-            for sys_value, (sys_name, list_of_samples) in sys_from_parquets2.items():
-                #print('sys_name', sys_name)
-                if sName in list_of_samples:
-                    syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
-                    syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
-                    nominal = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": "nominal"}].values()
-
-                    nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
-                    sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
             
 
             ch.addSample(sample)
 
-        sName = "Fake"
-        templ = get_template(hists_templates, sName, ChName)
-        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
+        #sName = "Fake"
+        #templ = get_template(hists_templates, sName, ChName)
+        #sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
 
-        ch.addSample(sample)
+        #ch.addSample(sample)
 
         # add data
         data_obs = get_template(hists_templates, "Data", ChName)
@@ -141,8 +132,12 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
         #data_obs = get_template(hists_templates, "ZH", ChName)
         ch.setObservation(data_obs)
 
-        if "CR" not in ChName:
-            ch.autoMCStats()
+        #if "CR" not in ChName:
+         #   ch.autoMCStats()
+        # add mcstats
+        ch.autoMCStats(
+            channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
+        )
 
     if add_ttbar_constraint:
         failCh = model["TopCR"]

@@ -1,6 +1,7 @@
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
 sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
-samples = sigs + bkgs + ["Fake"]
+#samples = sigs + bkgs + ["Fake"]
+samples = sigs + bkgs 
 
 
 def get_systematic_dict(years):

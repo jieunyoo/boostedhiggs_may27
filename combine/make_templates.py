@@ -496,14 +496,14 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         for year in years:  # e.g. 2018, 2017, 2016APV, 2016
             #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_{ch}.parquet")
             data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_ele.parquet")
-            print('data', data)
+            #print('data', data)
 
             for selection in presel[ch]:
                 logging.info(f"Applying {selection} selection on {len(data)} events")
                 data = data.query(presel[ch][selection])
  
             for region in hists.axes["Region"]:
-                print('region')
+                #print('region')
                 df = data.copy()
                 df["T_HWW"] = get_finetuned_score(data, model_path)
                 logging.info(f"Applying {region} selection on {len(data)} events")
@@ -517,6 +517,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
                 else:
                     hists.fill( Sample="Fake", Systematic=variation, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+
+                fix_neg_yields(hists)
 
     logging.info(hists)
     return hists

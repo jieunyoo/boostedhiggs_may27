@@ -40,7 +40,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
     model = rl.Model("testModel")
 
     # define the signal and control regions
-    SIG_regions = ["VBF", "ggFpt250to350", "ggFpt350to500", "ggFpt500toInf"]
+    #SIG_regions = ["VBF", "ggFpt250to350", "ggFpt350to500", "ggFpt500toInf"]
+    SIG_regions = ["SR1"]
     CONTROL_regions = ["TopCR", "WJetsCR"]
 
     if add_ttbar_constraint:
@@ -100,31 +101,32 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
             ch.addSample(sample)
 
+
         # add Fake
-        sName = "Fake"
-        templ = get_template(hists_templates, sName, ChName)
-        if templ == 0:
-            continue
-        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
+#        sName = "Fake"
+#        templ = get_template(hists_templates, sName, ChName)
+#        if templ == 0:
+#            continue
+#        sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
 
         # add Fake unc.
-        sample.setParamEffect(rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_Fake_SF_uncertainty", "lnN"), 1.5)
+#        sample.setParamEffect(rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_Fake_SF_uncertainty", "lnN"), 1.5)
 
-        name_in_card = {
-            "FR_stat": f"{CMS_PARAMS_LABEL}_FakeRate_statistical_uncertainty",
-            "EWK_SF": f"{CMS_PARAMS_LABEL}_FakeRate_EWK_SF_statistical_uncertainty",
-        }
-        for sys_name in ["FR_stat", "EWK_SF"]:
+#        name_in_card = {
+#            "FR_stat": f"{CMS_PARAMS_LABEL}_FakeRate_statistical_uncertainty",
+#            "EWK_SF": f"{CMS_PARAMS_LABEL}_FakeRate_EWK_SF_statistical_uncertainty",
+#        }
+#        for sys_name in ["FR_stat", "EWK_SF"]:
 
-            sys_value = rl.NuisanceParameter(name_in_card[sys_name], "shape")
-            syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
-            syst_do = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Down"}].values()
-            nominal = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": "nominal"}].values()
+#            sys_value = rl.NuisanceParameter(name_in_card[sys_name], "shape")
+#            syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
+#            syst_do = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Down"}].values()
+#            nominal = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": "nominal"}].values()
 
-            nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
-            sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
+#            nominal[nominal == 0] = 1  # to avoid invalid value encountered in true_divide in "syst_up/nominal"
+#            sample.setParamEffect(sys_value, (syst_up / nominal), (syst_do / nominal))
 
-        ch.addSample(sample)
+ #       ch.addSample(sample)
 
         # add data
         data_obs = get_template(hists_templates, "Data", ChName)
