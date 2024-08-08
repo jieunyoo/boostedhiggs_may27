@@ -749,16 +749,16 @@ jmrValues = {}
 # jet mass resolution: https://twiki.cern.ch/twiki/bin/view/CMS/JetWtagging
 # nominal, down, up (these are switched in the github!!!)
 jmrValues["msoftdrop"] = {
-   # "2016": [1.0, 0.8, 1.2],
-   # "2017": [1.09, 1.04, 1.14],
+    "2016": [1.0, 0.8, 1.2],
+    "2017": [1.09, 1.04, 1.14],
     # Use 2017 values for 2018 until 2018 are released
-   # "2018": [1.09, 1.04, 1.14],
+    "2018": [1.09, 1.04, 1.14],
 
 #change to nominal, up, down
-    "2016": [1.0, 1.2, 0.8],
-    "2017": [1.09, 1.14, 1.04],
+#    "2016": [1.0, 1.2, 0.8],
+ #   "2017": [1.09, 1.14, 1.04],
     # Use 2017 values for 2018 until 2018 are released
-    "2018": [1.09, 1.14, 1.04],
+  #  "2018": [1.09, 1.14, 1.04],
 
 }
 

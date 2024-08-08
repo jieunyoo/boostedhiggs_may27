@@ -356,6 +356,8 @@ class vhProcessor(processor.ProcessorABC):
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
+
+#MET
         met = met_factory.build(events.MET, jets, {}) if self.isMC else events.MET
 
 
@@ -471,6 +473,8 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "higgsMass": rec_higgs.mass,
        
+            "ues_up": met.MET_UnclusteredEnergy.up.pt,
+            "ues_down": met.MET_UnclusteredEnergy.down.pt,
        #check JEC
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
@@ -507,7 +511,6 @@ class vhProcessor(processor.ProcessorABC):
 #                variables = {**variables, **jecvariables}
    #NOTe; still no MET uncertainty     
 
-
             higgsPT_vars = {
             "h_fj_eta": candidatefj.eta,
             "h_fj_phi": candidatefj.phi,
@@ -520,6 +523,21 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
+#MET shift
+            #print('met', ak.to_list(met)[0:50])
+            met_pt_sys = {}
+            met_vars = ["pt"]
+            for met_var in met_vars:
+                for key, shift in self.jecs.items():
+                #for var in ["up", "down"]:
+                    for var in ["down", "up"]:
+                        #print('key, value,var', key, value, var)
+                        met_pt_sys[f"met_pt_{key}_{var}"] = met[shift][var][met_var]
+                        #print('met[value][var].pt', met[value][var].pt)
+            variables =  {**variables, **fatjetvars_sys,  **met_pt_sys}
+
+            #print(met.MET_UnclusteredEnergy.up.pt)
+            #print(met.MET_UnclusteredEnergy.down.pt)
 
         # Selection ***********************************************************************************************************************************************
 
@@ -543,12 +561,12 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
         #*************************
-    #    fj_pt_sel = second_fj.pt > 250   
-    #    if self.isMC:  # make an OR of all the JECs
-    #        for k, v in self.jecs.items():
-    #            for var in ["up", "down"]:
-    #                fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
-    #    self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
+        fj_pt_sel = second_fj.pt > 250   
+        if self.isMC:  # make an OR of all the JECs
+            for k, v in self.jecs.items():
+                for var in ["up", "down"]:
+                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
+        self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
         #*************************
         self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
         self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
