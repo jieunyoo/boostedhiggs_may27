@@ -193,29 +193,49 @@ class vhProcessor(processor.ProcessorABC):
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-        sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
 
-        # sum LHE weight
-        sumlheweight = {}
-        if "LHEScaleWeight" in events.fields and self.isMC:
-            if len(events.LHEScaleWeight[0]) == 9:
-                for i in range(len(events.LHEScaleWeight[0])):
-                    sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
+        if "TT" in dataset or "ST_" in dataset:
+            sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
+        else:
+            sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
 
-        # sum PDF weight
         sumpdfweight = {}
-        #if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
-        if "LHEPdfWeight" in events.fields and self.isMC:
-            for i in range(len(events.LHEPdfWeight[0])):
-                sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+        sumlheweight = {}
+        sumpdfweight = {}
+
+        if "TT" in dataset or "ST_" in dataset:
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * np.sign(events.genWeight))
+
+        else:
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+
 
         # add genweight before filling cutflow
         if self.isMC:
             for ch in self._channels:
-                self.weights[ch].add("genweight", events.genWeight)
-
-
-
+                if "TT" in dataset or "ST_" in dataset:
+                    self.weights[ch].add("genweight", np.sign(events.genWeight))
+                else:
+                    self.weights[ch].add("genweight", events.genWeight)
 
 
         ######################
@@ -506,11 +526,6 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-#            for met_shift in ["UES_up", "UES_down"]:
-#                jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
-#                variables = {**variables, **jecvariables}
-   #NOTe; still no MET uncertainty     
-
             higgsPT_vars = {
             "h_fj_eta": candidatefj.eta,
             "h_fj_phi": candidatefj.phi,
@@ -690,6 +705,13 @@ class vhProcessor(processor.ProcessorABC):
                 if self._systematics:
                     for systematic in self.weights[ch].variations:
                         variables[f"weight_{ch}_{systematic}"] = self.weights[ch].weight(modifier=systematic)
+
+                # store the individual weights (for DEBUG)
+                for key in self.weights[ch]._weights.keys():
+                    if f"weight_{key}" not in variables.keys():
+                        variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
+
+
 
                 # store b-tag weight  #i am using MEDIUM, changing to "M"
                 for wp_ in ["M"]:
