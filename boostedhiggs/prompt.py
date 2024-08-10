@@ -538,7 +538,8 @@ class promptProcessor(processor.ProcessorABC):
             if ch == "mu":
                 self.add_selection(
                     name="Trigger",
-                    sel=((candidatelep.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep.pt >= 55) & trigger["mu_highpt"]),
+                    #sel=((candidatelep.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep.pt >= 55) & trigger["mu_highpt"]),
+                    sel=((candidatelep_loose.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep_loose.pt >= 55) & trigger["mu_highpt"]),
                     channel=ch,
                 )
             else:

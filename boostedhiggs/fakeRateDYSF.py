@@ -31,9 +31,9 @@ from boostedhiggs.corrections import (
     #getJECVariables,
     #getJMSRVariables,
     met_factory,
+    add_TopPtReweighting,
 )
-from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs
-
+from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
 from .run_tagger_inference import runInferenceTriton
 
 warnings.filterwarnings("ignore", message="Found duplicate branch ")
@@ -170,31 +170,55 @@ class fakeRateDYSF(processor.ProcessorABC):
 
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
+        self.isSignal = True if ("HToWW" in dataset) or ("ttHToNonbb" in dataset) else False
 
         nevents = len(events)
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-        sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
+        if "TT" in dataset or "ST_" in dataset:
+            sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
+        else:
+            sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
 
-        # sum LHE weight
-        sumlheweight = {}
-        if "LHEScaleWeight" in events.fields and self.isMC:
-            if len(events.LHEScaleWeight[0]) == 9:
-                for i in range(len(events.LHEScaleWeight[0])):
-                    sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
-
-        # sum PDF weight
         sumpdfweight = {}
-        if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
-            for i in range(len(events.LHEPdfWeight[0])):
-                sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+        sumlheweight = {}
+        sumpdfweight = {}
+
+        if "TT" in dataset or "ST_" in dataset:
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * np.sign(events.genWeight))
+        else:
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
+
 
         # add genweight before filling cutflow
         if self.isMC:
             for ch in self._channels:
-                self.weights[ch].add("genweight", events.genWeight)
+                if "TT" in dataset or "ST_" in dataset:
+                    self.weights[ch].add("genweight", np.sign(events.genWeight))
+                else:
+                    self.weights[ch].add("genweight", events.genWeight)
+
 
         ######################
         # Trigger
@@ -267,7 +291,6 @@ class fakeRateDYSF(processor.ProcessorABC):
         Zmass = (candidatelep + secondLep).mass
 
 
-
         lep_reliso = (
             candidatelep.pfRelIso04_all if hasattr(candidatelep, "pfRelIso04_all") else candidatelep.pfRelIso03_all
         )  # reliso for candidate lepton
@@ -275,14 +298,8 @@ class fakeRateDYSF(processor.ProcessorABC):
         ngood_leptons = ak.num(goodleptons, axis=1)
 
 #** for fake rate estimation - loose *****************************************************************************
-        
-
-
         loose_muons = ( (muons.pt > 30) & (np.abs(muons.eta) < 2.4) & (muons.looseId) )
-        
         #loose_electrons = ( (electrons.pt > 38) & (np.abs(electrons.eta) < 2.4) & (electrons.mvaFall17V2noIso_WPL) & ((np.abs(electrons.eta) < 1.44) | (np.abs(electrons.eta) > 1.57))   )
-
-
         loose_electrons = ( 
         (electrons.pt > 38) & 
         (np.abs(electrons.eta) < 2.4) & 
@@ -527,53 +544,21 @@ class fakeRateDYSF(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-        #deleted farouk's code: re JEC for the other two jets outside Higgs for his VBF case
-
-    #        for met_shift in ["UES_up", "UES_down"]:
-    #            jecvariables = getJECVariables(fatjetvars, candidatelep_p4, met, pt_shift=None, met_shift=met_shift)
-    #            variables = {**variables, **jecvariables}
-
-    #    for shift in jec_shifted_fatjetvars["pt"]: commenting this out now june24 8:30 am as we don't need right now systematics on the fat jet for this pass
-    #        if shift != "" and not self._systematics:
-    #            continue
-    #        jecvariables = getJECVariables(fatjetvars, pt_shift=shift)
-    #        variables = {**variables, **jecvariables}
-
-   #     for shift in jmsr_shifted_fatjetvars["msoftdrop"]:
-   #         if shift != "" and not self._systematics:
-   #             continue
-   #         jmsrvariables = getJMSRVariables(fatjetvars, mass_shift=shift)
-   #         variables = {**variables, **jmsrvariables}
-
- 
         # Selection ***********************************************************************************************************************************************
         for ch in self._channels:
-            # trigger
+            # trigger  #for muon channel, for fake rate, need to run this twice 
             if ch == "mu":
-                self.add_selection(
-                    name="Trigger",
-                    sel=((candidatelep.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep.pt >= 55) & trigger["mu_highpt"]),
-                    channel=ch,
-                )
+                self.add_selection(name="Trigger", sel=((candidatelep.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep.pt >= 55) & trigger["mu_highpt"]),channel=ch,)
+
+                #self.add_selection(name="Trigger", sel=((candidatelep_loose.pt < 55) & trigger["mu_lowpt"]) | ((candidatelep_loose.pt >= 55) & trigger["mu_highpt"]),channel=ch,)
             else:
                 self.add_selection(name="Trigger", sel=trigger[ch], channel=ch)
 
         self.add_selection(name="METFilters", sel=metfilters)
         self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
 
-        #*************************
-        #fj_pt_sel = candidatefj.pt > 250   # this puts the selection on the candidate fj, may need to add this for the V 
-        #if self.isMC:  # make an OR of all the JECs
-        #    for k, v in self.jecs.items():
-        #        for var in ["up", "down"]:
-        #            fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
-
-        #self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
-        #*************************
-
         self.add_selection(name="metRevertCut", sel=(met.pt < 30))  #this is for the SFs, invert this for the QCD bkg
 
-        #we also add a MET cut, but can do offline so can use these files for checks
 
         # gen-level matching
         signal_mask = None
@@ -631,10 +616,16 @@ class fakeRateDYSF(processor.ProcessorABC):
                 variables["weight_qcdcorr"] = qcd_corr
                 variables["weight_altqcdcorr"] = alt_qcd_corr
 
-                if "HToWW" in dataset:
+
+#corrections updated aug 10, 10:53am
+                if "TT" in dataset:
+                    tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
+                    variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
+
+                if self.isSignal:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
 
-                if "HToWW" in dataset or "TT" in dataset or "WJets" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the QCD acceptance uncertainty:
                     - we save the individual weights [0, 1, 3, 5, 7, 8]
@@ -655,7 +646,7 @@ class fakeRateDYSF(processor.ProcessorABC):
                                 scale_weights[f"weight_scale{i}"] = events.LHEScaleWeight[:, i]
                     variables = {**variables, **scale_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the PDF acceptance uncertainty:
                     - store 103 variations. 0-100 PDF values
@@ -671,7 +662,7 @@ class fakeRateDYSF(processor.ProcessorABC):
                             pdf_weights[f"weight_pdf{i}"] = events.LHEPdfWeight[:, i]
                     variables = {**variables, **pdf_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     add_ps_weight(
                         self.weights[ch],
                         events.PSWeight if "PSWeight" in events.fields else [],
@@ -751,17 +742,6 @@ class fakeRateDYSF(processor.ProcessorABC):
             # convert arrays to pandas
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
-
-            for var_ in [
-                "rec_higgs_m",
-                "rec_higgs_pt",
-                "rec_W_qq_m",
-                "rec_W_qq_pt",
-                "rec_W_lnu_m",
-                "rec_W_lnu_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")

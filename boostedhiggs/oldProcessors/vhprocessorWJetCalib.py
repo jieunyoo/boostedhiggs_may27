@@ -28,17 +28,14 @@ from boostedhiggs.corrections import (
     get_btag_weights,
     get_jec_jets,
     get_jmsr,
-    getJECVariables,
-    getJECVariables_Higgs,
-    getJMSRVariables,
+    #getJECVariables,
+    #getJMSRVariables,
     met_factory,
     add_TopPtReweighting,
 )
 from boostedhiggs.utils import VScore, match_H, match_Top, match_V, sigs, get_pid_mask
 
 from .run_tagger_inference import runInferenceTriton
-
-from .SkimmerABC import *
 
 warnings.filterwarnings("ignore", message="Found duplicate branch ")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -79,7 +76,7 @@ def VScore(goodFatJetsSelected):
 
 
 #class HwwProcessor(processor.ProcessorABC):
-class vhProcessor(processor.ProcessorABC):
+class vhprocessorWJetCalib(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -90,6 +87,7 @@ class vhProcessor(processor.ProcessorABC):
         systematics=False,
         getLPweights=False,
         uselooselep=False,
+        #fakevalidation=False,
     ):
         self._year = year
         self._yearmod = yearmod
@@ -174,8 +172,7 @@ class vhProcessor(processor.ProcessorABC):
             selection_ch = self.selections[ch].all(*self.selections[ch].names)
 
             if self.isMC:
-                weight = self.weights[ch].partial_weight(["genweight"])  
-                print('weight', weight)
+                weight = self.weights[ch].partial_weight(["genweight"])
                 self.cutflows[ch][name] = float(weight[selection_ch].sum())
             else:
                 self.cutflows[ch][name] = np.sum(selection_ch)
@@ -185,59 +182,31 @@ class vhProcessor(processor.ProcessorABC):
 
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
-        self.isSignal = True if ("HToWW" in dataset) or ("ttHToNonbb" in dataset) else False
 
         nevents = len(events)
-        #print('events',events)
-
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
+        sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
 
-        if "TT" in dataset or "ST_" in dataset:
-            sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
-        else:
-            sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
-
-        sumpdfweight = {}
+        # sum LHE weight
         sumlheweight = {}
+        if "LHEScaleWeight" in events.fields and self.isMC:
+            if len(events.LHEScaleWeight[0]) == 9:
+                for i in range(len(events.LHEScaleWeight[0])):
+                    sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
+
+        # sum PDF weight
         sumpdfweight = {}
-
-        if "TT" in dataset or "ST_" in dataset:
-            if "LHEScaleWeight" in events.fields and self.isMC:
-                if len(events.LHEScaleWeight[0]) == 9:
-                    for i in range(len(events.LHEScaleWeight[0])):
-                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
-            if "LHEScaleWeight" in events.fields and self.isMC:
-                if len(events.LHEScaleWeight[0]) == 9:
-                    for i in range(len(events.LHEScaleWeight[0])):
-                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
-            if "LHEPdfWeight" in events.fields and self.isMC:
-                for i in range(len(events.LHEPdfWeight[0])):
-                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * np.sign(events.genWeight))
-
-        else:
-            if "LHEPdfWeight" in events.fields and self.isMC:
-                for i in range(len(events.LHEPdfWeight[0])):
-                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
-            if "LHEScaleWeight" in events.fields and self.isMC:
-                if len(events.LHEScaleWeight[0]) == 9:
-                    for i in range(len(events.LHEScaleWeight[0])):
-                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
-            if "LHEPdfWeight" in events.fields and self.isMC:
-                for i in range(len(events.LHEPdfWeight[0])):
-                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
-
+        if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
+            for i in range(len(events.LHEPdfWeight[0])):
+                sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
 
         # add genweight before filling cutflow
         if self.isMC:
             for ch in self._channels:
-                if "TT" in dataset or "ST_" in dataset:
-                    self.weights[ch].add("genweight", np.sign(events.genWeight))
-                else:
-                    self.weights[ch].add("genweight", events.genWeight)
-
+                self.weights[ch].add("genweight", events.genWeight)
 
         ######################
         # Trigger
@@ -318,71 +287,50 @@ class vhProcessor(processor.ProcessorABC):
         fatjets = events.FatJet
         fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
         fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
-        #fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         good_fatjets = fatjets[fatjet_selector]
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
 
-        #check fat jet pt
-        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
-
-        #JETS**************************************************
-        #this applies JEC to all the fat jets (same as farouk)
         good_fatjets, jec_shifted_fatjetvars = get_jec_jets(
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
-        #******************************************************
 
-        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
 
-        # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
-        candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
+
+        #for W Jet ******************************************************
+        candidatefj = ak.firsts(good_fatjets[:, 0:1]) #get highest pt jet
+        #print('pt', ak.to_list(candidatefj.pt)[0:100])
+
+
+        WJet_corrected, jec_shifted_fatjetvars_WJet = get_jec_jets(
+            events, good_fatjets[:, 0:1], self._year, not self.isMC, self.jecs, fatjets=True,
+        )
+        WJetIndex = ak.local_index(WJet_corrected,axis=1)
+        #print('WJetindex', ak.to_list(WJetIndex)[0:100])
+        #print('Wjet pt', ak.to_list(WJet_corrected.pt)[0:100])
+
+
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
+        #print('deltaR', ak.to_list(lep_fj_dr)[0:100])
+        VScore_WJet = VScore(candidatefj)
+        #print('VScore_WJet', ak.to_list(VScore_WJet)[0:100])
 
-        #this applies jmsr to higgs jet - need to fix to apply to V
-        #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
 
-        #*************************************************************************
-        # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
-        deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
-        minDeltaR = ak.argmin(deltaR_lepton_all_jets, axis=1)
-        fatJetIndices = ak.local_index(good_fatjets, axis=1)
-        mask1 = fatJetIndices != minDeltaR
-        allScores = VScore(good_fatjets)
-        masked = allScores[mask1]
-        secondFJ = good_fatjets[allScores == ak.max(masked, axis=1)]
-        second_fj = ak.firsts(secondFJ)
-        VCandidateVScore = VScore(second_fj)
-        VCandidate_Mass = second_fj.msdcorr
+        Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets( events, good_fatjets[:,0:1], self._year, not self.isMC, self.jecs, fatjets=True)
+            #Vboson_Jet, jec_shifted_fatjetvars_V = get_jec_jets( events, candidatefj, self._year, not self.isMC, self.jecs, fatjets=True)
+        VbosonIndex = ak.local_index(Vboson_Jet,axis=1)
 
-        #get index of the V
-        maxScoreIndexMask = (allScores == ak.max(masked, axis=1))
-        #VIndex = ak.firsts(fatJetIndices[maxScoreIndexMask])
-        VIndex = fatJetIndices[maxScoreIndexMask]
-        #print('vIndex', ak.to_list(VIndex)[0:100])
-        #print('fj_idx', ak.to_list(fj_idx_lep)[0:100])
-
-        dr_two_jets = candidatefj.delta_r(second_fj)
-
-        #only for V boson, since need up and down - need to fix later to be for Higgs as well
-        #if self.isMC:
-
-        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
+        Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[:,0:1], num_jets=1, year=self._year, isData=not self.isMC)
         correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
 
-        #print('correctedMass', ak.to_list(correctedVbosonNominalMass)[0:200])
+        #******************************************************
 
-        #*************************************************************************
 
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
-
-#MET
         met = met_factory.build(events.MET, jets, {}) if self.isMC else events.MET
 
-
-##need to get jets where pt is varied; the variable we care about is number B jets; does changing pt change number of b jets
         jet_selector = (
             (jets.pt > 30)
             & (abs(jets.eta) < 5.0)
@@ -390,35 +338,39 @@ class vhProcessor(processor.ProcessorABC):
             & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2))
         )
 
-#try printing
-        #print('jet_shiftted', jec_shifted_jetvars['pt'])
-#for shift, vals in jec_shifted_fatjetvars["pt"].items():
-
-
-
-
         goodjets = jets[jet_selector]
+
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
         ak4_bjet_candidate = jets[bjet_selector]
+
+
         # bjet counts for SR and TTBar Control Region
-        dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
-        dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
-        ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
-        NumOtherJetsOutsideBothJets = ak.num(ak4_outsideBothJets)
-        n_bjets_M_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],axis=1, )
-        n_bjets_T_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        #V H version
+        dr_ak8Jets_WJet = goodjets.delta_r(candidatefj)
+
+        ak4_outsideJet = goodjets[ (dr_ak8Jets_WJet > 0.8) ]
+
+        NumOtherJetsOutsideJet = ak.num(ak4_outsideJet)
+
+        n_bjets_M_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],
+            axis=1,
+        )
+        n_bjets_T_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"],
+            axis=1,
+        )
+
+        n_bjets_L_OutsideJet = ak.sum(
+            ak4_outsideJet.btagDeepFlavB > btagWPs["deepJet"][self._year]["L"],
+            axis=1,
+        )
 
 
 
-
-        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
-        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
-        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
-        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
-        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
-        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
-
+        # delta R between AK8 jet and lepton
+        lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
         mt_lep_met = np.sqrt(
             2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
@@ -427,99 +379,56 @@ class vhProcessor(processor.ProcessorABC):
         # delta phi MET and higgs candidate
         met_fj_dphi = candidatefj.delta_phi(met)
 
-
-        if self.isMC: 
-            cutoff = 4.
-            cutOnPU = np.ones(nevents,dtype='bool')
-            pweights = corrections.get_pileup_weight_raghav(self._year, events.Pileup.nPU.to_numpy())
-            pw_pass = ((pweights["nominal"] <= cutoff)*(pweights["up"] <= cutoff)*(pweights["down"] <= cutoff))
-            #print('pw_pass', pw_pass)
-        else:
-            pw_pass = np.ones(nevents,dtype='bool')
-
-           # events = events[pw_pass]
-
-#add in higgs mass for fun
-        candidateNeutrino = ak.zip(
-                {
-                    "pt": met.pt,
-                    "eta": candidatelep_p4.eta,
-                    "phi": met.phi,
-                    "mass": 0,
-                    "charge": 0,
-                },
-                with_name="PtEtaPhiMCandidate",behavior=candidate.behavior,)
-
-        rec1 = candidatelep_p4 + candidateNeutrino
-        rec2 = candidatefj - candidatelep_p4
-        rec_higgs = rec1 + rec2
-
-        #testMet
-        #metUncluster = met.MET_UnclusteredEnergy
-        
-        #print('met.pt', ak.to_list(met)[0:5])
-        #print('metUncluster', ak.to_list(metUncluster)[0:5])
-
         ######################
         # Store variables
         ######################
 
         variables = {
 
-#check met  
-            #"met_pt_up": met.MET_UnclusteredEnergy.up.pt,
-            #"met_pt_down": met.MET_UnclusteredEnergy.down.pt,
-
-            "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
-            "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
+            "fj_msoftdrop": candidatefj.msdcorr, #this it the W jet's soft drop mass
             "lep_pt": candidatelep.pt,
-            "lep_eta": candidatelep.eta,
             "lep_isolation": lep_reliso,
             "lep_misolation": lep_miso,
-  
-            "lep_fj_dr": lep_fj_dr, #  lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
-            "lep_met_mt": mt_lep_met, 
-            "met_fj_dphi": met_fj_dphi,
+            "lep_fj_dr": lep_fj_dr,
+            "lep_met_mt": mt_lep_met,
+            #"met_fj_dphi": met_fjlep_dphi,
             "met_pt": met.pt,
+	    "lep_eta": candidatelep.eta,
+            "numberLeptons": ngood_leptons,
+            #"numberFatJet": n_fatjets,
+            "ReconLepton_flavor": candidatelep.flavor,
+	    "WJet_pt": candidatefj.pt,
+            "VScore_WJet": VScore_WJet,
+            
+	    "numberAK4JetsOutsideFatJet": NumOtherJetsOutsideJet,
+	    "numberBJets_Medium_OutsideWFatJet": n_bjets_M_OutsideJet,
+	    "numberBJets_Tight_OutsideWFatJet": n_bjets_T_OutsideJet,
+	    "numberBJets_Loose_OutsideWFatJet": n_bjets_L_OutsideJet,
 
-            "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
-            "h_fj_pt": candidatefj.pt, #Higgs
-            "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
-            "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
-        
-            "numberAK4JetsOutsideFatJets": NumOtherJetsOutsideBothJets,
-            "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
-	    "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
-
-            "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
-            "higgsMass": rec_higgs.mass,
-       
-            "ues_up": met.MET_UnclusteredEnergy.up.pt,
-            "ues_down": met.MET_UnclusteredEnergy.down.pt,
-       #check JEC
-            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
-            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
-            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
-            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
-            "pileupWeightCheck": pw_pass
-
+            "VbosonJECcorrectedPT": Vboson_Jet.pt,
         }
 
-        fatjetvars = {
-            "fj_eta": second_fj.eta,
-            "fj_phi": second_fj.phi,
-            "fj_pt": second_fj.pt,
-            "fj_mass": correctedVbosonNominalMass,
-            }
+
+        
+
+        fatjetvars = {   
+            #"fj_pt": WJet_corrected.pt,
+            "fj_pt": candidatefj.pt,
+            "fj_eta": candidatefj.eta,
+            "fj_phi": candidatefj.phi,
+            "fj_mass": correctedVbosonNominalMass, #corrected for msoftdrop then JMS
+        }
+
         variables = {**variables, **fatjetvars}
 
         if self._systematics and self.isMC:
             fatjetvars_sys = {}
-            for shift, vals in jec_shifted_fatjetvars["pt"].items():
+            # JEC vars
+            for shift, vals in jec_shifted_fatjetvars_WJet["pt"].items(): #we only have one jet anyway don't need this systematics for now - to fix
                 if shift != "":
-                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[VIndex])  #to do: change this to the V
-                    #print('fj pt shift', ak.to_list(fatjetvars_sys[f"fj_pt{shift}"])[0:100]) 
+                    fatjetvars_sys[f"fj_pt{shift}"] = ak.firsts(vals[WJetIndex])
 
+            # JMSR vars
             for shift, vals in jmsr_shifted_fatjetvars["msoftdrop"].items():
                 if shift != "":
                     fatjetvars_sys[f"fj_mass{shift}"] = ak.firsts(vals)
@@ -527,39 +436,8 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-            higgsPT_vars = {
-            "h_fj_eta": candidatefj.eta,
-            "h_fj_phi": candidatefj.phi,
-            "h_fj_pt": candidatefj.pt,
-            "h_fj_mass": candidatefj.mass,
-            }
-            for shift, vals in jec_shifted_fatjetvars["pt"].items():
-                if shift != "":
-                    fatjetvars_sys[f"h_fj_pt{shift}"] = ak.firsts(vals[fj_idx_lep]) 
-            variables = {**variables, **fatjetvars_sys}
-            fatjetvars = {**fatjetvars, **fatjetvars_sys}
-
-#MET shift
-            #print('met', ak.to_list(met)[0:50])
-            met_pt_sys = {}
-            met_vars = ["pt"]
-            for met_var in met_vars:
-                for key, shift in self.jecs.items():
-                #for var in ["up", "down"]:
-                    for var in ["down", "up"]:
-                        #print('key, value,var', key, value, var)
-                        met_pt_sys[f"met_pt_{key}_{var}"] = met[shift][var][met_var]
-                        #print('met[value][var].pt', met[value][var].pt)
-            variables =  {**variables, **fatjetvars_sys,  **met_pt_sys}
-
-            #print(met.MET_UnclusteredEnergy.up.pt)
-            #print(met.MET_UnclusteredEnergy.down.pt)
-
+ 
         # Selection ***********************************************************************************************************************************************
-
-        #only for MC! need to fix this so it applies only for MC
-        #self.add_selection(name = "PileupWeight", sel=pw_pass)
-
         for ch in self._channels:
             # trigger
             if ch == "mu":
@@ -574,24 +452,22 @@ class vhProcessor(processor.ProcessorABC):
         self.add_selection(name="METFilters", sel=metfilters)
         self.add_selection(name="OneLep", sel=(n_good_muons == 1) & (n_good_electrons == 0), channel="mu")
         self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
-        self.add_selection(name="GreaterTwoFatJets", sel=(NumFatjets >= 2))
+        self.add_selection(name="OneJet", sel=(NumFatjets == 1))
 
         #*************************
-        fj_pt_sel = second_fj.pt > 250   
-        if self.isMC:  # make an OR of all the JECs
-            for k, v in self.jecs.items():
-                for var in ["up", "down"]:
-                    fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
-        self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
-        #*************************
-        self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
-        self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
+    #    fj_pt_sel = candidatefj.pt > 250   
+    #    if self.isMC:  # make an OR of all the JECs
+    #        for k, v in self.jecs.items():
+    #            for var in ["up", "down"]:
+    #                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
 
-        self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
-        self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
-        self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 40 )) 
+    #    self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
+        #*************************
+
+        #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 ))
         self.add_selection(name="MET", sel=(met.pt > 30))
 
+        #we also add a MET cut, but can do offline so can use these files for checks
 
         # gen-level matching
         signal_mask = None
@@ -649,16 +525,15 @@ class vhProcessor(processor.ProcessorABC):
                 variables["weight_qcdcorr"] = qcd_corr
                 variables["weight_altqcdcorr"] = alt_qcd_corr
 
-                #add top pt reweighting from farouk's repo, june 29th: 3:50 pm version
-                #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
                 if "TT" in dataset:
                     tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
                     variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
-                if self.isSignal:
+
+                if "HToWW" in dataset:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
 
-                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
+                if "HToWW" in dataset or "TT" in dataset or "WJets" in dataset:
                     """
                     For the QCD acceptance uncertainty:
                     - we save the individual weights [0, 1, 3, 5, 7, 8]
@@ -679,7 +554,7 @@ class vhProcessor(processor.ProcessorABC):
                                 scale_weights[f"weight_scale{i}"] = events.LHEScaleWeight[:, i]
                     variables = {**variables, **scale_weights}
 
-                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
+                if "HToWW" in dataset:
                     """
                     For the PDF acceptance uncertainty:
                     - store 103 variations. 0-100 PDF values
@@ -695,7 +570,7 @@ class vhProcessor(processor.ProcessorABC):
                             pdf_weights[f"weight_pdf{i}"] = events.LHEPdfWeight[:, i]
                     variables = {**variables, **pdf_weights}
 
-                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
+                if "HToWW" in dataset:
                     add_ps_weight(
                         self.weights[ch],
                         events.PSWeight if "PSWeight" in events.fields else [],
@@ -706,13 +581,6 @@ class vhProcessor(processor.ProcessorABC):
                 if self._systematics:
                     for systematic in self.weights[ch].variations:
                         variables[f"weight_{ch}_{systematic}"] = self.weights[ch].weight(modifier=systematic)
-
-                # store the individual weights (for DEBUG)
-                for key in self.weights[ch]._weights.keys():
-                    if f"weight_{key}" not in variables.keys():
-                        variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
-
-
 
                 # store b-tag weight  #i am using MEDIUM, changing to "M"
                 for wp_ in ["M"]:
@@ -782,15 +650,6 @@ class vhProcessor(processor.ProcessorABC):
             # convert arrays to pandas
             if not isinstance(output[ch], pd.DataFrame):
                 output[ch] = self.ak_to_pandas(output[ch])
-
-            for var_ in [
-                #"rec_higgs_m",
-                #"rec_higgs_pt",
-                "rec_V_m",
-                "rec_V_pt",
-            ]:
-                if var_ in output[ch].keys():
-                    output[ch][var_] = np.nan_to_num(output[ch][var_], nan=-1)
 
         # now save pandas dataframes
         fname = events.behavior["__events_factory__"]._partition_key.replace("/", "_")
