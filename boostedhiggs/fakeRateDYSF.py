@@ -184,13 +184,8 @@ class fakeRateDYSF(processor.ProcessorABC):
 
         sumpdfweight = {}
         sumlheweight = {}
-        sumpdfweight = {}
 
         if "TT" in dataset or "ST_" in dataset:
-            if "LHEScaleWeight" in events.fields and self.isMC:
-                if len(events.LHEScaleWeight[0]) == 9:
-                    for i in range(len(events.LHEScaleWeight[0])):
-                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
             if "LHEScaleWeight" in events.fields and self.isMC:
                 if len(events.LHEScaleWeight[0]) == 9:
                     for i in range(len(events.LHEScaleWeight[0])):
@@ -199,9 +194,6 @@ class fakeRateDYSF(processor.ProcessorABC):
                 for i in range(len(events.LHEPdfWeight[0])):
                     sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * np.sign(events.genWeight))
         else:
-            if "LHEPdfWeight" in events.fields and self.isMC:
-                for i in range(len(events.LHEPdfWeight[0])):
-                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
             if "LHEScaleWeight" in events.fields and self.isMC:
                 if len(events.LHEScaleWeight[0]) == 9:
                     for i in range(len(events.LHEScaleWeight[0])):
