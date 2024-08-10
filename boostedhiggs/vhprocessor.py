@@ -76,9 +76,6 @@ def VScore(goodFatJetsSelected):
     score = num / den
     return score
 
-
-
-#class HwwProcessor(processor.ProcessorABC):
 class vhProcessor(processor.ProcessorABC):
     def __init__(
         self,
@@ -186,15 +183,12 @@ class vhProcessor(processor.ProcessorABC):
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
         self.isSignal = True if ("HToWW" in dataset) or ("ttHToNonbb" in dataset) else False
-
         nevents = len(events)
-        #print('events',events)
-
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-
+        #fix for TTbar weights
         if "TT" in dataset or "ST_" in dataset:
             sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
         else:
@@ -263,12 +257,10 @@ class vhProcessor(processor.ProcessorABC):
 
         good_muons = (
             (muons.pt > 30)
-            & (np.abs(muons.eta) < 2.4)
-            & muons.mediumId
+            & (np.abs(muons.eta) < 2.4) & muons.mediumId
             & (((muons.pfRelIso04_all < 0.20) & (muons.pt < 55)) | (muons.pt >= 55) & (muons.miniPFRelIso_all < 0.2))
             # additional cuts
-            & (np.abs(muons.dz) < 0.1)
-            & (np.abs(muons.dxy) < 0.02)
+            & (np.abs(muons.dz) < 0.1) & (np.abs(muons.dxy) < 0.02)
         )
 
         n_good_muons = ak.sum(good_muons, axis=1)
@@ -330,9 +322,7 @@ class vhProcessor(processor.ProcessorABC):
         candidatefj = ak.firsts(good_fatjets[fj_idx_lep])
         lep_fj_dr = candidatefj.delta_r(candidatelep_p4)
 
-        #this applies jmsr to higgs jet - need to fix to apply to V
         #jmsr_shifted_fatjetvars = get_jmsr(good_fatjets[fj_idx_lep], num_jets=1, year=self._year, isData=not self.isMC)
-
         #*************************************************************************
         # VH jet   /differs from HWW processor, but Farouks added this into hww processor now
         deltaR_lepton_all_jets = candidatelep_p4.delta_r(good_fatjets)
@@ -354,9 +344,6 @@ class vhProcessor(processor.ProcessorABC):
         #print('fj_idx', ak.to_list(fj_idx_lep)[0:100])
 
         dr_two_jets = candidatefj.delta_r(second_fj)
-
-        #only for V boson, since need up and down - need to fix later to be for Higgs as well
-        #if self.isMC:
 
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
@@ -574,13 +561,13 @@ class vhProcessor(processor.ProcessorABC):
                     fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
         #*************************
-        self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
-        self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
+        #self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
+        #self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 40 )) 
-        self.add_selection(name="MET", sel=(met.pt > 30))
+        #self.add_selection(name="MET", sel=(met.pt > 30))
 
 
         # gen-level matching
@@ -698,11 +685,9 @@ class vhProcessor(processor.ProcessorABC):
                         variables[f"weight_{ch}_{systematic}"] = self.weights[ch].weight(modifier=systematic)
 
                 # store the individual weights (for DEBUG)
-                for key in self.weights[ch]._weights.keys():
-                    if f"weight_{key}" not in variables.keys():
-                        variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
-
-
+                #for key in self.weights[ch]._weights.keys():
+                 #   if f"weight_{key}" not in variables.keys():
+                  #      variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
 
                 # store b-tag weight  #i am using MEDIUM, changing to "M"
                 for wp_ in ["M"]:
