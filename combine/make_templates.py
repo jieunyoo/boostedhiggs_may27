@@ -28,7 +28,9 @@ pd.set_option("mode.chained_assignment", None)
 sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
 #bkgs = ["TTbar", "WJetsLNu", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
 
-bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
+#bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
+
+bkgs = ["TTbar", "WJetsLNu", "SingleTop", "WZQQ", "Diboson", "EWKvjets", "DYJets"]
 
 
 def get_templates(years, channels, samples, samples_dir, regions_sel, model_path, add_fake=False):
@@ -49,20 +51,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
     """
 
-    JEC_systs_MASS = {}
-    for year in years:
-        if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
-            yearlabel = "2016"
-        else:
-            yearlabel = year
-        JEC_systs_MASS = {
-            **JEC_systs_MASS,
-            **{ f"JMR_{year}": ( year, sigs + bkgs, {"ele": "JMR", "mu": "JMR"},),
-                f"JMS_{year}": ( year, sigs + bkgs, {"ele": "JMS", "mu": "JMS"},),
-            },        
-    }
-
-
+    
     # add extra selections to preselection
     presel = {
         "mu": {
@@ -73,7 +62,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         },
     }
 
-    mass_binning = [40,60,80,100,120,140,160,180]
+    mass_binning = [40,60,80,100,120,140,180]
+    #mass_binning = [40,160]
 
     hists = hist2.Hist(
         hist2.axis.StrCategory([], name="Sample", growth=True),
@@ -154,7 +144,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     else:
                         nominal = df[f"weight_{ch}"] * xsecweight
 
-                        if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                        if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                             nominal *= df["weight_btag"]
 
                         if sample_to_use == "TTbar":
@@ -319,7 +309,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     # ------------------- Common systematics  -------------------
 
                     for syst, (yrs, smpls, var) in SYST_DICT["common"].items():
-                        print('syst', syst)
+                        #print('syst', syst)
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                             shape_up = df[var[ch] + "Up"] * xsecweight
@@ -380,15 +370,16 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         )
 
 
-                for syst, (yrs, smpls, var) in { **JEC_systs_MASS}.items():
-                    if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                        shape_up = df["fj_mass" + var[ch] + "_up"]
-                        shape_down = df["fj_mass" + var[ch] + "_down"]
-                    else:
-                        shape_up = df["fj_mass"]
-                        shape_down = df["fj_mass"]
-                    hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal, )
-                    hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal, )
+                    for syst, (yrs, smpls, var) in SYST_DICT["JEC_systs_MASS"].items():
+                        if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                            print('got it')
+                            shape_up = df["fj_mass" + var[ch] + "_up"]
+                            shape_down = df["fj_mass" + var[ch] + "_down"]
+                        else:
+                            shape_up = df["fj_mass"]
+                            shape_down = df["fj_mass"]
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal, )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal, )
 
                 # ------------------- individual sources of JES -------------------
 
@@ -400,7 +391,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
+                                #region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
+
                                 region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
+                                #region_sel = region_sel.replace("met", "met" + var[ch] + f"_{variation}")
+                                #print('region_sel', region_sel)
+    #to do: add a line here to add in met up
+
 
                             df = data.copy()
                             df = df.query(region_sel)
@@ -437,25 +434,45 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                                 weight=nominal,
                             )
 
+ #   for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down"]:
+ #       for year in years:
+        #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
+            #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/0-1_ele.parquet")
+#            data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_ele.parquet")
+            #print('data', data)
+#            for selection in presel["ele"]:
+                #logging.info(f"Applying {selection} selection on {len(data)} events")
+#                data = data.query(presel["ele"][selection])
+#                data["THWW"] = get_finetuned_score(data, model_path)
+#            for region in hists.axes["Region"]:
+#                df = data.copy()
+#                logging.info(f"Applying {region} selection on {len(data)} events")
+#                df = df.query(regions_sel[region])
+#                logging.info(f"Will fill the histograms with the remaining {len(data)} events")
+               # print('df', df['fj_mass'])
+            #need to rename nonprompt_event_weight as event_weight
+                #hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+#                if variation == "fakes_nominal":
+#                    hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+#                else:
+#                    print('variation', variation)
+#                    hists.fill( Sample="Fake", Systematic=variation, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+
+
+    return hists
+
 #NOTE - by default this is off
     if add_fake:
-
         for variation in ["FR_Nominal", "FR_stat_Up", "FR_stat_Down", "EWK_SF_Up", "EWK_SF_Down"]:
-
             for year in years:
-
                 data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele_{variation}.parquet")
-
                 # apply selection
                 for selection in presel["ele"]:
                     logging.info(f"Applying {selection} selection on {len(data)} events")
                     data = data.query(presel["ele"][selection])
-
                 data["event_weight"] *= 0.6  # the closure test SF
-
                 for region in hists.axes["Region"]:
                     df = data.copy()
-
                     logging.info(f"Applying {region} selection on {len(df)} events")
                     df = df.query(regions_sel[region])
                     logging.info(f"Will fill the histograms with the remaining {len(df)} events")

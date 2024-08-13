@@ -476,14 +476,14 @@ def systs_from_parquets(years):
                     f"JER_{year}",
                     sigs + bkgs,
                 ),
-               # rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
-               #     f"JMR_{year}",
-               #     sigs + bkgs,
-               # ),
-               # rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
-               #     f"JMS_{year}",
-               #     sigs + bkgs,
-               # ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
+                    f"JMR_{year}",
+                    sigs + bkgs,
+                ),
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
+                    f"JMS_{year}",
+                    sigs + bkgs,
+                ),
                 rl.NuisanceParameter(f"CMS_scale_j_BBEC1_{year}", "shape"): (
                     f"JES_BBEC1_{year}",
                     sigs + bkgs,
@@ -506,6 +506,9 @@ def systs_from_parquets(years):
                 ),
             },
         }
+
+
+
 
     SYSTEMATICS = {
         **SYSTEMATICS_correlated,

@@ -183,35 +183,45 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         dataset = events.metadata["dataset"]
         self.isMC = hasattr(events, "genWeight")
 
+        self.isSignal = True if ("HToWW" in dataset) or ("ttHToNonbb" in dataset) else False
         nevents = len(events)
         self.weights = {ch: Weights(nevents, storeIndividual=True) for ch in self._channels}
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-        sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
-
-        # sum LHE weight
-        sumlheweight = {}
-        if "LHEScaleWeight" in events.fields and self.isMC:
-            if len(events.LHEScaleWeight[0]) == 9:
-                for i in range(len(events.LHEScaleWeight[0])):
-                    sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
-
-        # sum PDF weight
+#updated here 1125am, 8/10
+        if "TT" in dataset or "ST_" in dataset:
+            sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
+        else:
+            sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
         sumpdfweight = {}
-        if "LHEPdfWeight" in events.fields and self.isMC and "HToWW" in dataset:
-            for i in range(len(events.LHEPdfWeight[0])):
-                sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
-
+        sumlheweight = {}
+        if "TT" in dataset or "ST_" in dataset:
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * np.sign(events.genWeight))
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * np.sign(events.genWeight))
+        else:
+            if "LHEScaleWeight" in events.fields and self.isMC:
+                if len(events.LHEScaleWeight[0]) == 9:
+                    for i in range(len(events.LHEScaleWeight[0])):
+                        sumlheweight[i] = ak.sum(events.LHEScaleWeight[:, i] * events.genWeight)
+            if "LHEPdfWeight" in events.fields and self.isMC:
+                for i in range(len(events.LHEPdfWeight[0])):
+                    sumpdfweight[i] = ak.sum(events.LHEPdfWeight[:, i] * events.genWeight)
         # add genweight before filling cutflow
         if self.isMC:
             for ch in self._channels:
-                self.weights[ch].add("genweight", events.genWeight)
+                if "TT" in dataset or "ST_" in dataset:
+                    self.weights[ch].add("genweight", np.sign(events.genWeight))
+                else:
+                    self.weights[ch].add("genweight", events.genWeight)
 
-        ######################
+        #*******************************************************
         # Trigger
-        ######################
-
         trigger = {}
         for ch in ["ele", "mu_lowpt", "mu_highpt"]:
             trigger[ch] = np.zeros(nevents, dtype="bool")
@@ -223,20 +233,14 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         trigger["mu_highpt"] = trigger["mu_highpt"] & (~trigger["ele"])
         trigger["mu_lowpt"] = trigger["mu_lowpt"] & (~trigger["ele"])
 
-        ######################
         # METFLITERS
-        ######################
-
         metfilters = np.ones(nevents, dtype="bool")
         metfilterkey = "mc" if self.isMC else "data"
         for mf in self._metfilters[metfilterkey]:
             if mf in events.Flag.fields:
                 metfilters = metfilters & events.Flag[mf]
 
-        ######################
         # OBJECT DEFINITION
-        ######################
-
         # OBJECT: muons
         muons = ak.with_field(events.Muon, 0, "flavor")
 
@@ -454,20 +458,8 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
         self.add_selection(name="OneLep", sel=(n_good_electrons == 1) & (n_good_muons == 0), channel="ele")
         self.add_selection(name="OneJet", sel=(NumFatjets == 1))
 
-        #*************************
-    #    fj_pt_sel = candidatefj.pt > 250   
-    #    if self.isMC:  # make an OR of all the JECs
-    #        for k, v in self.jecs.items():
-    #            for var in ["up", "down"]:
-    #                fj_pt_sel = fj_pt_sel | (candidatefj[v][var].pt > 250)
-
-    #    self.add_selection(name="CandidateJetpT", sel=(fj_pt_sel == 1))
-        #*************************
-
         #self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 30 ))
         self.add_selection(name="MET", sel=(met.pt > 30))
-
-        #we also add a MET cut, but can do offline so can use these files for checks
 
         # gen-level matching
         signal_mask = None
@@ -525,15 +517,16 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
                 variables["weight_qcdcorr"] = qcd_corr
                 variables["weight_altqcdcorr"] = alt_qcd_corr
 
+
+
                 if "TT" in dataset:
                     tops = events.GenPart[get_pid_mask(events.GenPart, 6, byall=False) * events.GenPart.hasFlags(["isLastCopy"])]
                     variables["top_reweighting"] = add_TopPtReweighting(tops.pt)
 
-
-                if "HToWW" in dataset:
+                if self.isSignal:
                     add_HiggsEW_kFactors(self.weights[ch], events.GenPart, dataset)
 
-                if "HToWW" in dataset or "TT" in dataset or "WJets" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the QCD acceptance uncertainty:
                     - we save the individual weights [0, 1, 3, 5, 7, 8]
@@ -554,7 +547,7 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
                                 scale_weights[f"weight_scale{i}"] = events.LHEScaleWeight[:, i]
                     variables = {**variables, **scale_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     """
                     For the PDF acceptance uncertainty:
                     - store 103 variations. 0-100 PDF values
@@ -570,7 +563,7 @@ class vhprocessorWJetCalib(processor.ProcessorABC):
                             pdf_weights[f"weight_pdf{i}"] = events.LHEPdfWeight[:, i]
                     variables = {**variables, **pdf_weights}
 
-                if "HToWW" in dataset:
+                if self.isSignal or "TT" in dataset or "WJets" in dataset or "ST_" in dataset:
                     add_ps_weight(
                         self.weights[ch],
                         events.PSWeight if "PSWeight" in events.fields else [],
