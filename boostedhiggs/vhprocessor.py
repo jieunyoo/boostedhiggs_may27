@@ -172,7 +172,7 @@ class vhProcessor(processor.ProcessorABC):
 
             if self.isMC:
                 weight = self.weights[ch].partial_weight(["genweight"])  
-                print('weight', weight)
+                #print('weight', weight)
                 self.cutflows[ch][name] = float(weight[selection_ch].sum())
             else:
                 self.cutflows[ch][name] = np.sum(selection_ch)
@@ -189,7 +189,8 @@ class vhProcessor(processor.ProcessorABC):
         self.cutflows = {ch: {} for ch in self._channels}
 
         #fix for TTbar weights
-        if "TT" in dataset or "ST_" in dataset:
+        #if "TT" in dataset or "ST_" in dataset:
+        if "TT" in dataset or "ST_" in dataset or "DYJets" in dataset:
             sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
         else:
             sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
@@ -217,7 +218,8 @@ class vhProcessor(processor.ProcessorABC):
         # add genweight before filling cutflow
         if self.isMC:
             for ch in self._channels:
-                if "TT" in dataset or "ST_" in dataset:
+                #if "TT" in dataset or "ST_" in dataset:
+                if "TT" in dataset or "ST_" in dataset or "DYJets" in dataset:
                     self.weights[ch].add("genweight", np.sign(events.genWeight))
                 else:
                     self.weights[ch].add("genweight", events.genWeight)
@@ -376,8 +378,9 @@ class vhProcessor(processor.ProcessorABC):
 
         goodjets = jets[jet_selector]
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
-        bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
-        ak4_bjet_candidate = jets[bjet_selector]
+        #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
+        bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+        #ak4_bjet_candidate = jets[bjet_selector]
         # bjet counts for SR and TTBar Control Region
         dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
         dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
@@ -471,8 +474,8 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "higgsMass": rec_higgs.mass,
        
-            "ues_up": met.MET_UnclusteredEnergy.up.pt,
-            "ues_down": met.MET_UnclusteredEnergy.down.pt,
+            #"ues_up": met.MET_UnclusteredEnergy.up.pt,
+            #"ues_down": met.MET_UnclusteredEnergy.down.pt,
        #check JEC
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
@@ -535,7 +538,7 @@ class vhProcessor(processor.ProcessorABC):
         # Selection ***********************************************************************************************************************************************
 
         #only for MC! need to fix this so it applies only for MC
-        #self.add_selection(name = "PileupWeight", sel=pw_pass)
+        self.add_selection(name = "PileupWeight", sel=pw_pass)
 
         for ch in self._channels:
             # trigger
@@ -685,9 +688,9 @@ class vhProcessor(processor.ProcessorABC):
                         variables[f"weight_{ch}_{systematic}"] = self.weights[ch].weight(modifier=systematic)
 
                 # store the individual weights (for DEBUG)
-                #for key in self.weights[ch]._weights.keys():
-                 #   if f"weight_{key}" not in variables.keys():
-                  #      variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
+                for key in self.weights[ch]._weights.keys():
+                    if f"weight_{key}" not in variables.keys():
+                        variables[f"weight_{key}"] = self.weights[ch].partial_weight([key])
 
                 # store b-tag weight  #i am using MEDIUM, changing to "M"
                 for wp_ in ["M"]:
