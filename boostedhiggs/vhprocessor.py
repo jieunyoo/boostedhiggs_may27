@@ -379,7 +379,13 @@ class vhProcessor(processor.ProcessorABC):
         goodjets = jets[jet_selector]
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
-        bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+        #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+
+#temporarily change this to the V to see if this helps with uncert
+        bjet_selector = (jet_selector) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+
+
+
         #ak4_bjet_candidate = jets[bjet_selector]
         # bjet counts for SR and TTBar Control Region
         dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
@@ -435,11 +441,12 @@ class vhProcessor(processor.ProcessorABC):
         rec_higgs = rec1 + rec2
 
         #testMet
-        #metUncluster = met.MET_UnclusteredEnergy
-        
+        metUnclusterNominal = met.pt
+        metUnclusterUp = met.MET_UnclusteredEnergy.up.pt
+        metUnclusterDown = met.MET_UnclusteredEnergy.down.pt
         #print('met.pt', ak.to_list(met)[0:5])
-        #print('metUncluster', ak.to_list(metUncluster)[0:5])
-
+        #print('metUnclusterUp', ak.to_list(metUnclusterUp)[0:5])
+        #print('metUnclusterDown', ak.to_list(metUnclusterDown)[0:5])
         ######################
         # Store variables
         ######################
@@ -447,8 +454,8 @@ class vhProcessor(processor.ProcessorABC):
         variables = {
 
 #check met  
-            #"met_pt_up": met.MET_UnclusteredEnergy.up.pt,
-            #"met_pt_down": met.MET_UnclusteredEnergy.down.pt,
+            "met_pt_up": met.MET_UnclusteredEnergy.up.pt,
+            "met_pt_down": met.MET_UnclusteredEnergy.down.pt,
 
             "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
             "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
