@@ -177,7 +177,7 @@ class fakeRateDYSF(processor.ProcessorABC):
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-        if "TT" in dataset or "ST_" in dataset:
+        if "TT" in dataset or "ST_" in dataset or "DYJets" in dataset:
             sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
         else:
             sumgenweight = ak.sum(events.genWeight) if self.isMC else nevents
