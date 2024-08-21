@@ -379,10 +379,9 @@ class vhProcessor(processor.ProcessorABC):
         goodjets = jets[jet_selector]
         # OBJECT: b-jets (only for jets with abs(eta)<2.5)
         #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
-        #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+        bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
 
-#temporarily change this to the V to see if this helps with uncert
-        bjet_selector = (jet_selector) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
+        #bjet_selector = (jet_selector) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
 
 
 
@@ -404,6 +403,13 @@ class vhProcessor(processor.ProcessorABC):
         n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
         n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
         n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+
+        #let me test what the pt of ak4 jets is
+
+        good_jetsOutsideHiggsV = ak4_outsideBothJets[ak.argsort(ak4_outsideBothJets.pt, ascending=False)]  # sort them by pt
+        ak4_jet1 = good_jetsOutsideHiggsV[:, 0:1]
+        ak4_jet2 = good_jetsOutsideHiggsV[:, 1:2]
 
 
         mt_lep_met = np.sqrt(
@@ -452,11 +458,6 @@ class vhProcessor(processor.ProcessorABC):
         ######################
 
         variables = {
-
-#check met  
-            "met_pt_up": met.MET_UnclusteredEnergy.up.pt,
-            "met_pt_down": met.MET_UnclusteredEnergy.down.pt,
-
             "n_good_electrons": n_good_electrons, # n_good_electrons = ak.sum(good_electrons, axis=1)
             "n_good_muons": n_good_muons, #     n_good_muons = ak.sum(good_muons, axis=1)
             "lep_pt": candidatelep.pt,
@@ -481,16 +482,19 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "higgsMass": rec_higgs.mass,
        
-            #"ues_up": met.MET_UnclusteredEnergy.up.pt,
-            #"ues_down": met.MET_UnclusteredEnergy.down.pt,
+            "ues_up": met.MET_UnclusteredEnergy.up.pt,
+            "ues_down": met.MET_UnclusteredEnergy.down.pt,
        #check JEC
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
             "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
             "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
-            "pileupWeightCheck": pw_pass
+            "pileupWeightCheck": pw_pass,
 
-        }
+            "ak4_jet1":  ak.firsts(ak4_jet1.pt),
+            "ak4_jet2":  ak.firsts(ak4_jet2.pt)
+
+      }
 
         fatjetvars = {
             "fj_eta": second_fj.eta,
