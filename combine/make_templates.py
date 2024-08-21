@@ -26,10 +26,7 @@ warnings.filterwarnings("ignore", message="Found duplicate branch ")
 pd.set_option("mode.chained_assignment", None)
 
 sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
-#bkgs = ["TTbar", "WJetsLNu", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
-
 #bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
-
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "WZQQ", "Diboson", "EWKvjets", "DYJets"]
 
 
@@ -62,8 +59,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         },
     }
 
-    mass_binning = [40,60,80,100,120,140,180]
-    #mass_binning = [40,160]
+    #mass_binning = [40,70,100,130,180]
+    #mass_binning = [40,60,80,100,120,180]
+    mass_binning = [40,180]
 
     hists = hist2.Hist(
         hist2.axis.StrCategory([], name="Sample", growth=True),
@@ -125,6 +123,118 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                 for selection in presel[ch]:
                     logging.info(f"Applying {selection} selection on {len(data)} events")
                     data = data.query(presel[ch][selection])
+
+                    if not is_data:
+                        if year == '2018':
+                            data['temp_JESdown'] = data['met_pt_JES_down']
+                            data['temp_JESup'] = data['met_pt_JES_up']
+                            data[['met_pt_JES_down', 'met_pt_JES_up']]= data[['temp_JESup', 'temp_JESdown']]
+
+                            data['temp_JERdown'] = data['met_pt_JER_down']
+                            data['temp_JERup'] = data['met_pt_JER_up']
+                            data[['met_pt_JER_down', 'met_pt_JER_up']]= data[['temp_JERup', 'temp_JERdown']]
+                            
+                            data['temp_JES_FlavorQCD_down'] = data['met_pt_JES_FlavorQCD_down']
+                            data['temp_JES_FlavorQCD_up'] = data['met_pt_JES_FlavorQCD_up']
+                            data[['met_pt_JES_FlavorQCD_down', 'met_pt_JES_FlavorQCD_up']]= data[['temp_JES_FlavorQCD_up', 'temp_JES_FlavorQCD_down']]
+
+                            data['temp_JESRelativeBal_down'] = data['met_pt_JES_RelativeBal_down']
+                            data['temp_JESRelativeBal_up'] = data['met_pt_JES_RelativeBal_up']
+                            data[['met_pt_JES_RelativeBal_down', 'met_pt_JES_RelativeBal_up']]= data[['temp_JESRelativeBal_up', 'temp_JESRelativeBal_down']]
+
+                            data['temp_JES_HF_down'] = data['met_pt_JES_HF_down']
+                            data['temp_JES_HF_up'] = data['met_pt_JES_HF_up']
+                            data[['met_pt_JES_HF_down', 'met_pt_JES_HF_up']]= data[['temp_JES_HF_up', 'temp_JES_HF_down']]
+                            
+                            data['temp_JES_BBEC1_down'] = data['met_pt_JES_BBEC1_down']
+                            data['temp_JES_BBEC1_up'] = data['met_pt_JES_BBEC1_up']
+                            data[['met_pt_JES_BBEC1_down', 'met_pt_JES_BBEC1_up']]= data[['temp_JES_BBEC1_up', 'temp_JES_BBEC1_down']]
+
+                            data['temp_JES_EC2_down'] = data['met_pt_JES_EC2_down']
+                            data['temp_JES_EC2_up'] = data['met_pt_JES_EC2_up']
+                            data[['met_pt_JES_EC2_down', 'met_pt_JES_EC2_up']]= data[['temp_JES_EC2_up', 'temp_JES_EC2_down']]
+
+                            data['temp_JES_Absolute_down'] = data['met_pt_JES_Absolute_down']
+                            data['temp_JES_Absolute_up'] = data['met_pt_JES_Absolute_up']
+                            data[['met_pt_JES_Absolute_down', 'met_pt_JES_Absolute_up']]= data[['temp_JES_Absolute_up', 'temp_JES_Absolute_down']]
+                            
+                            data['temp_JES_BBEC1_2018_down'] = data['met_pt_JES_BBEC1_2018_down']
+                            data['temp_JES_BBEC1_2018_up'] = data['met_pt_JES_BBEC1_2018_up']
+                            data[['met_pt_JES_BBEC1_2018_down', 'met_pt_JES_BBEC1_2018_up']]= data[['temp_JES_BBEC1_2018_up', 'temp_JES_BBEC1_2018_down']]
+
+                            data['temp_JES_RelativeSample_2018_down'] = data['met_pt_JES_RelativeSample_2018_down']
+                            data['temp_JES_RelativeSample_2018_up'] = data['met_pt_JES_RelativeSample_2018_up']
+                            data[['met_pt_JES_RelativeSample_2018_down', 'met_pt_JES_RelativeSample_2018_up']]= data[['temp_JES_RelativeSample_2018_up', 'temp_JES_RelativeSample_2018_down']]
+
+                            data['temp_JES_EC2_2018_down'] = data['met_pt_JES_EC2_2018_down']
+                            data['temp_JES_EC2_2018_up'] = data['met_pt_JES_EC2_2018_up']
+                            data[['met_pt_JES_EC2_2018_down', 'met_pt_JES_EC2_2018_up']]= data[['temp_JES_EC2_2018_up', 'temp_JES_EC2_2018_down']]
+                            
+                            data['temp_JES_HF_2018_down'] = data['met_pt_JES_HF_2018_down']
+                            data['temp_JES_HF_2018_up'] = data['met_pt_JES_HF_2018_up']
+                            data[['met_pt_JES_HF_2018_down', 'met_pt_JES_HF_2018_up']]= data[['temp_JES_HF_2018_up', 'temp_JES_HF_2018_down']]
+
+                            data['temp_JES_Absolute_2018_down'] = data['met_pt_JES_Absolute_2018_down']
+                            data['temp_JES_Absolute_2018_up'] = data['met_pt_JES_Absolute_2018_up']
+                            data[['met_pt_JES_Absolute_2018_down', 'met_pt_JES_Absolute_2018_up']]= data[['temp_JES_Absolute_2018_up', 'temp_JES_Absolute_2018_down']]
+                            data['temp_JES_Total_down'] = data['met_pt_JES_Total_down']
+                            data['temp_JES_Total_up'] = data['met_pt_JES_Total_up']
+                            data[['met_pt_JES_Total_down', 'met_pt_JES_Total_up']]= data[['temp_JES_Total_up', 'temp_JES_Total_down']]
+
+                        elif year == '2017':
+                            data['temp_JESdown'] = data['met_pt_JES_down']
+                            data['temp_JESup'] = data['met_pt_JES_up']
+                            data[['met_pt_JES_down', 'met_pt_JES_up']]= data[['temp_JESup', 'temp_JESdown']]
+                            data['temp_JERdown'] = data['met_pt_JER_down']
+                            data['temp_JERup'] = data['met_pt_JER_up']
+                            data[['met_pt_JER_down', 'met_pt_JER_up']]= data[['temp_JERup', 'temp_JERdown']]
+        
+                            data['temp_JES_FlavorQCD_down'] = data['met_pt_JES_FlavorQCD_down']
+                            data['temp_JES_FlavorQCD_up'] = data['met_pt_JES_FlavorQCD_up']
+                            data[['met_pt_JES_FlavorQCD_down', 'met_pt_JES_FlavorQCD_up']]= data[['temp_JES_FlavorQCD_up', 'temp_JES_FlavorQCD_down']]
+
+                            data['temp_JESRelativeBal_down'] = data['met_pt_JES_RelativeBal_down']
+                            data['temp_JESRelativeBal_up'] = data['met_pt_JES_RelativeBal_up']
+                            data[['met_pt_JES_RelativeBal_down', 'met_pt_JES_RelativeBal_up']]= data[['temp_JESRelativeBal_up', 'temp_JESRelativeBal_down']]
+
+                            data['temp_JES_HF_down'] = data['met_pt_JES_HF_down']
+                            data['temp_JES_HF_up'] = data['met_pt_JES_HF_up']
+                            data[['met_pt_JES_HF_down', 'met_pt_JES_HF_up']]= data[['temp_JES_HF_up', 'temp_JES_HF_down']]
+                            
+                            data['temp_JES_BBEC1_down'] = data['met_pt_JES_BBEC1_down']
+                            data['temp_JES_BBEC1_up'] = data['met_pt_JES_BBEC1_up']
+                            data[['met_pt_JES_BBEC1_down', 'met_pt_JES_BBEC1_up']]= data[['temp_JES_BBEC1_up', 'temp_JES_BBEC1_down']]
+
+                            data['temp_JES_EC2_down'] = data['met_pt_JES_EC2_down']
+                            data['temp_JES_EC2_up'] = data['met_pt_JES_EC2_up']
+                            data[['met_pt_JES_EC2_down', 'met_pt_JES_EC2_up']]= data[['temp_JES_EC2_up', 'temp_JES_EC2_down']]
+
+                            data['temp_JES_Absolute_down'] = data['met_pt_JES_Absolute_down']
+                            data['temp_JES_Absolute_up'] = data['met_pt_JES_Absolute_up']
+                            data[['met_pt_JES_Absolute_down', 'met_pt_JES_Absolute_up']]= data[['temp_JES_Absolute_up', 'temp_JES_Absolute_down']]
+                            
+                            data['temp_JES_BBEC1_2017_down'] = data['met_pt_JES_BBEC1_2017_down']
+                            data['temp_JES_BBEC1_2017_up'] = data['met_pt_JES_BBEC1_2017_up']
+                            data[['met_pt_JES_BBEC1_2017_down', 'met_pt_JES_BBEC1_2017_up']]= data[['temp_JES_BBEC1_2017_up', 'temp_JES_BBEC1_2017_down']]
+
+                            data['temp_JES_RelativeSample_2017_down'] = data['met_pt_JES_RelativeSample_2017_down']
+                            data['temp_JES_RelativeSample_2017_up'] = data['met_pt_JES_RelativeSample_2017_up']
+                            data[['met_pt_JES_RelativeSample_2017_down', 'met_pt_JES_RelativeSample_2017_up']]= data[['temp_JES_RelativeSample_2017_up', 'temp_JES_RelativeSample_2017_down']]
+
+                            data['temp_JES_EC2_2017_down'] = data['met_pt_JES_EC2_2017_down']
+                            data['temp_JES_EC2_2017_up'] = data['met_pt_JES_EC2_2017_up']
+                            data[['met_pt_JES_EC2_2017_down', 'met_pt_JES_EC2_2017_up']]= data[['temp_JES_EC2_2017_up', 'temp_JES_EC2_2017_down']]
+                            
+                            data['temp_JES_HF_2017_down'] = data['met_pt_JES_HF_2017_down']
+                            data['temp_JES_HF_2017_up'] = data['met_pt_JES_HF_2017_up']
+                            data[['met_pt_JES_HF_2017_down', 'met_pt_JES_HF_2017_up']]= data[['temp_JES_HF_2017_up', 'temp_JES_HF_2017_down']]
+
+                            data['temp_JES_Absolute_2017_down'] = data['met_pt_JES_Absolute_2017_down']
+                            data['temp_JES_Absolute_2017_up'] = data['met_pt_JES_Absolute_2017_up']
+                            data[['met_pt_JES_Absolute_2017_down', 'met_pt_JES_Absolute_2017_up']]= data[['temp_JES_Absolute_2017_up', 'temp_JES_Absolute_2017_down']]
+                            data['temp_JES_Total_down'] = data['met_pt_JES_Total_down']
+                            data['temp_JES_Total_up'] = data['met_pt_JES_Total_up']
+                            data[['met_pt_JES_Total_down', 'met_pt_JES_Total_up']]= data[['temp_JES_Total_up', 'temp_JES_Total_down']]
 
                 # get the xsecweight
                 xsecweight, sumgenweights, sumpdfweights, sumscaleweights = get_xsecweight(
@@ -372,7 +482,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     for syst, (yrs, smpls, var) in SYST_DICT["JEC_systs_MASS"].items():
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            print('got it')
+                            #print('got it')
                             shape_up = df["fj_mass" + var[ch] + "_up"]
                             shape_down = df["fj_mass" + var[ch] + "_down"]
                         else:
@@ -385,9 +495,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                 """We apply the jet pt cut on the up/down variations. Must loop over systematics first."""
                 for syst, (yrs, smpls, var) in SYST_DICT["JEC"].items():
-
                     for variation in ["up", "down"]:
-
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
@@ -395,8 +503,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                                 region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
                                 #region_sel = region_sel.replace("met", "met" + var[ch] + f"_{variation}")
+
+                                region_sel = region_sel.replace("met_pt", "met_pt_" + var[ch] + f"_{variation}")
                                 #print('region_sel', region_sel)
-    #to do: add a line here to add in met up
 
 
                             df = data.copy()
@@ -408,7 +517,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight
 
-                                if "bjets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
+                                if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                                     nominal *= df["weight_btag"]
 
                                 if sample_to_use == "TTbar":
