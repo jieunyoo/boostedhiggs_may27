@@ -60,8 +60,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
     }
 
     #mass_binning = [40,70,100,130,180]
-    #mass_binning = [40,60,80,100,120,180]
-    mass_binning = [40,180]
+    mass_binning = [40,60,80,100,120,180]
+    #mass_binning = [40,180]
 
     hists = hist2.Hist(
         hist2.axis.StrCategory([], name="Sample", growth=True),
@@ -423,8 +423,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         #print('syst', syst)
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df[var[ch] + "Up"] * nominal
-                            shape_down = df[var[ch] + "Down"] * nominal 
+                            shape_up = df[var[ch] + "Up"] #* nominal
+                            shape_down = df[var[ch] + "Down"] #* nominal 
 
                             #if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                              #   shape_up *= df["weight_btag"]
@@ -442,7 +442,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Systematic=f"{syst}_up",
                             Region=region,
                             mass_observable=df["fj_mass"],
-                            weight=shape_up,
+                            weight=shape_up*nominal,
                         )
 
                         hists.fill(
@@ -450,7 +450,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Systematic=f"{syst}_down",
                             Region=region,
                             mass_observable=df["fj_mass"],
-                            weight=shape_down,
+                            weight=shape_down*nominal,
                         )
 
                     # ------------------- btag systematics  -------------------
@@ -484,13 +484,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     for syst, (yrs, smpls, var) in SYST_DICT["JEC_systs_MASS"].items():
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                             #print('got it')
-                            shape_up = df["fj_mass" + var[ch] + "_up"] * nominal
-                            shape_down = df["fj_mass" + var[ch] + "_down"] * nominal
+                            shape_up = df["fj_mass" + var[ch] + "_up"] 
+                            shape_down = df["fj_mass" + var[ch] + "_down"] 
                         else:
-                            shape_up = df["fj_mass"] * nominal
-                            shape_down = df["fj_mass"] * nominal
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=shape_up, )
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=shape_down, )
+                            shape_up = df["fj_mass"] 
+                            shape_down = df["fj_mass"] 
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal )
                
                 #end of: for region, region_sel in regions_sel.items(): 
                 # ------------------- individual sources of JES -------------------
