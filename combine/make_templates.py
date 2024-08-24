@@ -532,9 +532,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             ###################################
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                                shape_variation = df["fj_mass"] * nominal # + var[ch] + f"_{variation}"]
+                                shape_variation = df["fj_mass"] # + var[ch] + f"_{variation}"]
                             else:
-                                shape_variation = df["fj_mass"]*nominal
+                                shape_variation = df["fj_mass"]
 
                             hists.fill(
                                 Sample=sample_to_use,
