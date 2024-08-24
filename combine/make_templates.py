@@ -419,12 +419,14 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     # ------------------- Common systematics  -------------------
 
+#nominal has event weight, but event weight already has pileup weight in it since it is a product of various event weights, so i guess that is why farouk only has xsec weight.
+
                     for syst, (yrs, smpls, var) in SYST_DICT["common"].items():
                         #print('syst', syst)
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df[var[ch] + "Up"] #* nominal
-                            shape_down = df[var[ch] + "Down"] #* nominal 
+                            shape_up = df[var[ch] + "Up"] * xsecweight * df["weight_btag"]
+                            shape_down = df[var[ch] + "Down"] * xsecweight * df["weight_btag"]
 
                             #if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                              #   shape_up *= df["weight_btag"]
@@ -442,7 +444,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Systematic=f"{syst}_up",
                             Region=region,
                             mass_observable=df["fj_mass"],
-                            weight=shape_up*nominal,
+                            weight=shape_up,
                         )
 
                         hists.fill(
@@ -450,7 +452,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             Systematic=f"{syst}_down",
                             Region=region,
                             mass_observable=df["fj_mass"],
-                            weight=shape_down*nominal,
+                            weight=shape_down,
                         )
 
                     # ------------------- btag systematics  -------------------
