@@ -329,6 +329,7 @@ def get_btag_weights(
         return ak.unflatten(sf, nj)
 
     lightJets = jets[jet_selector & (jets.hadronFlavour == 0)]
+    #print('lightJets',ak.to_list(lightJets)[0:200])
     bcJets = jets[jet_selector & (jets.hadronFlavour > 0)]
 
     lightEff = efflookup(lightJets.pt, abs(lightJets.eta), lightJets.hadronFlavour)
@@ -367,23 +368,23 @@ def get_btag_weights(
 
     # Separate uncertainties are applied for b/c jets and light jets
     if systematics:
-        ret_weights[f"weight_btagSFlight{year}Up"] = _combine(lightEff, _btagSF(lightJets, "light", syst="up"), lightPass)
-        ret_weights[f"weight_btagSFlight{year}Down"] = _combine(
+        ret_weights[f"weight_btagSFlight{year}Up"] = (_combine(lightEff, _btagSF(lightJets, "light", syst="up"), lightPass))*bc
+        ret_weights[f"weight_btagSFlight{year}Down"] = (_combine(
             lightEff, _btagSF(lightJets, "light", syst="down"), lightPass
-        )
+        ))*bc
 
-        ret_weights[f"weight_btagSFbc{year}Up"] = _combine(bcEff, _btagSF(bcJets, "bc", syst="up"), bcPass)
-        ret_weights[f"weight_btagSFbc{year}Down"] = _combine(bcEff, _btagSF(bcJets, "bc", syst="down"), bcPass)
+        ret_weights[f"weight_btagSFbc{year}Up"] = (_combine(bcEff, _btagSF(bcJets, "bc", syst="up"), bcPass))*light
+        ret_weights[f"weight_btagSFbc{year}Down"] = (_combine(bcEff, _btagSF(bcJets, "bc", syst="down"), bcPass))*light
 
-        ret_weights["weight_btagSFlightCorrelatedUp"] = _combine(
+        ret_weights["weight_btagSFlightCorrelatedUp"] = (_combine(
             lightEff, _btagSF(lightJets, "light", syst="up_correlated"), lightPass
-        )
-        ret_weights["weight_btagSFlightCorrelatedDown"] = _combine(
+        ))*bc
+        ret_weights["weight_btagSFlightCorrelatedDown"] = (_combine(
             lightEff, _btagSF(lightJets, "light", syst="down_correlated"), lightPass
-        )
+        ))*bc
 
-        ret_weights["weight_btagSFbcCorrelatedUp"] = _combine(bcEff, _btagSF(bcJets, "bc", syst="up_correlated"), bcPass)
-        ret_weights["weight_btagSFbcCorrelatedDown"] = _combine(bcEff, _btagSF(bcJets, "bc", syst="down_correlated"), bcPass)
+        ret_weights["weight_btagSFbcCorrelatedUp"] = (_combine(bcEff, _btagSF(bcJets, "bc", syst="up_correlated"), bcPass)) *light
+        ret_weights["weight_btagSFbcCorrelatedDown"] = (_combine(bcEff, _btagSF(bcJets, "bc", syst="down_correlated"), bcPass))*light
 
     return ret_weights
 
