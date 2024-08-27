@@ -500,8 +500,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         else:
                             shape_up = df["fj_mass"] 
                             shape_down = df["fj_mass"] 
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=shape_up )
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=shape_down )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal )
+                        #can't do weight = shape_up here otherwise get weird messages like effect_up (CMS_HWW_boosted_jms_2018, SR1_singletop) has magnitude greater than 50% (1254.50%), you might be passing absolute values instead of relative
                
                 #end of: for region, region_sel in regions_sel.items(): 
                 # ------------------- individual sources of JES -------------------
