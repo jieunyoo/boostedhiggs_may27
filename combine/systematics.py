@@ -1,4 +1,6 @@
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets"]
+
+#bkgs = ["TTbar"]
 sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
 #samples = sigs + bkgs + ["Fake"]
 samples = sigs + bkgs 

@@ -476,11 +476,11 @@ def systs_from_parquets(years):
                     f"JER_{year}",
                     sigs + bkgs,
                 ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "shape"): (
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jmr_{year}", "lnN"): (
                     f"JMR_{year}",
                     sigs + bkgs,
                 ),
-                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "shape"): (
+                rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_jms_{year}", "lnN"): (
                     f"JMS_{year}",
                     sigs + bkgs,
                 ),

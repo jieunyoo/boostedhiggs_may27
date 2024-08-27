@@ -169,6 +169,9 @@ def shape_to_num(var, nom, clip=1.5):
     """
     nom_rate = np.sum(nom)
     var_rate = np.sum(var)
+	
+    print("nom_rate", nom_rate)
+    print("var_rate", var_rate)
 
     if var_rate == nom_rate:  # in cases when both are zero
         return 1

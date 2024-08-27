@@ -494,9 +494,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                             shape_up = df["fj_mass" + var[ch] + "_up"] 
                             shape_down = df["fj_mass" + var[ch] + "_down"] 
-                            if sample_to_use == "TTbar":
-                            	shape_up *= df["top_reweighting"]
-                            	shape_down *= df["top_reweighting"]
+                            #if sample_to_use == "TTbar":
+                            #	shape_up *= df["top_reweighting"]
+                            #	shape_down *= df["top_reweighting"]
                         else:
                             shape_up = df["fj_mass"] 
                             shape_down = df["fj_mass"] 
