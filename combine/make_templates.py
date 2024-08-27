@@ -59,8 +59,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
         },
     }
 
-    #mass_binning = [40,70,100,130,180]
-    mass_binning = [40,60,80,100,120,180]
+    mass_binning = [40,70,100,130,180]
+    #mass_binning = [40,60,80,100,120,180]
     #mass_binning = [40,180]
 
     hists = hist2.Hist(
@@ -421,20 +421,22 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
 #nominal has event weight, but event weight already has pileup weight in it since it is a product of various event weights, so i guess that is why farouk only has xsec weight.
 
+                        #nominal = df[f"weight_{ch}"] * xsecweight * df["weight_btag"]
                     for syst, (yrs, smpls, var) in SYST_DICT["common"].items():
                         #print('syst', syst)
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df[var[ch] + "Up"] * xsecweight * df["weight_btag"]
-                            shape_down = df[var[ch] + "Down"] * xsecweight * df["weight_btag"]
+                            shape_up = df[var[ch] + "Up"] * xsecweight * df["weight_btag"] 
+                            shape_down = df[var[ch] + "Down"] * xsecweight * df["weight_btag"] 
 
                             #if "numberBJets" in region_sel:  # if there's a bjet selection, add btag SF to the nominal weight
                              #   shape_up *= df["weight_btag"]
                               #  shape_down *= df["weight_btag"]
-
                             if sample_to_use == "TTbar":
                                 shape_up *= df["top_reweighting"]
                                 shape_down *= df["top_reweighting"]
+
+
                         else:
                             shape_up = nominal
                             shape_down = nominal
@@ -460,11 +462,16 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                     for syst, (yrs, smpls, var) in SYST_DICT["btag"].items():
 
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df[var[ch] + "Up"] * nominal
-                            shape_down = df[var[ch] + "Down"] * nominal
+                            shape_up = df[var[ch] + "Up"]  * xsecweight * df[f"weight_{ch}"]
+                            shape_down = df[var[ch] + "Down"]  * xsecweight * df[f"weight_{ch}"]
                         else:
                             shape_up = nominal
                             shape_down = nominal
+
+
+                        if sample_to_use == "TTbar":
+                            shape_up *= df["top_reweighting"]
+                            shape_down *= df["top_reweighting"]
 
                         hists.fill(
                             Sample=sample_to_use,
@@ -485,14 +492,16 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     for syst, (yrs, smpls, var) in SYST_DICT["JEC_systs_MASS"].items():
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            #print('got it')
-                            shape_up = df["fj_mass" + var[ch] + "_up"] 
-                            shape_down = df["fj_mass" + var[ch] + "_down"] 
+                            shape_up = df["fj_mass" + var[ch] + "_up"] * xsecweight * df[f"weight_{ch}"] * df["weight_btag"]
+                            shape_down = df["fj_mass" + var[ch] + "_down"] * xsecweight * df[f"weight_{ch}"] * df["weight_btag"]
+                            if sample_to_use == "TTbar":
+                            	shape_up *= df["top_reweighting"]
+                            	shape_down *= df["top_reweighting"]
                         else:
                             shape_up = df["fj_mass"] 
                             shape_down = df["fj_mass"] 
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=nominal )
-                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=nominal )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_up", Region=region, mass_observable=shape_up, weight=shape_up )
+                        hists.fill( Sample=sample_to_use, Systematic=f"{syst}_down", Region=region, mass_observable=shape_down, weight=shape_down )
                
                 #end of: for region, region_sel in regions_sel.items(): 
                 # ------------------- individual sources of JES -------------------
@@ -503,11 +512,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         for region, region_sel in regions_sel.items():  # e.g. pass, fail, top control region, etc.
 
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                                #region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
-
                                 region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
-                                #region_sel = region_sel.replace("met", "met" + var[ch] + f"_{variation}")
-
                                 region_sel = region_sel.replace("met_pt", "met_pt_" + var[ch] + f"_{variation}")
                                 #print('region_sel', region_sel)
 

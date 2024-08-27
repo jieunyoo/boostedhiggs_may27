@@ -32,7 +32,7 @@ CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
 def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
-#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=False):
+#def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
     sys_from_parquets = systs_from_parquets(years)
@@ -83,15 +83,21 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
             # SYSTEMATICS FROM PARQUETS
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
                 if sName in list_of_samples:
+                    print('sName', sName, sys_name)
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
+                    #print('syst_do', syst_do)
                     nominal = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": "nominal"}].values()
+                    #print('nominal', nominal)
 
                     if sys_value.combinePrior == "lnN":
                         eff_up = shape_to_num(syst_up, nominal)
                         eff_do = shape_to_num(syst_do, nominal)
+                        #print('up', eff_up)
+                        #print('down', eff_do)
 
                         if math.isclose(eff_up, eff_do, rel_tol=1e-2):  # if up and down are the same
+                            print('up and down are same')
                             sample.setParamEffect(sys_value, max(eff_up, eff_do))
                         else:
                             sample.setParamEffect(sys_value, max(eff_up, eff_do), min(eff_up, eff_do))
@@ -134,7 +140,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
         ch.setObservation(data_obs)
 
         # add mcstats
-        ch.autoMCStats(
+        ch.autoMCStats( 
+            #channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
             channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
         )
 
