@@ -93,11 +93,11 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
                     if sys_value.combinePrior == "lnN":
                         eff_up = shape_to_num(syst_up, nominal)
                         eff_do = shape_to_num(syst_do, nominal)
-                        print('up', eff_up)
-                        print('down', eff_do)
+                        #print('up', eff_up)
+                        #print('down', eff_do)
 
                         if math.isclose(eff_up, eff_do, rel_tol=1e-2):  # if up and down are the same
-                            print('up and down are same')
+                            #print('up and down are same')
                             sample.setParamEffect(sys_value, max(eff_up, eff_do))
                         else:
                             sample.setParamEffect(sys_value, max(eff_up, eff_do), min(eff_up, eff_do))

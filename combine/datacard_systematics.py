@@ -435,10 +435,10 @@ def systs_from_parquets(years):
 
     # systematics correlated across all years
     JEC_systs_correlated = {
-    #    rl.NuisanceParameter("unclustered_Energy", "shape"): (
-    #        "UES",
-    #        sigs + bkgs,
-    #    ),
+        rl.NuisanceParameter("unclustered_Energy", "shape"): (
+            "UES",
+            sigs + bkgs,
+        ),
         # individual sources
         rl.NuisanceParameter("CMS_scale_j_FlavQCD", "shape"): (
             "JES_FlavorQCD",

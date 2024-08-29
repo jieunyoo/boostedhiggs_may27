@@ -171,7 +171,7 @@ def get_systematic_dict(years):
             },
         }
 
-    # JEC / JMS
+    # JEC / UES
     JEC_systs_correlated = {
         "JES_FlavorQCD": (
             years,
@@ -203,11 +203,6 @@ def get_systematic_dict(years):
             sigs + bkgs,
             {"ele": "JES_Absolute", "mu": "JES_Absolute"},
         ),
-     #   "UES": (
-     #       years,
-     #       sigs + bkgs,
-     #       {"ele": "UES", "mu": "UES"},
-     #   ),
     }
 
     JEC_systs_uncorrelated = {}
@@ -288,11 +283,31 @@ def get_systematic_dict(years):
     }
 
 
+    UES_systs = {}
+    for year in years:
+        if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
+            yearlabel = "2016"
+        else:
+            yearlabel = year
+
+        UES_systs = {
+            **UES_systs,
+            **{
+        "UES": (
+            years,
+            sigs + bkgs,
+            {"ele": "UES", "mu": "UES"},
+        ),
+        },
+    }
+
+
     SYST_DICT = {
         "common": {**COMMON_systs_correlated, **COMMON_systs_uncorrelated},
         "btag": {**BTAG_systs_correlated, **BTAG_systs_uncorrelated},
         "JEC": {**JEC_systs_correlated, **JEC_systs_uncorrelated},
         "JEC_systs_MASS": {**JEC_systs_MASS},
+        "UES_systs": {**UES_systs},
     }
 
     return SYST_DICT
