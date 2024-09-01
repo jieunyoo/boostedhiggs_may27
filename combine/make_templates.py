@@ -577,7 +577,7 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}", Region=region, mass_observable=shape_variation, weight=nominal,)
 
 
-    for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down"]:
+    for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down", "fakes_DR_Up", "fakes_DR_Down"]:
         for year in years:
             #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
             #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/0-1_ele.parquet")

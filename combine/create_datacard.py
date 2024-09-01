@@ -41,7 +41,6 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
     model = rl.Model("testModel")
 
     # define the signal and control regions
-    #SIG_regions = ["VBF", "ggFpt250to350", "ggFpt350to500", "ggFpt500toInf"]
     SIG_regions = ["SR1"]
     CONTROL_regions = ["TopCR", "WJetsCR"]
 
@@ -121,10 +120,12 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
         name_in_card = {
             #"FR_stat": f"{CMS_PARAMS_LABEL}_FakeRate_statistical_uncertainty",
-            "fakes_SF": f"{CMS_PARAMS_LABEL}_FakeRate_EWK_SF_statistical_uncertainty",
+            "fakes_SF": f"{CMS_PARAMS_LABEL}_FakeRate_EWK_SF_statistical_uncertainty", #this is from moving SF up and down 20%
+
+            "fakes_DR": f"{CMS_PARAMS_LABEL}_FakeRate_flavor_uncertainty", #this is from moving SF up and down 20%
         }
         #for sys_name in ["FR_stat", "EWK_SF"]:
-        for sys_name in ["fakes_SF"]:
+        for sys_name in ["fakes_SF", "fakes_DR"]:
 
             sys_value = rl.NuisanceParameter(name_in_card[sys_name], "shape")
             syst_up = hists_templates[{"Sample": "Fake", "Region": ChName, "Systematic": sys_name + "_Up"}].values()
@@ -142,7 +143,6 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
         # add mcstats
         ch.autoMCStats( 
-            #channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
             channel_name=f"{CMS_PARAMS_LABEL}_{ChName}",
         )
 
