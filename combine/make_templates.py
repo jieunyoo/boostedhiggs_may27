@@ -577,29 +577,29 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             hists.fill( Sample=sample_to_use, Systematic=f"{syst}_{variation}", Region=region, mass_observable=shape_variation, weight=nominal,)
 
 
- #   for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down"]:
- #       for year in years:
-        #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
+    for variation in ["fakes_nominal", "fakes_SF_Up", "fakes_SF_Down"]:
+        for year in years:
+            #data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele.parquet")
             #data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/0-1_ele.parquet")
-#            data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_ele.parquet")
+            data = pd.read_parquet(f"/uscms/home/jieun201/nobackup/YOURWORKINGAREA/Fake_{year}/outfiles/{variation}_ele.parquet")
             #print('data', data)
-#            for selection in presel["ele"]:
-                #logging.info(f"Applying {selection} selection on {len(data)} events")
-#                data = data.query(presel["ele"][selection])
-#                data["THWW"] = get_finetuned_score(data, model_path)
-#            for region in hists.axes["Region"]:
-#                df = data.copy()
-#                logging.info(f"Applying {region} selection on {len(data)} events")
-#                df = df.query(regions_sel[region])
-#                logging.info(f"Will fill the histograms with the remaining {len(data)} events")
+            for selection in presel["ele"]:
+                logging.info(f"Applying {selection} selection on {len(data)} events")
+                data = data.query(presel["ele"][selection])
+                data["THWW"] = get_finetuned_score(data, model_path)
+            for region in hists.axes["Region"]:
+                df = data.copy()
+                logging.info(f"Applying {region} selection on {len(data)} events")
+                df = df.query(regions_sel[region])
+                logging.info(f"Will fill the histograms with the remaining {len(data)} events")
                # print('df', df['fj_mass'])
             #need to rename nonprompt_event_weight as event_weight
-                #hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
-#                if variation == "fakes_nominal":
-#                    hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
-#                else:
-#                    print('variation', variation)
-#                    hists.fill( Sample="Fake", Systematic=variation, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+                hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+                if variation == "fakes_nominal":
+                    hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+                else:
+                    print('variation', variation)
+                    hists.fill( Sample="Fake", Systematic=variation, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
 
 
     return hists
