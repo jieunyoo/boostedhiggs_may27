@@ -31,7 +31,7 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
 #def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
@@ -82,7 +82,6 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
             # SYSTEMATICS FROM PARQUETS
             for sys_value, (sys_name, list_of_samples) in sys_from_parquets.items():
                 if sName in list_of_samples:
-                    print('sName', sName, sys_name)
                     syst_up = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_up"}].values()
                     syst_do = hists_templates[{"Sample": sName, "Region": ChName, "Systematic": sys_name + "_down"}].values()
                     #print('syst_do', syst_do)
@@ -107,13 +106,13 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=T
 
             ch.addSample(sample)
 
-
         # add Fake
         sName = "Fake"
         templ = get_template(hists_templates, sName, ChName)
-        #if templ == 0:
-         #   continue
+        if templ == 0:
+            continue
         sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
+        print('sample', sample)
 
         # add Fake unc.
         sample.setParamEffect(rl.NuisanceParameter(f"{CMS_PARAMS_LABEL}_Fake_SF_uncertainty", "lnN"), 1.5)
@@ -179,6 +178,7 @@ def main(args):
     lep_channels = args.channels.split(",")
 
     hists_templates = load_templates(years, lep_channels, args.outdir)
+    print('hists', hists_templates)
 
     model = create_datacard(hists_templates, years, lep_channels)
 
