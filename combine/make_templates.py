@@ -264,8 +264,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                         if sample_to_use == "TTbar":
                             nominal *= df["top_reweighting"]
 
-                        if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                            nominal *= 0.85
+
+                        #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                         #   nominal *= 0.85
 
 
                     ###################################
@@ -475,9 +476,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             shape_up = nominal
                             shape_down = nominal
 
-                        if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                            shape_up *= 0.85 
-                            shape_down *= 0.85 
+                        #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                         #   shape_up *= 0.85 
+                          #  shape_down *= 0.85 
 
                         if sample_to_use == "TTbar":
                             shape_up *= df["top_reweighting"]
@@ -502,8 +503,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
 
                     for syst, (yrs, smpls, var) in SYST_DICT["JEC_systs_MASS"].items():
                         if (sample_to_use in smpls) and (year in yrs) and (ch in var):
-                            shape_up = df["fj_mass" + var[ch] + "_up"] 
-                            shape_down = df["fj_mass" + var[ch] + "_down"] 
+                            shape_up = df["fj_mass" + var[ch] + "_up"]  
+                            shape_down = df["fj_mass" + var[ch] + "_down"]
                         else:
                             shape_up = df["fj_mass"] 
                             shape_down = df["fj_mass"] 
@@ -530,8 +531,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight * df["weight_btag"]
                                 
-                            if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                                nominal *= 0.85
+                            #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                             #   nominal *= 0.85
                             if sample_to_use == "TTbar":
                                 nominal *= df["top_reweighting"]
                             if sample_to_use == "EWKvjets":
@@ -560,8 +561,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight * df["weight_btag"]
 
-                            if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                                nominal *= 0.85
+                            #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                             #   nominal *= 0.85
                             if sample_to_use == "TTbar":
                                 nominal *= df["top_reweighting"]
                             if sample_to_use == "EWKvjets":
@@ -592,52 +593,13 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                 logging.info(f"Applying {region} selection on {len(data)} events")
                 df = df.query(regions_sel[region])
                 logging.info(f"Will fill the histograms with the remaining {len(data)} events")
-               # print('df', df['fj_mass'])
-            #need to rename nonprompt_event_weight as event_weight
-                hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
+
                 if variation == "fakes_nominal":
                     hists.fill( Sample="Fake", Systematic="nominal", Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
                 else:
                     print('variation', variation)
                     hists.fill( Sample="Fake", Systematic=variation, Region=region, mass_observable=df["fj_mass"], weight=df["event_weight"],  )
 
-
-    return hists
-
-#NOTE - by default this is off
-    if add_fake:
-        for variation in ["FR_Nominal", "FR_stat_Up", "FR_stat_Down", "EWK_SF_Up", "EWK_SF_Down"]:
-            for year in years:
-                data = pd.read_parquet(f"{samples_dir[year]}/fake_{year}_ele_{variation}.parquet")
-                # apply selection
-                for selection in presel["ele"]:
-                    logging.info(f"Applying {selection} selection on {len(data)} events")
-                    data = data.query(presel["ele"][selection])
-                data["event_weight"] *= 0.6  # the closure test SF
-                for region in hists.axes["Region"]:
-                    df = data.copy()
-                    logging.info(f"Applying {region} selection on {len(df)} events")
-                    df = df.query(regions_sel[region])
-                    logging.info(f"Will fill the histograms with the remaining {len(df)} events")
-
-                    if variation == "FR_Nominal":
-                        hists.fill(
-                            Sample="Fake",
-                            Systematic="nominal",
-                            Region=region,
-                            mass_observable=df["fj_mass"],
-                            weight=df["event_weight"],
-                        )
-                    else:
-                        hists.fill(
-                            Sample="Fake",
-                            Systematic=variation,
-                            Region=region,
-                            mass_observable=df["fj_mass"],
-                            weight=df["event_weight"],
-                        )
-
-    logging.info(hists)
 
     return hists
 
