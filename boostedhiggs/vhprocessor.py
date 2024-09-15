@@ -432,10 +432,22 @@ class vhProcessor(processor.ProcessorABC):
            # events = events[pw_pass]
 
 #add in higgs mass for fun
+
+        candidateHiggs = ak.zip (
+        {
+        "pt": candidatefj.pt,
+        "eta": candidatefj.eta,
+        "phi": candidatefj.phi,
+        "mass": candidatefj.mass,
+        },
+            with_name="PtEtaPhiMCandidate",
+        behavior=candidate.behavior,
+    )
+
         candidateNeutrino = ak.zip(
                 {
                     "pt": met.pt,
-                    "eta": candidatelep_p4.eta,
+                    "eta": candidateHiggs.eta,
                     "phi": met.phi,
                     "mass": 0,
                     "charge": 0,
@@ -443,13 +455,13 @@ class vhProcessor(processor.ProcessorABC):
                 with_name="PtEtaPhiMCandidate",behavior=candidate.behavior,)
 
         rec1 = candidatelep_p4 + candidateNeutrino
-        rec2 = candidatefj - candidatelep_p4
+        rec2 = candidateHiggs - candidatelep_p4
         rec_higgs = rec1 + rec2
 
         #testMet
-        metUnclusterNominal = met.pt
-        metUnclusterUp = met.MET_UnclusteredEnergy.up.pt
-        metUnclusterDown = met.MET_UnclusteredEnergy.down.pt
+        #metUnclusterNominal = met.pt
+        #metUnclusterUp = met.MET_UnclusteredEnergy.up.pt
+        #metUnclusterDown = met.MET_UnclusteredEnergy.down.pt
         #print('met.pt', ak.to_list(met)[0:5])
         #print('metUnclusterUp', ak.to_list(metUnclusterUp)[0:5])
         #print('metUnclusterDown', ak.to_list(metUnclusterDown)[0:5])
@@ -482,8 +494,8 @@ class vhProcessor(processor.ProcessorABC):
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "higgsMass": rec_higgs.mass,
        
-            "ues_up": met.MET_UnclusteredEnergy.up.pt,
-            "ues_down": met.MET_UnclusteredEnergy.down.pt,
+        #    "ues_up": met.MET_UnclusteredEnergy.up.pt,
+        #    "ues_down": met.MET_UnclusteredEnergy.down.pt,
        #check JEC
             "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
             "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
@@ -575,13 +587,13 @@ class vhProcessor(processor.ProcessorABC):
                     fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
         #*************************
-        #self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
-        #self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
+    #    self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
+    #    self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
 
         self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
         self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 40 )) 
-        #self.add_selection(name="MET", sel=(met.pt > 30))
+     #   self.add_selection(name="MET", sel=(met.pt > 30))
 
 
         # gen-level matching
