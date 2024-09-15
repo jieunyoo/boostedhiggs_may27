@@ -50,9 +50,9 @@ def systs_not_from_parquets(years: List[str], lep_channels: List[str]):
     systs_dict["all_samples"], systs_dict_values["all_samples"] = {}, {}
 
     # lumi systematics
-    if "2016" in years:
-        systs_dict["all_samples"]["lumi_13TeV_2016"] = rl.NuisanceParameter("lumi_13TeV_2016", "lnN")
-        systs_dict_values["all_samples"]["lumi_13TeV_2016"] = (1.01 ** ((LUMI["2016"] + LUMI["2016APV"]) / full_lumi), None)
+   #if "2016" in years:
+   #     systs_dict["all_samples"]["lumi_13TeV_2016"] = rl.NuisanceParameter("lumi_13TeV_2016", "lnN")
+   #     systs_dict_values["all_samples"]["lumi_13TeV_2016"] = (1.01 ** ((LUMI["2016"] + LUMI["2016APV"]) / full_lumi), None)
     if "2017" in years:
         systs_dict["all_samples"]["lumi_13TeV_2017"] = rl.NuisanceParameter("lumi_13TeV_2017", "lnN")
         systs_dict_values["all_samples"]["lumi_13TeV_2017"] = (1.02 ** (LUMI["2017"] / full_lumi), None)

@@ -31,7 +31,7 @@ pd.set_option("mode.chained_assignment", None)
 CMS_PARAMS_LABEL = "CMS_HWW_boosted"
 
 
-def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
+def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=True, add_wjets_constraint=True):
 #def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=False, add_wjets_constraint=False):
     # define the systematics
     systs_dict, systs_dict_values = systs_not_from_parquets(years, lep_channels)
@@ -109,8 +109,8 @@ def create_datacard(hists_templates, years, lep_channels, add_ttbar_constraint=F
         # add Fake
         sName = "Fake"
         templ = get_template(hists_templates, sName, ChName)
-        if templ == 0:
-            continue
+        #if templ == 0:
+         #   continue
         sample = rl.TemplateSample(ch.name + "_" + labels[sName], rl.Sample.BACKGROUND, templ)
         print('sample', sample)
 

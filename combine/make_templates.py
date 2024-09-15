@@ -29,6 +29,14 @@ sigs = ["ggF", "VBF", "WH", "ZH", "ttH"]
 #bkgs = ["TTbar", "WJetsLNu", "SingleTop", "DYJets", "WZQQ", "Diboson", "EWKvjets", "Fake"]
 bkgs = ["TTbar", "WJetsLNu", "SingleTop", "WZQQ", "Diboson", "EWKvjets", "DYJets"]
 
+WFACTOR = 1.5
+
+#2016: 1.0
+#2016APV: 1.5
+#2017: 1.3
+#2018: 0.85
+
+
 
 def get_templates(years, channels, samples, samples_dir, regions_sel, model_path, add_fake=False):
     """
@@ -265,8 +273,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             nominal *= df["top_reweighting"]
 
 
-                        #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                         #   nominal *= 0.85
+                        if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                            nominal *= WFACTOR
 
 
                     ###################################
@@ -476,9 +484,9 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             shape_up = nominal
                             shape_down = nominal
 
-                        #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                         #   shape_up *= 0.85 
-                          #  shape_down *= 0.85 
+                        if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                            shape_up *= WFACTOR
+                            shape_down *= WFACTOR
 
                         if sample_to_use == "TTbar":
                             shape_up *= df["top_reweighting"]
@@ -522,7 +530,10 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             if (sample_to_use in smpls) and (year in yrs) and (ch in var):
                                 region_sel = region_sel.replace("fj_pt", "fj_pt" + var[ch] + f"_{variation}")
                                 region_sel = region_sel.replace("met_pt", "met_pt_" + var[ch] + f"_{variation}")
-                                #print('region_sel', region_sel)
+
+                                region_sel = region_sel.replace("numberBJets_Medium_OutsideFatJets", "numberBJets_" + var[ch] + f"_{variation}")
+
+                                print('region_sel', region_sel)
                             df = data.copy()
                             df = df.query(region_sel)
                             # ------------------- Nominal -------------------
@@ -531,8 +542,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight * df["weight_btag"]
                                 
-                            #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                             #   nominal *= 0.85
+                            if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                                nominal *= WFACTOR
                             if sample_to_use == "TTbar":
                                 nominal *= df["top_reweighting"]
                             if sample_to_use == "EWKvjets":
@@ -561,8 +572,8 @@ def get_templates(years, channels, samples, samples_dir, regions_sel, model_path
                             else:
                                 nominal = df[f"weight_{ch}"] * xsecweight * df["weight_btag"]
 
-                            #if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
-                             #   nominal *= 0.85
+                            if sample_to_use == "TTbar" or sample_to_use == "ggF" or sample_to_use == "VBF" or sample_to_use == "WH"or sample_to_use == "ttH" or sample_to_use == "SingleTop" or sample_to_use == "WQZZ" or sample_to_use == "Diboson":
+                                nominal *= WFACTOR
                             if sample_to_use == "TTbar":
                                 nominal *= df["top_reweighting"]
                             if sample_to_use == "EWKvjets":
