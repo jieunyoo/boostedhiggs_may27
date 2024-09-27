@@ -157,12 +157,12 @@ def get_systematic_dict(years):
         BTAG_systs_uncorrelated = {
             **BTAG_systs_uncorrelated,
             **{
-                f"weight_btagSFlight_{year}": (
+                f"weight_btagSFlight{year}": (
                     year,
                     sigs + bkgs,
                     {"ele": f"weight_btagSFlight{yearlabel}", "mu": f"weight_btagSFlight{yearlabel}"},
                 ),
-                f"weight_btagSFbc_{year}": (
+                f"weight_btagSFbc{year}": (
                     year,
                     sigs + bkgs,
                     {"ele": f"weight_btagSFbc{yearlabel}", "mu": f"weight_btagSFbc{yearlabel}"},
@@ -271,12 +271,14 @@ def get_systematic_dict(years):
                 f"JMR_{year}": (
                     year,
                     sigs + bkgs,
-                    {"ele": "JMR", "mu": "JMR"},
+                   #  {"ele": "JMR", "mu": "JMR"},
+                    {"ele": f"JMR_{yearlabel}", "mu": f"JMR_{yearlabel}"},
                 ),
                 f"JMS_{year}": (
                     year,
                     sigs + bkgs,
-                    {"ele": "JMS", "mu": "JMS"},
+                    # {"ele": "JMS", "mu": "JMS"},
+                    {"ele": f"JMS_{yearlabel}", "mu": f"JMS_{yearlabel}"},
                 ),
                 },
     }
@@ -300,13 +302,32 @@ def get_systematic_dict(years):
         },
     }
 
+    TRIGGER_systs = {}
+    for year in years:
+        if "APV" in year:  # all APV parquets don't have APV explicitly in the systematics
+            yearlabel = "2016"
+        else:
+            yearlabel = year
+
+        TRIGGER_systs = {
+            **TRIGGER_systs,
+            **{
+        "weight_trigger": (
+            years,
+            sigs + bkgs,
+            {"ele": "weight_ele_trigger", },
+        ),
+        },
+    }
 
     SYST_DICT = {
         "common": {**COMMON_systs_correlated, **COMMON_systs_uncorrelated},
-        "btag": {**BTAG_systs_correlated, **BTAG_systs_uncorrelated},
+        "btag1": {**BTAG_systs_correlated},
+        "btag2": {**BTAG_systs_uncorrelated},
         "JEC": {**JEC_systs_correlated, **JEC_systs_uncorrelated},
-        "JEC_systs_MASS": {**JEC_systs_MASS},
-        "UES_systs": {**UES_systs},
+        "JEC_systs_MASS": {**JEC_systs_MASS, **JEC_systs_MASS},
+        "UES_systs": {**UES_systs, **UES_systs, },
+        "TRIGGER_systs": {**TRIGGER_systs, **TRIGGER_systs},
     }
 
     return SYST_DICT
