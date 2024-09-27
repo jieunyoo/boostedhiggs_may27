@@ -27,6 +27,8 @@ from boostedhiggs.corrections import (
     corrected_msoftdrop,
     get_btag_weights,
     get_jec_jets,
+
+    get_jec_jets2,
     get_jmsr,
     getJECVariables,
     getJECVariables_Higgs,
@@ -47,11 +49,6 @@ warnings.filterwarnings("ignore", message="divide by zero encountered in log")
 warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 np.seterr(invalid="ignore")
 
-def getHiggs(genparticles):
-    absid = abs(genparticles.pdgId)
-    return genparticles[(absid == 25)& genparticles.hasFlags(['fromHardProcess', 'isLastCopy'])
-    ]
-
 
 def build_p4(cand):
     return ak.zip(
@@ -67,21 +64,21 @@ def build_p4(cand):
     )
 
 def VScore(goodFatJetsSelected):
-    num = (
-        goodFatJetsSelected.particleNetMD_Xbb
-        + goodFatJetsSelected.particleNetMD_Xcc
-        + goodFatJetsSelected.particleNetMD_Xqq
-    )
-    den = (
-        goodFatJetsSelected.particleNetMD_Xbb
-        + goodFatJetsSelected.particleNetMD_Xcc
-        + goodFatJetsSelected.particleNetMD_Xqq
-        + goodFatJetsSelected.particleNetMD_QCD
+    num = ( goodFatJetsSelected.particleNetMD_Xbb + goodFatJetsSelected.particleNetMD_Xcc + goodFatJetsSelected.particleNetMD_Xqq )
+    den = ( goodFatJetsSelected.particleNetMD_Xbb + goodFatJetsSelected.particleNetMD_Xcc + goodFatJetsSelected.particleNetMD_Xqq + goodFatJetsSelected.particleNetMD_QCD
     )
     score = num / den
     return score
 
-class vhProcessor(processor.ProcessorABC):
+def getNumberBTaggedJets(ak4jets, higgsJet, VJet,year):
+    dr_ak8Jets_HiggsCandidateJet_Uncertainty = ak4jets.delta_r(higgsJet)
+    dr_ak8Jets_VCandidateJet_Uncertainty = ak4jets.delta_r(VJet)
+    ak4_outsideBothJets_Uncertainty = ak4jets[ (dr_ak8Jets_HiggsCandidateJet_Uncertainty > 0.8) & (dr_ak8Jets_VCandidateJet_Uncertainty  > 0.8) ]
+    #NumOtherJetsOutsideBothJets_Uncertainty_down = ak.num(ak4_outsideBothJets_Uncertainty_down)
+    NumOtherJetsOutsideBothJets_Uncertainty = ak.sum( ak4_outsideBothJets_Uncertainty.btagDeepFlavB > btagWPs["deepJet"][year]["M"],axis=1, )
+    return NumOtherJetsOutsideBothJets_Uncertainty
+
+class vhprocessorAK4(processor.ProcessorABC):
     def __init__(
         self,
         year="2017",
@@ -100,9 +97,7 @@ class vhProcessor(processor.ProcessorABC):
         self._getLPweights = getLPweights
         self._uselooselep = uselooselep
         #self._fakevalidation = fakevalidation
-
         self._output_location = output_location
-
         # trigger paths
         with importlib.resources.path("boostedhiggs.data", "triggers.json") as path:
             with open(path, "r") as f:
@@ -193,8 +188,6 @@ class vhProcessor(processor.ProcessorABC):
         self.selections = {ch: PackedSelection() for ch in self._channels}
         self.cutflows = {ch: {} for ch in self._channels}
 
-        #fix for TTbar weights
-        #if "TT" in dataset or "ST_" in dataset:
         if "TT" in dataset or "ST_" in dataset or "DYJets" in dataset:
             sumgenweight = ak.sum(np.sign(events.genWeight)) if self.isMC else nevents
         else:
@@ -307,17 +300,9 @@ class vhProcessor(processor.ProcessorABC):
         fatjets = events.FatJet
         fatjets["msdcorr"] = corrected_msoftdrop(fatjets)
         fatjet_selector = (fatjets.pt > 200) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
-        #fatjet_selector = (fatjets.pt > 250) & (abs(fatjets.eta) < 2.5) & fatjets.isTight
         good_fatjets = fatjets[fatjet_selector]
         good_fatjets = good_fatjets[ak.argsort(good_fatjets.pt, ascending=False)]  # sort them by pt
         NumFatjets = ak.num(good_fatjets)
-
-        #for generator studies
-        FirstFatjet = ak.firsts(good_fatjets[:, 0:1])
-
-
-        #check fat jet pt
-        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
 
         #JETS**************************************************
         #this applies JEC to all the fat jets (same as farouk)
@@ -325,8 +310,6 @@ class vhProcessor(processor.ProcessorABC):
             events, good_fatjets, self._year, not self.isMC, self.jecs, fatjets=True
         )
         #******************************************************
-
-        #print('good fat jet pt', ak.to_list(good_fatjets.pt)[0:100])
 
         # OBJECT: candidate fatjet
         fj_idx_lep = ak.argmin(good_fatjets.delta_r(candidatelep_p4), axis=1, keepdims=True)
@@ -351,83 +334,191 @@ class vhProcessor(processor.ProcessorABC):
         maxScoreIndexMask = (allScores == ak.max(masked, axis=1))
         #VIndex = ak.firsts(fatJetIndices[maxScoreIndexMask])
         VIndex = fatJetIndices[maxScoreIndexMask]
-        #print('vIndex', ak.to_list(VIndex)[0:100])
-        #print('fj_idx', ak.to_list(fj_idx_lep)[0:100])
 
         dr_two_jets = candidatefj.delta_r(second_fj)
 
         Vboson_Jet_mass, jmsr_shifted_fatjetvars = get_jmsr(secondFJ, num_jets=1, year=self._year, isData=not self.isMC)
         correctedVbosonNominalMass = ak.firsts(Vboson_Jet_mass)
 
-        #print('correctedMass', ak.to_list(correctedVbosonNominalMass)[0:200])
-
         #*************************************************************************
-
         # OBJECT: AK4 jets
         jets, jec_shifted_jetvars = get_jec_jets(events, events.Jet, self._year, not self.isMC, self.jecs, fatjets=False)
-
-#MET
         met = met_factory.build(events.MET, jets, {}) if self.isMC else events.MET
 
-
-##need to get jets where pt is varied; the variable we care about is number B jets; does changing pt change number of b jets
-        jet_selector = (
-            (jets.pt > 30)
-            & (abs(jets.eta) < 5.0)
-            & jets.isTight
-            & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2))
-        )
-
-#try printing
-        #print('jet_shiftted', jec_shifted_jetvars['pt'])
-#for shift, vals in jec_shifted_fatjetvars["pt"].items():
-
-
-
+        jet_selector = ( (jets.pt > 30) & (abs(jets.eta) < 5.0) & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)) )
 
         goodjets = jets[jet_selector]
-        # OBJECT: b-jets (only for jets with abs(eta)<2.5)
-        #bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (abs(jets.eta) < 2.5)
         bjet_selector = (jet_selector) & (jets.delta_r(candidatefj) > 0.8) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
-
-        #bjet_selector = (jet_selector) & (jets.delta_r(second_fj) > 0.8) & (abs(jets.eta) < 2.5)
-
-
-
-        #ak4_bjet_candidate = jets[bjet_selector]
-        # bjet counts for SR and TTBar Control Region
         dr_ak8Jets_HiggsCandidateJet = goodjets.delta_r(candidatefj)
         dr_ak8Jets_VCandidateJet = goodjets.delta_r(second_fj)
         ak4_outsideBothJets = goodjets[ (dr_ak8Jets_HiggsCandidateJet > 0.8) & (dr_ak8Jets_VCandidateJet  > 0.8) ]
         NumOtherJetsOutsideBothJets = ak.num(ak4_outsideBothJets)
         n_bjets_M_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"],axis=1, )
-        n_bjets_T_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        #n_bjets_T_OutsideBothJets = ak.sum( ak4_outsideBothJets.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+
+        #ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
+        #ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
+        #n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        #n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        #n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
+        #n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        #good_jetsOutsideHiggsV = ak4_outsideBothJets[ak.argsort(ak4_outsideBothJets.pt, ascending=False)]  # sort them by pt
+
+        #ak4_jet1 = good_jetsOutsideHiggsV[:, 0:1]
+        #ak4_jet2 = good_jetsOutsideHiggsV[:, 1:2]
 
 
+    #for ak4 jet uncertaintites only
+    #Jet_nominal = jec_shifted_jetvars['pt']['']
+        JES_down = jec_shifted_jetvars['pt']['JES_down']
+        JES_up = jec_shifted_jetvars['pt']['JES_up']
+        JER_down = jec_shifted_jetvars['pt']['JER_down']
+        JER_up = jec_shifted_jetvars['pt']['JER_up']
+        JES_FlavorQCD_up = jec_shifted_jetvars['pt']['JES_FlavorQCD_up']
+        JES_FlavorQCD_down = jec_shifted_jetvars['pt']['JES_FlavorQCD_down']
+        JES_RelativeBal_up = jec_shifted_jetvars['pt']['JES_RelativeBal_up']
+        JES_RelativeBal_down = jec_shifted_jetvars['pt']['JES_RelativeBal_down']
+        JES_HF_up = jec_shifted_jetvars['pt']['JES_HF_up']
+        JES_HF_down = jec_shifted_jetvars['pt']['JES_HF_down']
+        JES_BBEC1_up = jec_shifted_jetvars['pt']['JES_BBEC1_up']
+        JES_BBEC1_down = jec_shifted_jetvars['pt']['JES_BBEC1_down']
+        JES_EC2_up = jec_shifted_jetvars['pt']['JES_EC2_up']
+        JES_EC2_down = jec_shifted_jetvars['pt']['JES_EC2_down']
+        JES_Absolute_up = jec_shifted_jetvars['pt']['JES_Absolute_up']
+        JES_Absolute_down = jec_shifted_jetvars['pt']['JES_Absolute_down']
+        
+        JES_BBEC1_year_up = jec_shifted_jetvars['pt'][f'JES_BBEC1_{self._year}_up']
+        JES_BBEC1_year_down = jec_shifted_jetvars['pt'][f'JES_BBEC1_{self._year}_down']
+        JES_RelativeSample_year_up = jec_shifted_jetvars['pt'][f'JES_RelativeSample_{self._year}_up']
+        JES_RelativeSample_year_down = jec_shifted_jetvars['pt'][f'JES_RelativeSample_{self._year}_down']
+        JES_EC2_year_up = jec_shifted_jetvars['pt'][f'JES_EC2_{self._year}_up']
+        JES_EC2_year_down = jec_shifted_jetvars['pt'][f'JES_EC2_{self._year}_down']
+        JES_HF_year_up = jec_shifted_jetvars['pt'][f'JES_HF_{self._year}_up']
+        JES_HF_year_down = jec_shifted_jetvars['pt'][f'JES_HF_{self._year}_down']
+        JES_Absolute_year_up = jec_shifted_jetvars['pt'][f'JES_Absolute_{self._year}_up']
+        JES_Absolute_year_down = jec_shifted_jetvars['pt'][f'JES_Absolute_{self._year}_down']
+        
+        JES_Total_up = jec_shifted_jetvars['pt']['JES_Total_up']
+        JES_Total_down = jec_shifted_jetvars['pt']['JES_Total_down']
+
+        #print('jet nominal', ak.to_list(Jet_nominal)[0:100])
+        #print('jes down', ak.to_list(JES_down)[0:100])
+
+        jet_selector_JES_down = ( (JES_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_down = jets[jet_selector_JES_down]
+        numBJets_JES_down =getNumberBTaggedJets(goodjets_JES_down, candidatefj, second_fj,self._year)
+        jet_selector_JES_up = ( (JES_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_up = jets[jet_selector_JES_up]
+        numBJets_JES_up =getNumberBTaggedJets(goodjets_JES_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JER_down = ( (JER_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JER_down = jets[jet_selector_JER_down]
+        numBJets_JER_down =getNumberBTaggedJets(goodjets_JER_down, candidatefj, second_fj,self._year)
+        jet_selector_JER_up = ( (JER_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JER_up = jets[jet_selector_JER_up]
+        numBJets_JER_up =getNumberBTaggedJets(goodjets_JER_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_FlavorQCD_up = ( (JES_FlavorQCD_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_FlavorQCD_up = jets[jet_selector_JES_FlavorQCD_up]
+        numBJets_JES_FlavorQCD_up =getNumberBTaggedJets(goodjets_JES_FlavorQCD_up, candidatefj, second_fj,self._year)
+        jet_selector_JES_FlavorQCD_down = ( (JES_FlavorQCD_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_FlavorQCD_down = jets[jet_selector_JES_FlavorQCD_down]
+        numBJets_JES_FlavorQCD_down =getNumberBTaggedJets(goodjets_JES_FlavorQCD_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_RelativeBal_up = ( (JES_RelativeBal_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_RelativeBal_up = jets[jet_selector_JES_RelativeBal_up]
+        numBJets_JES_RelativeBal_up =getNumberBTaggedJets(goodjets_JES_RelativeBal_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_RelativeBal_down = ( (JES_RelativeBal_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_RelativeBal_down = jets[jet_selector_JES_RelativeBal_down]
+        numBJets_JES_RelativeBal_down =getNumberBTaggedJets(goodjets_JES_RelativeBal_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_HF_up = ( (JES_HF_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_HF_up = jets[jet_selector_JES_HF_up]
+        numBJets_JES_HF_up =getNumberBTaggedJets(goodjets_JES_HF_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_HF_down = ( (JES_HF_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_HF_down = jets[jet_selector_JES_HF_down]
+        numBJets_JES_HF_down =getNumberBTaggedJets(goodjets_JES_HF_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_BBEC1_up = ( (JES_BBEC1_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_BBEC1_up = jets[jet_selector_JES_BBEC1_up]
+        numBJets_JES_BBEC1_up =getNumberBTaggedJets(goodjets_JES_BBEC1_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_BBEC1_down = ( (JES_BBEC1_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_BBEC1_down = jets[jet_selector_JES_BBEC1_down]
+        numBJets_JES_BBEC1_down =getNumberBTaggedJets(goodjets_JES_BBEC1_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_EC2_up = ( (  JES_EC2_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_EC2_up = jets[jet_selector_JES_EC2_up]
+        numBJets_JES_EC2_up =getNumberBTaggedJets(goodjets_JES_EC2_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_EC2_down = ( (JES_EC2_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_EC2_down = jets[jet_selector_JES_EC2_down]
+        numBJets_JES_EC2_down =getNumberBTaggedJets(goodjets_JES_EC2_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Absolute_up = ( (JES_Absolute_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Absolute_up = jets[jet_selector_JES_Absolute_up]
+        numBJets_JES_Absolute_up =getNumberBTaggedJets(goodjets_JES_Absolute_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Absolute_down = ( (JES_Absolute_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Absolute_down = jets[jet_selector_JES_Absolute_down]
+        numBJets_JES_Absolute_down =getNumberBTaggedJets(goodjets_JES_Absolute_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_BBEC1_year_up = ( (JES_BBEC1_year_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_BBEC1_year_up = jets[jet_selector_JES_BBEC1_year_up]
+        numBJets_JES_BBEC1_year_up =getNumberBTaggedJets(goodjets_JES_BBEC1_year_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_BBEC1_year_down = ( (JES_BBEC1_year_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_BBEC1_year_down = jets[jet_selector_JES_BBEC1_year_down]
+        numBJets_JES_BBEC1_year_down =getNumberBTaggedJets(goodjets_JES_BBEC1_year_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_RelativeSample_year_up = ( (JES_RelativeSample_year_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_RelativeSample_year_up = jets[jet_selector_JES_RelativeSample_year_up]
+        numBJets_JES_RelativeSample_year_up =getNumberBTaggedJets(goodjets_JES_RelativeSample_year_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_RelativeSample_year_down = ( (JES_RelativeSample_year_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_RelativeSample_year_down = jets[jet_selector_JES_RelativeSample_year_down]
+        numBJets_JES_RelativeSample_year_down =getNumberBTaggedJets(goodjets_JES_RelativeSample_year_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_EC2_year_up = ( (JES_EC2_year_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_EC2_year_up = jets[jet_selector_JES_EC2_year_up]
+        numBJetsJES_EC2_year_up =getNumberBTaggedJets(goodjets_JES_EC2_year_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_EC2_year_down = ( (JES_EC2_year_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_EC2_year_down = jets[jet_selector_JES_EC2_year_down]
+        numBJetsJES_EC2_year_down =getNumberBTaggedJets(goodjets_JES_EC2_year_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_HF_year_up = ( (JES_HF_year_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_HF_year_up = jets[jet_selector_JES_HF_year_up]
+        numBJetsJES_HF_year_up =getNumberBTaggedJets(goodjets_JES_HF_year_up, candidatefj, second_fj,self._year)
 
 
-        ak4_outsideHiggs = goodjets[(dr_ak8Jets_HiggsCandidateJet > 0.8)]
-        ak4_outsideV = goodjets[(dr_ak8Jets_VCandidateJet  > 0.8)]
-        n_bjets_M_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
-        n_bjets_T_OutsideHiggs = ak.sum( ak4_outsideHiggs.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
-        n_bjets_M_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["M"], axis=1,)
-        n_bjets_T_OutsideV = ak.sum( ak4_outsideV.btagDeepFlavB > btagWPs["deepJet"][self._year]["T"], axis=1,)
+        jet_selector_JES_HF_year_down = ( (JES_HF_year_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_HF_year_down = jets[jet_selector_JES_HF_year_down]
+        numBJetsJES_HF_year_down =getNumberBTaggedJets(goodjets_JES_HF_year_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Absolute_year_up = ( ( JES_Absolute_year_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Absolute_year_up = jets[jet_selector_JES_Absolute_year_up]
+        numBJetsJES_Absolute_year_up =getNumberBTaggedJets(goodjets_JES_Absolute_year_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Absolute_year_down = ( ( JES_Absolute_year_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Absolute_year_down = jets[jet_selector_JES_Absolute_year_down]
+        numBJetsJES_Absolute_year_down =getNumberBTaggedJets(goodjets_JES_Absolute_year_down, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Total_up = ( (  JES_Total_up > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Total_up = jets[jet_selector_JES_Total_up]
+        numBJetsJES_Total_up =getNumberBTaggedJets(goodjets_JES_Total_up, candidatefj, second_fj,self._year)
+
+        jet_selector_JES_Total_down = ( (  JES_Total_down > 30) & (abs(jets.eta) < 5.0)  & jets.isTight & ((jets.pt >= 50) | ((jets.pt < 50) & (jets.puId & 2) == 2)))
+        goodjets_JES_Total_down = jets[jet_selector_JES_Total_down]
+        numBJetsJES_Total_down =getNumberBTaggedJets(goodjets_JES_Total_down, candidatefj, second_fj,self._year)
 
 
-        #let me test what the pt of ak4 jets is
+        #end ak4 jet uncertainties stuff*****************************************************************************
 
-        good_jetsOutsideHiggsV = ak4_outsideBothJets[ak.argsort(ak4_outsideBothJets.pt, ascending=False)]  # sort them by pt
-        ak4_jet1 = good_jetsOutsideHiggsV[:, 0:1]
-        ak4_jet2 = good_jetsOutsideHiggsV[:, 1:2]
-
-
-        mt_lep_met = np.sqrt(
-            2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met)))
-        )
-
-        # delta phi MET and higgs candidate
+        mt_lep_met = np.sqrt( 2.0 * candidatelep_p4.pt * met.pt * (ak.ones_like(met.pt) - np.cos(candidatelep_p4.delta_phi(met))))
         met_fj_dphi = candidatefj.delta_phi(met)
-
 
         if self.isMC: 
             cutoff = 4.
@@ -438,22 +529,7 @@ class vhProcessor(processor.ProcessorABC):
         else:
             pw_pass = np.ones(nevents,dtype='bool')
 
-
-
-
-        if self.isMC: 
-
-            higgs = getHiggs(events.GenPart)
-            
-            higgsChosenJet = higgs.delta_r(candidatefj)
-            higgsHighestPTJet = higgs.delta_r(FirstFatjet)
-            #print('higgsJet', ak.to_list(higgsChosenJet)[0:200])
-
-            
-
-
 #add in higgs mass for fun
-
         candidateHiggs = ak.zip (
         {
         "pt": candidatefj.pt,
@@ -479,13 +555,24 @@ class vhProcessor(processor.ProcessorABC):
         rec2 = candidateHiggs - candidatelep_p4
         rec_higgs = rec1 + rec2
 
-        #testMet
-        #metUnclusterNominal = met.pt
-        #metUnclusterUp = met.MET_UnclusteredEnergy.up.pt
-        #metUnclusterDown = met.MET_UnclusteredEnergy.down.pt
-        #print('met.pt', ak.to_list(met)[0:5])
-        #print('metUnclusterUp', ak.to_list(metUnclusterUp)[0:5])
-        #print('metUnclusterDown', ak.to_list(metUnclusterDown)[0:5])
+        #print(met.MET_UnclusteredEnergy.up.pt)
+        #print(met.MET_UnclusteredEnergy.down.pt)
+
+#***********for new JMR/JMS
+        #print(ak.to_list(second_fj.subjets.pt)[0:100])
+        V_subjets = second_fj.subjets
+
+        closestAK8JetsToSubJets = second_fj.subjets.nearest(events.Jet)
+
+        Vsubjets_fatjets, jec_shifted_subjet_fatjetvars = get_jec_jets2(
+            events, events.fixedGridRhoFastjetAll, V_subjets,  closestAK8JetsToSubJets, self._year, not self.isMC, self.jecs, fatjets=False)
+
+        print(ak.to_list(V_subjets.pt)[0:100])
+
+
+
+
+        
         ######################
         # Store variables
         ######################
@@ -502,33 +589,59 @@ class vhProcessor(processor.ProcessorABC):
             "lep_met_mt": mt_lep_met, 
             "met_fj_dphi": met_fj_dphi,
             "met_pt": met.pt,
-
             "NumFatjets": NumFatjets, # NumFatjets = ak.num(good_fatjets)
             "h_fj_pt": candidatefj.pt, #Higgs
             "ReconVCandidateFatJetVScore": VCandidateVScore, # VCandidateVScore = VScore(second_fj)
             "ReconVCandidateMass": VCandidate_Mass,  #VCandidate_Mass = second_fj.msdcorr
-        
             "numberAK4JetsOutsideFatJets": NumOtherJetsOutsideBothJets,
             "numberBJets_Medium_OutsideFatJets": n_bjets_M_OutsideBothJets,
-	    "numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
+	    #"numberBJets_Tight_OutsideFatJets": n_bjets_T_OutsideBothJets,
 
             "dr_TwoFatJets": dr_two_jets, #dr_two_jets = candidatefj.delta_r(second_fj)
             "higgsMass": rec_higgs.mass,
        
-        #    "ues_up": met.MET_UnclusteredEnergy.up.pt,
-        #    "ues_down": met.MET_UnclusteredEnergy.down.pt,
-       #check JEC
-            "numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
-            "numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
-            "numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
-            "numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
-            "pileupWeightCheck": pw_pass,
+            "ues_up": met.MET_UnclusteredEnergy.up.pt,
+            "ues_down": met.MET_UnclusteredEnergy.down.pt,
+            #"numberBJets_Medium_OutsideHiggs": n_bjets_M_OutsideHiggs,
+            #"numberBJets_Tight_OutsideHiggs": n_bjets_T_OutsideHiggs,
+            #"numberBJets_Medium_OutsideV": n_bjets_M_OutsideV,
+            #"numberBJets_Tight_OutsideV": n_bjets_T_OutsideV,
+            #"pileupWeightCheck": pw_pass,
+            #"ak4_jet1":  ak.firsts(ak4_jet1.pt),
+            #"ak4_jet2":  ak.firsts(ak4_jet2.pt),
 
-            "ak4_jet1":  ak.firsts(ak4_jet1.pt),
-            "ak4_jet2":  ak.firsts(ak4_jet2.pt),
 
-            "dR_higgs_ChosenReconJet": higgsChosenJet,
-            "dR_higgs_HighestPTJet": higgsHighestPTJet,
+            "numberBJets_JES_down": numBJets_JES_down,
+            "numberBJets_JES_up": numBJets_JES_up,
+            "numberBJets_JER_down": numBJets_JER_down,
+            "numberBJets_JER_up": numBJets_JER_up,
+            "numberBJets_JES_FlavorQCD_up": numBJets_JES_FlavorQCD_up,
+            "numberBJets_JES_FlavorQCD_down": numBJets_JES_FlavorQCD_down,
+            "numberBJets_JES_RelativeBal_up": numBJets_JES_RelativeBal_up,
+            "numberBJets_JES_RelativeBal_down": numBJets_JES_RelativeBal_down,
+            "numberBJets_JES_HF_up": numBJets_JES_HF_up,
+            "numberBJets_JES_HF_down": numBJets_JES_HF_down,
+            "numberBJets_JES_BBEC1_up": numBJets_JES_BBEC1_up,
+            "numberBJets_JES_BBEC1_down": numBJets_JES_BBEC1_down,
+            "numberBJets_JES_EC2_up": numBJets_JES_EC2_up,
+            "numberBJets_JES_EC2_down": numBJets_JES_EC2_down,
+            "numberBJets_JES_Absolute_up": numBJets_JES_Absolute_up,
+            "numberBJets_JES_Absolute_down": numBJets_JES_Absolute_down,
+            f"numberBJets_JES_BBEC1_{self._year}_up": numBJets_JES_BBEC1_year_up,
+            f"numberBJets_JES_BBEC1_{self._year}_down": numBJets_JES_BBEC1_year_down,
+            f"numberBJets_JES_EC2_{self._year}_up": numBJetsJES_EC2_year_up,
+            f"numberBJets_JES_EC2_{self._year}_down": numBJetsJES_EC2_year_down,
+
+            f"numberBJets_JES_RelativeSample_{self._year}_up": numBJets_JES_RelativeSample_year_up,
+            f"numberBJets_JES_RelativeSample_{self._year}_down": numBJets_JES_RelativeSample_year_down,
+
+            f"numberBJets_JES_HF_{self._year}_up": numBJetsJES_HF_year_up,
+            f"numberBJets_JES_HF_{self._year}_down": numBJetsJES_HF_year_down,
+            f"numberBJets_JES_Absolute_{self._year}_up": numBJetsJES_Absolute_year_up,
+            f"numberBJets_JES_Absolute_{self._year}_down": numBJetsJES_Absolute_year_down,
+
+            "numberBJets_JES_Total_up": numBJetsJES_Total_up,
+            "numberBJets_JES_Total_down": numBJetsJES_Total_down,
 
       }
 
@@ -554,7 +667,7 @@ class vhProcessor(processor.ProcessorABC):
             variables = {**variables, **fatjetvars_sys}
             fatjetvars = {**fatjetvars, **fatjetvars_sys}
 
-            higgsPT_vars = {
+            higgsPT_vars = { #need these for systematics, don't comment out
             "h_fj_eta": candidatefj.eta,
             "h_fj_phi": candidatefj.phi,
             "h_fj_pt": candidatefj.pt,
@@ -579,8 +692,6 @@ class vhProcessor(processor.ProcessorABC):
                         #print('met[value][var].pt', met[value][var].pt)
             variables =  {**variables, **fatjetvars_sys,  **met_pt_sys}
 
-            #print(met.MET_UnclusteredEnergy.up.pt)
-            #print(met.MET_UnclusteredEnergy.down.pt)
 
         # Selection ***********************************************************************************************************************************************
 
@@ -611,13 +722,12 @@ class vhProcessor(processor.ProcessorABC):
                     fj_pt_sel = fj_pt_sel | (second_fj[v][var].pt > 250) |  (candidatefj[v][var].pt > 250)
         self.add_selection(name="CandidateJetpT_V", sel=(fj_pt_sel == 1))
         #*************************
-    #    self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
-    #    self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
-
-        #self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
-        #self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
+        #self.add_selection(name="higgs_pt", sel=(candidatefj.pt > 250))
+        #self.add_selection(name="v_pt", sel=(second_fj.pt > 250))
+        self.add_selection(name="LepInJet", sel=(lep_fj_dr < 0.8))
+        self.add_selection(name="JetLepOverlap", sel=(lep_fj_dr > 0.03))
         self.add_selection(name="VmassCut", sel=( VCandidate_Mass > 40 )) 
-     #   self.add_selection(name="MET", sel=(met.pt > 30))
+        #self.add_selection(name="MET", sel=(met.pt > 30))
 
 
         # gen-level matching
