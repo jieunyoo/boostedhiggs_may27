@@ -545,19 +545,19 @@ def add_lepton_weight(weights, lepton, year, lepton_type="muon"):
         weights.add(f"{corr}_{lepton_type}", values["nominal"], values["up"], values["down"])
 
     # quick hack to add electron trigger SFs
-    if lepton_type == "electron":
-        corr = "trigger"
-        with importlib.resources.path("boostedhiggs.data", f"electron_trigger_{ul_year}_UL.json") as filename:
-            cset = correctionlib.CorrectionSet.from_file(str(filename))
-            lepton_pt, lepton_eta = get_clip(lep_pt, lep_eta, lepton_type, corr)
-            values["nominal"] = cset["UL-Electron-Trigger-SF"].evaluate(
-                ul_year + "_UL", "sf", "trigger", lepton_eta, lepton_pt
-            )
-            values["up"] = cset["UL-Electron-Trigger-SF"].evaluate(ul_year + "_UL", "sfup", "trigger", lepton_eta, lepton_pt)
-            values["down"] = cset["UL-Electron-Trigger-SF"].evaluate(
-                ul_year + "_UL", "sfdown", "trigger", lepton_eta, lepton_pt
-            )
-            weights.add(f"{corr}_{lepton_type}", values["nominal"], values["up"], values["down"])
+    #if lepton_type == "electron":
+    #    corr = "trigger"
+    #    with importlib.resources.path("boostedhiggs.data", f"electron_trigger_{ul_year}_UL.json") as filename:
+    #        cset = correctionlib.CorrectionSet.from_file(str(filename))
+    #        lepton_pt, lepton_eta = get_clip(lep_pt, lep_eta, lepton_type, corr)
+    #        values["nominal"] = cset["UL-Electron-Trigger-SF"].evaluate(
+    #            ul_year + "_UL", "sf", "trigger", lepton_eta, lepton_pt
+    #        )
+    #        values["up"] = cset["UL-Electron-Trigger-SF"].evaluate(ul_year + "_UL", "sfup", "trigger", lepton_eta, lepton_pt)
+    #        values["down"] = cset["UL-Electron-Trigger-SF"].evaluate(
+     #           ul_year + "_UL", "sfdown", "trigger", lepton_eta, lepton_pt
+     #       )
+     #       weights.add(f"{corr}_{lepton_type}", values["nominal"], values["up"], values["down"])
 
 
 def get_pileup_weight_raghav(year: str, nPU: np.ndarray):
@@ -658,7 +658,6 @@ try:
 except KeyError:
     print("Failed loading compiled JECs")
 
-
 def _add_jec_variables(jets: JetArray, event_rho: ak.Array) -> JetArray:
     """add variables needed for JECs"""
     jets["pt_raw"] = (1 - jets.rawFactor) * jets.pt
@@ -666,6 +665,18 @@ def _add_jec_variables(jets: JetArray, event_rho: ak.Array) -> JetArray:
     # gen pT needed for smearing
     jets["pt_gen"] = ak.values_astype(ak.fill_none(jets.matched_gen.pt, 0), np.float32)
     jets["event_rho"] = ak.broadcast_arrays(event_rho, jets.pt)[0]
+    #print('jets', jets)
+    return jets
+
+def _add_jec_variables2(jets: JetArray, closestJets, event_rho: ak.Array,) -> JetArray:
+    """add variables needed for JECs"""
+    jets["pt_raw"] = (1 - jets.rawFactor) * jets.pt
+    jets["mass_raw"] = (1 - jets.rawFactor) * jets.mass
+    # gen pT needed for smearing
+    #jets["area"] = ak.values_astype(ak.fill_none(closestJets, 0), np.float32)
+    jets["pt_gen"] = ak.values_astype(ak.fill_none(closestJets.matched_gen.pt, 0), np.float32)
+    #jets["pt_gen"] = closestJets.matched_gen.pt
+    jets["event_rho"] = ak.broadcast_arrays(event_rho, closestJets.matched_gen.pt)[0]
     return jets
 
 
@@ -708,17 +719,70 @@ def get_jec_jets(events, jets, year: str, isData: bool = False, jecs: Dict[str, 
         #print('tdict', ak.to_list(tdict))
         if apply_jecs:
             for key, shift in jecs.items():
+                #print('jecs.items()', jecs.items())
+                #print('key', key)
+                #print('shift', shift)
                 for var in ["up", "down"]:
-         #           print('var', var)
-          #          print('shift', shift)
+                 #   print('var', var)
+                  #  print('jec_var', jec_var)
                     tdict[f"{key}_{var}"] = jets[shift][var][jec_var]
-           #         print(tdict[f"{key}_{var}"])
+                   # print(tdict[f"{key}_{var}"])
 
         jec_shifted_vars[jec_var] = tdict
         #print('jec_shifted vars', jec_shifted_vars[jec_var])
 
     return jets, jec_shifted_vars
 
+def get_jec_jets2(events, fastJetCorr, jets, closestJets, year: str, isData: bool = False, jecs: Dict[str, str] = None, fatjets: bool = True):
+    """
+    Based on https://github.com/nsmith-/boostedhiggs/blob/master/boostedhiggs/hbbprocessor.py
+    Eventually update to V5 JECs once I figure out what's going on with the 2017 UL V5 JER scale factors
+
+    See https://cms-nanoaod-integration.web.cern.ch/commonJSONSFs/summaries/
+
+    If ``jecs`` is not None, returns the shifted values of variables are affected by JECs.
+    """
+
+    jec_vars = ["pt"]  # variables we are saving that are affected by JECs
+    if fatjets:
+        jet_factory = fatjet_factory
+    else:
+        jet_factory = ak4jet_factory
+
+    apply_jecs = not (not ak.any(jets.pt) or isData)
+
+    import cachetools
+    jec_cache = cachetools.Cache(np.inf)
+    corr_key = f"{get_UL_year(year)}mc".replace("_UL", "")
+
+    # fatjet_factory.build gives an error if there are no fatjets in event
+    if apply_jecs:
+        jets = jet_factory[corr_key].build(_add_jec_variables2(jets, closestJets, fastJetCorr), jec_cache)
+
+    # return only fatjets if no jecs given
+    if jecs is None:
+        return jets
+
+    jec_shifted_vars = {}
+
+    for jec_var in jec_vars:
+        tdict = {"": jets[jec_var]}
+        #print('tdict', ak.to_list(tdict))
+        if apply_jecs:
+            for key, shift in jecs.items():
+                #print('jecs.items()', jecs.items())
+                #print('key', key)
+                #print('shift', shift)
+                for var in ["up", "down"]:
+                 #   print('var', var)
+                  #  print('jec_var', jec_var)
+                    tdict[f"{key}_{var}"] = jets[shift][var][jec_var]
+                   # print(tdict[f"{key}_{var}"])
+
+        jec_shifted_vars[jec_var] = tdict
+        #print('jec_shifted vars', jec_shifted_vars[jec_var])
+
+    return jets, jec_shifted_vars
 
 """
 The following are added on Feb9_2024 by Farouk.
