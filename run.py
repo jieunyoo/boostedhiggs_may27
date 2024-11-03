@@ -131,11 +131,21 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+    elif args.processor == "ak4":
+        from boostedhiggs.vhprocessorAK4 import vhprocessorAK4
 
-    elif args.processor == "fr":
-        from boostedhiggs.fakeRateProcessor import fakeRateProcessor
+        p = vhprocessorAK4(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+    elif args.processor == "frclosure":
+        from boostedhiggs.fakeRateLooseButNotTightClosure import fakeRateLooseButNotTightClosure
 
-        p = fakeRateProcessor(
+        p = fakeRateLooseButNotTightClosure(
             year=year,
             yearmod=yearmod,
             channels=channels,
@@ -144,6 +154,66 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+    elif args.processor == "vhC":
+        from boostedhiggs.vhprocessorClosure import vhProcessorClosure
+
+        p = vhProcessorClosure(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+    elif args.processor == "vhWH":
+        from boostedhiggs.vhprocessorWH import vhProcessorWH
+
+        p = vhProcessorWH(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+
+    elif args.processor == "vhZH":
+        from boostedhiggs.vhprocessorZH import vhProcessorZH
+
+        p = vhProcessorZH(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+    elif args.processor == "mini":
+        from boostedhiggs.vhprocessorMini import vhprocessorMini
+
+        p = vhprocessorMini(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+
+    elif args.processor == "wjv":
+        from boostedhiggs.vhprocessorWJetCalibV import vhprocessorWJetCalibV
+
+        p = vhprocessorWJetCalibV(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
     elif args.processor == "wj":
         from boostedhiggs.vhprocessorWJetCalib import vhprocessorWJetCalib
 
@@ -156,9 +226,41 @@ def main(args):
             output_location="./outfiles" + job_name,
         )
 
+    elif args.processor == "cutflow":
+        from boostedhiggs.cutflow import vhcutflow
+        p = vhcutflow(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+    elif args.processor == "prompt":
+        from boostedhiggs.prompt import promptProcessor
+        p = promptProcessor(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+    elif args.processor == "vhb":
+        from boostedhiggs.vhprocessor_b import vhprocessor_b
+        p = vhprocessor_b(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
+
     elif args.processor == "frdy":
         from boostedhiggs.fakeRateDYSF import fakeRateDYSF
-
         p = fakeRateDYSF(
             year=year,
             yearmod=yearmod,
@@ -167,6 +269,18 @@ def main(args):
             systematics=args.systematics,
             output_location="./outfiles" + job_name,
         )
+
+    elif args.processor == "fr":
+        from boostedhiggs.fakeRate import fakeRate
+        p = fakeRate(
+            year=year,
+            yearmod=yearmod,
+            channels=channels,
+            inference=args.inference,
+            systematics=args.systematics,
+            output_location="./outfiles" + job_name,
+        )
+
     elif args.processor == "frloose":
         from boostedhiggs.fakeRateLooseButNotTight import fakeRateLooseButNotTight
 
